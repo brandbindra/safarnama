@@ -209,6 +209,9 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .bk-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
 .bk-detail{font-size:10px;color:var(--text-3);margin-top:2px}
 .bk-tip{font-size:10px;color:var(--teal);background:var(--teal-light);border-radius:5px;padding:4px 8px;margin-top:6px;display:block;line-height:1.4}
+.bk-attach-btn{font-size:10px;color:var(--text-3);background:none;border:1px dashed var(--border-2);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:var(--font-ui);margin-top:6px;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.bk-attach-btn:hover{border-color:var(--teal);color:var(--teal)}
+.bk-attach-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;margin-top:6px}
 .bk-actions{display:flex;gap:6px;margin-top:9px;align-items:center}
 .bk-ref-input{flex:1;font-size:11px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--cream-2);color:var(--text);font-family:var(--font-ui);min-width:0}
 .bk-ref-input:focus{outline:none;border-color:var(--teal);background:var(--cream)}
@@ -495,13 +498,22 @@ function showLogin() {
 function updateCountdownLogin() {
   const el = document.getElementById('login-countdown');
   if (!el) return;
+  // Try to get trip dates from Supabase cache or currentTrip
+  const cache = loadOfflineCache();
+  const trip = currentTrip || (cache && cache.trip);
+  if (!trip || !trip.start_date) { el.textContent = ''; return; }
   const today = new Date(); today.setHours(0,0,0,0);
-  const start = new Date('2025-07-31');
+  const start = new Date(trip.start_date); start.setHours(0,0,0,0);
+  const end = new Date(trip.end_date); end.setHours(0,0,0,0);
   const diff = Math.round((start - today) / 86400000);
-  if (diff > 0) el.textContent = diff + ' days to departure ✈';
+  const totalDays = Math.round((end - start) / 86400000) + 1;
+  if (diff > 0) el.textContent = diff + ' day' + (diff===1?'':'s') + ' to departure ✈';
   else if (diff === 0) el.textContent = 'Departure day! ✈';
-  else if (diff > -17) el.textContent = 'Trip in progress 🌏';
-  else el.textContent = 'Trip complete — memories made ✓';
+  else if (today <= end) {
+    const dayNum = Math.abs(diff) + 1;
+    el.textContent = 'Day ' + dayNum + ' of ' + totalDays + ' · Trip in progress 🌏';
+  }
+  else el.textContent = trip.name + ' — memories made ✓';
 }
 
 function updateCountdown() {
@@ -634,6 +646,7 @@ async function loadApp() {
     if (trips && trips.length) {
       currentTrip = trips[0];
       saveOfflineCache({ trip: trips[0] });
+      updateCountdownLogin();
       renderAll();
     } else if (!cache) {
       renderNoTrip();
@@ -672,37 +685,45 @@ async function renderAll() {
   await Promise.all([renderItinerary(), renderBookings(), renderEssentials(), renderShare()]);
 }
 
+// open-meteo.com — no API key, no CORS issues
 const WEATHER_CITIES = [
-  {name:'Delhi', q:'Delhi'},
-  {name:'Katra', q:'Katra,India'},
-  {name:'Udaipur', q:'Udaipur'},
-  {name:'Leh', q:'Leh,India'},
-  {name:'Patiala', q:'Patiala'}
+  {name:'Delhi',   lat:28.6139, lon:77.2090},
+  {name:'Katra',   lat:32.9916, lon:74.9320},
+  {name:'Udaipur', lat:24.5854, lon:73.7125},
+  {name:'Leh',     lat:34.1526, lon:77.5771},
+  {name:'Patiala', lat:30.3398, lon:76.3869}
 ];
+
+const WMO_ICONS = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'❄️',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
 
 async function fetchWeather() {
   const strip = document.getElementById('weather-strip');
   if (!strip) return;
-  strip.innerHTML = WEATHER_CITIES.map(c=>`<div class="weather-chip-sm" id="wc-${c.name}"><div class="weather-city">${c.name}</div><div class="weather-temp">…</div></div>`).join('');
-  for (const city of WEATHER_CITIES) {
-    try {
-      const r = await fetch(`https://wttr.in/${encodeURIComponent(city.q)}?format=j1`);
-      const d = await r.json();
-      const cur = d.current_condition?.[0];
-      if (!cur) continue;
-      const temp = cur.temp_C + '°';
-      const desc = cur.weatherDesc?.[0]?.value || '';
+  strip.innerHTML = WEATHER_CITIES.map(c=>`<div class="weather-chip-sm" id="wc-${c.name}"><div class="weather-city">${c.name}</div><div class="weather-temp" style="font-size:13px">…</div></div>`).join('');
+  try {
+    const lats = WEATHER_CITIES.map(c=>c.lat).join(',');
+    const lons = WEATHER_CITIES.map(c=>c.lon).join(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current_weather=true&timezone=auto`;
+    const r = await fetch(url);
+    const results = await r.json();
+    // open-meteo returns array when multiple locations
+    const arr = Array.isArray(results) ? results : [results];
+    arr.forEach((d, i) => {
+      const city = WEATHER_CITIES[i];
+      if (!city || !d.current_weather) return;
+      const temp = Math.round(d.current_weather.temperature) + '°C';
+      const icon = WMO_ICONS[d.current_weather.weathercode] || '🌡';
       const el = document.getElementById('wc-'+city.name);
-      if (el) el.innerHTML = `<div class="weather-city">${city.name}</div><div class="weather-temp">${temp}</div><div class="weather-desc">${desc.substring(0,12)}</div>`;
-    } catch(e) {}
-  }
+      if (el) el.innerHTML = `<div class="weather-city">${city.name}</div><div class="weather-temp">${icon} ${temp}</div>`;
+    });
+  } catch(e) { console.warn('Weather fetch failed:', e); }
 }
 
 function renderProgressBar(days, phases) {
   const today = new Date();
   today.setHours(0,0,0,0);
-  const tripStart = new Date(currentTrip.start_date);
-  const tripEnd = new Date(currentTrip.end_date);
+  const tripStart = new Date(currentTrip.start_date); tripStart.setHours(0,0,0,0);
+  const tripEnd = new Date(currentTrip.end_date); tripEnd.setHours(0,0,0,0);
   const totalDays = Math.round((tripEnd - tripStart) / 86400000) + 1;
   const elapsed = Math.max(0, Math.min(totalDays, Math.round((today - tripStart) / 86400000)));
   const pct = Math.round((elapsed / totalDays) * 100);
@@ -776,17 +797,16 @@ async function renderItinerary() {
     let html = '';
     for (const ph of phases) {
       const phDays = days.filter(d => d.phase_id === ph.id);
-      // Extract destination keyword from phase name for Unsplash
-      const phKeywords = {
-        'Zero-Leave Entry & Katra': 'vaishno+devi+katra+india',
-        'Vaishno Devi': 'vaishno+devi+shrine+india',
-        'Udaipur Anniversary': 'udaipur+lake+palace+india',
-        'Leh Valley': 'leh+ladakh+mountains+india',
-        "Noida Parents' Base": 'noida+delhi+india',
-        'Panipat · Patiala · Chandigarh': 'patiala+punjab+india'
+      // Curated Wikimedia/public domain images per phase
+      const phImages = {
+        'Zero-Leave Entry & Katra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Vaishno_Devi_Shrine.jpg/800px-Vaishno_Devi_Shrine.jpg',
+        'Vaishno Devi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Vaishno_Devi_Shrine.jpg/800px-Vaishno_Devi_Shrine.jpg',
+        'Udaipur Anniversary': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Lake_Pichola_with_City_Palace_Udaipur.jpg/800px-Lake_Pichola_with_City_Palace_Udaipur.jpg',
+        'Leh Valley': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Thikse_Monastery_Ladakh_India.jpg/800px-Thikse_Monastery_Ladakh_India.jpg',
+        "Noida Parents' Base": 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Delhi_India.jpg/800px-Delhi_India.jpg',
+        'Panipat · Patiala · Chandigarh': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Qila_Mubarak_Patiala.jpg/800px-Qila_Mubarak_Patiala.jpg'
       };
-      const imgKey = phKeywords[ph.name] || encodeURIComponent(ph.name + ' india travel');
-      const imgUrl = `https://source.unsplash.com/800x300/?${imgKey}`;
+      const imgUrl = phImages[ph.name] || `https://picsum.photos/seed/${encodeURIComponent(ph.name)}/800/300`;
       html += `<div class="phase-block">
         <div style="position:relative;height:120px;border-radius:${12}px;overflow:hidden;margin-bottom:10px">
           <img src="${imgUrl}" alt="${esc(ph.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'">
@@ -986,6 +1006,12 @@ async function renderBookings() {
               })()}
               ${editFields}
             </div>
+          </div>
+          <div style="margin-top:6px" id="attach-area-${b.id}">
+            ${b.attachment_data ? `<div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <img src="${b.attachment_data}" class="bk-attach-thumb" onclick="viewAttachment('${b.id}')" alt="Booking doc">
+              ${isOwner ? `<button class="bk-attach-btn" onclick="removeAttachment('${b.id}')"><i class="ti ti-trash" style="font-size:12px"></i> Remove</button>` : ''}
+            </div>` : (isOwner ? `<label class="bk-attach-btn" for="attach-${b.id}"><i class="ti ti-paperclip" style="font-size:12px"></i> Attach confirmation<input type="file" id="attach-${b.id}" accept="image/*,.pdf" style="display:none" onchange="uploadAttachment('${b.id}',this)"></label>` : '')}
           </div>
           <div class="bk-actions">${refField}${statusBtn}</div>
         </div>`;
@@ -1331,6 +1357,43 @@ async function openLinkFromBooking(bookingId) {
     document.getElementById('link-booking-list').innerHTML = html;
     openModal('modal-link');
   } catch(e) { showToast('Failed'); console.error(e); }
+}
+
+async function uploadAttachment(bookingId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 1500000) { showToast('File too large — max 1.5MB'); return; }
+  showToast('Uploading…');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = e.target.result; // base64 data URL
+      await sbPatch('bookings', bookingId, { attachment_data: data });
+      showToast('Attachment saved ✓');
+      await renderBookings();
+    } catch(err) { showToast('Upload failed: ' + err.message.substring(0,40)); }
+  };
+  reader.readAsDataURL(file);
+}
+
+function viewAttachment(bookingId) {
+  const item = document.getElementById('bkitem-'+bookingId);
+  const img = item?.querySelector('.bk-attach-thumb');
+  if (!img) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `<div style="position:relative;max-width:100%;max-height:90vh"><img src="${img.src}" style="max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain"><button onclick="this.parentElement.parentElement.remove()" style="position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-radius:50%;background:white;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button></div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+async function removeAttachment(bookingId) {
+  if (!confirm('Remove attachment?')) return;
+  try {
+    await sbPatch('bookings', bookingId, { attachment_data: null });
+    showToast('Attachment removed');
+    await renderBookings();
+  } catch(e) { showToast('Failed'); }
 }
 
 async function renderShare() {
