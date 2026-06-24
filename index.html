@@ -480,7 +480,7 @@ async function loadApp() {
   try {
     let settings = [];
     try {
-      settings = await sbGet('app_settings', 'order=created_at.desc&limit=1');
+      settings = await sbGet('app_settings', 'limit=1');
     } catch(e) { console.warn('Settings fetch failed:', e.message); }
     if (settings && settings.length) {
       pins.owner = settings[0].pin_owner || '1111';
