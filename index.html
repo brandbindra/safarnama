@@ -639,6 +639,7 @@ async function renderBookings() {
   try {
     const bookings = await sbGet('bookings', `trip_id=eq.${currentTrip.id}&order=sort_order.asc`);
     const canEdit = currentRole === 'owner' || currentRole === 'editor';
+    const isOwner = currentRole === 'owner';
     const groups = [...new Set(bookings.map(b=>b.category))];
     const iconMap = { 'Flights':'ti-plane','Hotels':'ti-building','Transfers & Taxis':'ti-car','Special Bookings':'ti-helicopter' };
     let html = '<div class="bk-body">';
@@ -687,7 +688,10 @@ async function renderBookings() {
     }
     html += '</div>';
     document.getElementById('tab-bookings').innerHTML = html;
-  } catch(e) { console.error(e); }
+  } catch(e) { 
+    console.error('renderBookings error:', e); 
+    document.getElementById('tab-bookings').innerHTML = `<div class="no-trip"><p style="color:red;padding:20px;font-size:12px">${e.message}</p><button class="btn-primary" onclick="renderBookings()">Retry</button></div>`;
+  }
 }
 
 async function saveBookingRef(id, val) {
