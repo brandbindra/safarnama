@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Safarnama</title>
+<title>Manish Explores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
@@ -310,8 +310,8 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 <div id="screen-login" class="screen active">
   <div class="login-hero">
     <div class="login-compass"><i class="ti ti-compass"></i></div>
-    <div class="login-wordmark">Safarnama</div>
-    <div class="login-tagline">Your travel chronicle</div>
+    <div class="login-wordmark">Explores</div>
+    <div class="login-tagline">Crafted for the Bindras</div>
 <div id="login-countdown" style="margin-top:12px;font-size:13px;color:rgba(240,250,247,.75);font-family:var(--font-ui);font-weight:300;letter-spacing:.04em"></div>
   </div>
   <div class="login-body">
@@ -346,7 +346,10 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 
 <!-- PIN -->
 <div id="screen-pin" class="screen">
-  <div class="pin-logo">Safarnama</div>
+  <div style="text-align:center;margin-bottom:6px">
+  <div style="font-family:var(--font-ui);font-size:9px;font-weight:500;color:var(--teal);letter-spacing:.26em;text-transform:uppercase;margin-bottom:3px">M A N I S H</div>
+  <div class="pin-logo">Explores</div>
+</div>
   <div class="pin-role-name" id="pin-role-label">Owner PIN</div>
   <div class="pin-dots">
     <div class="pin-dot" id="pd0"></div>
@@ -375,7 +378,10 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 <div id="screen-app" class="screen">
   <div class="app-header">
     <div class="app-top-row">
-      <span class="app-wordmark">Safarnama</span>
+      <div>
+        <div style="font-family:var(--font-ui);font-size:7px;font-weight:600;color:var(--teal);letter-spacing:.26em;text-transform:uppercase;margin-bottom:1px">M A N I S H</div>
+        <span class="app-wordmark">Explores</span>
+      </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="role-badge badge-owner" id="app-role-badge">Owner</span>
         <button class="settings-btn" id="settings-btn" onclick="openSettings()" title="Settings" style="display:none"><i class="ti ti-settings"></i></button>
@@ -402,7 +408,7 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">New trip</div>
-    <div class="modal-sub">Paste your itinerary as plain text — exactly as you'd describe it to someone. Claude will read it and build the trip structure for you.</div>
+    <div class="modal-sub">Paste your itinerary as plain text — exactly as you described it. Claude reads it and builds the full structure for you.</div>
     <textarea class="modal-textarea" id="import-text" placeholder="e.g. India trip July 31 to August 16. Phase 1: July 31 fly Dubai to Delhi evening, stay Aerocity hotel. August 1 fly Delhi to Jammu morning then drive to Katra..."></textarea>
     <div class="modal-status" id="import-status"></div>
     <div class="modal-btn-row">
@@ -619,7 +625,7 @@ async function enterApp() {
   await loadApp();
 }
 
-const CACHE_KEY = 'safarnama_offline_v1';
+const CACHE_KEY = 'manishexplores_v1';
 
 function saveOfflineCache(data) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify({...data, cachedAt: new Date().toISOString()})); } catch(e) {}
@@ -674,7 +680,7 @@ function renderNoTrip() {
   const noTripHtml = `<div class="no-trip">
     <div class="no-trip-icon"><i class="ti ti-map-2"></i></div>
     <h2>No trip yet</h2>
-    <p>Paste your itinerary as text and Claude will build the full trip structure — phases, days, bookings, and tips — in seconds.</p>
+    <p>Paste your itinerary as free text and Claude will build the full structure — phases, days, bookings, and tips — in seconds.</p>
     <button class="btn-primary" onclick="openModal('modal-import')"><i class="ti ti-sparkles" style="margin-right:6px"></i>Import itinerary</button>
   </div>`;
   ['tab-itinerary','tab-bookings','tab-essentials','tab-share'].forEach(id => {
@@ -1442,7 +1448,7 @@ async function renderShare() {
     ]);
 
     const pending = bookings.filter(b=>b.status!=='booked');
-    let pendingText = `SAFARNAMA — PENDING BOOKINGS\n${'─'.repeat(30)}\n${currentTrip.name}\n${currentTrip.subtitle||''}\nGenerated: ${new Date().toLocaleDateString()}\n\n`;
+    let pendingText = `MANISH EXPLORES — PENDING BOOKINGS\n${'─'.repeat(30)}\n${currentTrip.name}\n${currentTrip.subtitle||''}\nGenerated: ${new Date().toLocaleDateString()}\n\n`;
     const groups = [...new Set(pending.map(b=>b.category))];
     groups.forEach(g => {
       pendingText += `${g.toUpperCase()}\n`;
@@ -1450,7 +1456,7 @@ async function renderShare() {
     });
     if (!pending.length) pendingText += 'All bookings confirmed! ✓\n';
 
-    let itinText = `SAFARNAMA — FULL ITINERARY\n${'─'.repeat(28)}\n${currentTrip.name}\n${currentTrip.subtitle||''}\n\n`;
+    let itinText = `MANISH EXPLORES — FULL ITINERARY\n${'─'.repeat(28)}\n${currentTrip.name}\n${currentTrip.subtitle||''}\n\n`;
     for (const ph of phases) {
       itinText += `▶ ${ph.name.toUpperCase()}${ph.date_range?' ('+ph.date_range+')':''}\n`;
       const phDays = days.filter(d=>d.phase_id===ph.id);
