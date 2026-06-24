@@ -592,7 +592,7 @@ async function renderItinerary() {
           : '';
         const canEdit = currentRole === 'owner' || currentRole === 'editor';
         const tipContent = canEdit
-          ? `<textarea class="tip-textarea" rows="3" onchange="saveTip('${d.id}',this.value)" onblur="saveTip('${d.id}',this.value)">${esc(d.tip||'')}</textarea>`
+          ? `<textarea class="tip-textarea" rows="3" oninput="debounceTip('${d.id}',this.value)" onblur="saveTip('${d.id}',this.value)" placeholder="Add a tip for this day...">${esc(d.tip||'')}</textarea>`
           : `<div class="tip-readonly">${esc(d.tip||'No tip added yet.')}</div>`;
         const editRow = (currentRole==='owner') ? `
           <div class="day-edit-row" style="margin-bottom:8px">
@@ -656,8 +656,17 @@ function toggleDay(id) {
   card.classList.toggle('has-open');
 }
 
+let tipTimers = {};
+function debounceTip(id, val) {
+  clearTimeout(tipTimers[id]);
+  tipTimers[id] = setTimeout(() => saveTip(id, val), 800);
+}
 async function saveTip(id, val) {
-  try { await sbPatch('days', id, { tip: val }); } catch(e) { console.error(e); }
+  try {
+    await sbPatch('days', id, { tip: val });
+    const ta = document.querySelector(`#dc-${id} .tip-textarea`);
+    if (ta) { ta.style.borderColor = 'var(--teal)'; setTimeout(()=>ta.style.borderColor='', 1000); }
+  } catch(e) { console.error(e); showToast('Tip save failed'); }
 }
 
 async function saveDay(id) {
