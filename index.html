@@ -15,7 +15,6 @@
   --teal-light: #E1F5EE;
   --teal-pale:  #F0FAF7;
   --teal-border:#9FE1CB;
-  --teal-hero:  #FAFCFC;
   --cream:      #FAFCFC;
   --cream-2:    #F0FAF7;
   --cream-3:    #E6F5F2;
@@ -38,6 +37,34 @@
   --font-ui:    'Inter', sans-serif;
   --r:          12px;
   --r-sm:       8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --teal:       #1D9E75;
+    --teal-dark:  #9FE1CB;
+    --teal-mid:   #5DCAA5;
+    --teal-light: #0A3D2E;
+    --teal-pale:  #0D2E28;
+    --teal-border:#0F6E56;
+    --cream:      #0D1A16;
+    --cream-2:    #132318;
+    --cream-3:    #0A1A12;
+    --border:     #1A3A2A;
+    --border-2:   #2A5A3A;
+    --text:       #E0F5EE;
+    --text-2:     #9FE1CB;
+    --text-3:     #4A8A72;
+    --text-4:     #2A5A3A;
+    --amber:      #F0C060;
+    --amber-light:#2A1A00;
+    --amber-dark: #F0C060;
+    --amber-border:#5A3A00;
+    --green:      #9FE1CB;
+    --green-light:#0A3D2E;
+    --green-border:#0F6E56;
+    --red:        #FF6B6B;
+    --red-light:  #3D0A0A;
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
@@ -124,6 +151,14 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .btn-secondary:active{background:var(--teal-light)}
 
 /* ── ITINERARY ── */
+.progress-bar-wrap{padding:12px 14px 0}
+.progress-bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.progress-bar-label{font-size:11px;font-weight:600;color:var(--teal)}
+.progress-bar-sub{font-size:10px;color:var(--text-3)}
+.progress-bar-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.progress-bar-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .6s ease}
+.progress-milestones{display:flex;gap:4px;flex-wrap:wrap}
+.progress-phase-pip{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:.03em}
 .itin-body{padding:12px 14px}
 .phase-block{margin-bottom:20px}
 .phase-header-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -251,6 +286,14 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 
 /* ── LOADING ── */
 .loading-spinner{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--teal-border);font-size:32px}
+.weather-strip{display:flex;gap:6px;padding:6px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.weather-strip::-webkit-scrollbar{display:none}
+.weather-chip-sm{background:var(--cream-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;flex-shrink:0;text-align:center;min-width:80px}
+.weather-city{font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.weather-temp{font-size:16px;font-weight:500;color:var(--teal);font-family:var(--font-brand)}
+.weather-desc{font-size:9px;color:var(--text-3);margin-top:1px}
+.ptr-indicator{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;font-size:12px;color:var(--text-3);height:0;overflow:hidden;transition:height .2s}
+.ptr-indicator.visible{height:40px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
@@ -266,6 +309,7 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
     <div class="login-compass"><i class="ti ti-compass"></i></div>
     <div class="login-wordmark">Safarnama</div>
     <div class="login-tagline">Your travel chronicle</div>
+<div id="login-countdown" style="margin-top:12px;font-size:13px;color:rgba(240,250,247,.75);font-family:var(--font-ui);font-weight:300;letter-spacing:.04em"></div>
   </div>
   <div class="login-body">
     <div class="login-greeting">Who are you?</div>
@@ -341,7 +385,8 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
       <div class="app-tab" onclick="showTab('share')">Share</div>
     </div>
   </div>
-  <div class="tab-content">
+  <div class="ptr-indicator" id="ptr-indicator"><i class="ti ti-refresh" id="ptr-icon"></i><span id="ptr-text">Pull to refresh</span></div>
+<div class="tab-content" id="tab-content-scroll">
     <div class="tab-panel active" id="tab-itinerary"></div>
     <div class="tab-panel" id="tab-bookings"></div>
     <div class="tab-panel" id="tab-essentials"></div>
@@ -442,7 +487,75 @@ async function sbDelete(table, col, val) {
   if (!r.ok) throw new Error(await r.text());
 }
 
-function showLogin() { showScreen('screen-login'); }
+function showLogin() {
+  showScreen('screen-login');
+  updateCountdownLogin();
+}
+
+function updateCountdownLogin() {
+  const el = document.getElementById('login-countdown');
+  if (!el) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = new Date('2025-07-31');
+  const diff = Math.round((start - today) / 86400000);
+  if (diff > 0) el.textContent = diff + ' days to departure ✈';
+  else if (diff === 0) el.textContent = 'Departure day! ✈';
+  else if (diff > -17) el.textContent = 'Trip in progress 🌏';
+  else el.textContent = 'Trip complete — memories made ✓';
+}
+
+function updateCountdown() {
+  updateCountdownLogin();
+}
+
+// ── Pull to refresh ──
+(function() {
+  let startY = 0, pulling = false, threshold = 70;
+  document.addEventListener('touchstart', e => {
+    const el = document.getElementById('tab-content-scroll');
+    if (!el || el.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const el = document.getElementById('tab-content-scroll');
+    if (!el || el.scrollTop > 0) return;
+    const dist = e.touches[0].clientY - startY;
+    if (dist < 0) return;
+    const ind = document.getElementById('ptr-indicator');
+    const icon = document.getElementById('ptr-icon');
+    const txt = document.getElementById('ptr-text');
+    if (dist > 20) {
+      ind.classList.add('visible');
+      if (dist > threshold) {
+        icon.style.transform = 'rotate(180deg)';
+        txt.textContent = 'Release to refresh';
+      } else {
+        icon.style.transform = `rotate(${dist*2}deg)`;
+        txt.textContent = 'Pull to refresh';
+      }
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', async e => {
+    if (!pulling) return;
+    pulling = false;
+    const dist = e.changedTouches[0].clientY - startY;
+    const ind = document.getElementById('ptr-indicator');
+    const txt = document.getElementById('ptr-text');
+    if (dist > threshold) {
+      txt.textContent = 'Refreshing…';
+      document.getElementById('ptr-icon').className = 'ti ti-loader spinning';
+      await renderAll();
+      txt.textContent = 'Updated ✓';
+      setTimeout(() => ind.classList.remove('visible'), 800);
+    } else {
+      ind.classList.remove('visible');
+    }
+    document.getElementById('ptr-icon').style.transform = '';
+    document.getElementById('ptr-icon').className = 'ti ti-refresh';
+  }, { passive: true });
+})();
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -483,6 +596,7 @@ function checkPin() {
 
 async function enterApp() {
   showScreen('screen-app');
+  updateCountdown();
   const badge = document.getElementById('app-role-badge');
   badge.textContent = currentRole.charAt(0).toUpperCase()+currentRole.slice(1);
   badge.className = 'role-badge badge-'+currentRole;
@@ -490,12 +604,27 @@ async function enterApp() {
   await loadApp();
 }
 
+const CACHE_KEY = 'safarnama_offline_v1';
+
+function saveOfflineCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({...data, cachedAt: new Date().toISOString()})); } catch(e) {}
+}
+
+function loadOfflineCache() {
+  try { const d = localStorage.getItem(CACHE_KEY); return d ? JSON.parse(d) : null; } catch(e) { return null; }
+}
+
 async function loadApp() {
+  // Try to load from cache first for instant display
+  const cache = loadOfflineCache();
+  if (cache && cache.trip) {
+    currentTrip = cache.trip;
+    showToast('Loaded from cache — refreshing…');
+    renderAll();
+  }
   try {
     let settings = [];
-    try {
-      settings = await sbGet('app_settings', 'limit=1');
-    } catch(e) { console.warn('Settings fetch failed:', e.message); }
+    try { settings = await sbGet('app_settings', 'limit=1'); } catch(e) {}
     if (settings && settings.length) {
       pins.owner = settings[0].pin_owner || '1111';
       pins.editor = settings[0].pin_editor || '2222';
@@ -504,20 +633,24 @@ async function loadApp() {
     const trips = await sbGet('trips', 'order=created_at.desc&limit=1');
     if (trips && trips.length) {
       currentTrip = trips[0];
+      saveOfflineCache({ trip: trips[0] });
       renderAll();
-    } else {
+    } else if (!cache) {
       renderNoTrip();
     }
   } catch(e) {
     const msg = e.message || 'Unknown error';
-    showToast('Error: ' + msg.substring(0, 60));
     console.error('loadApp error:', e);
-    document.getElementById('tab-itinerary').innerHTML = `<div class="no-trip">
-      <div class="no-trip-icon"><i class="ti ti-alert-circle"></i></div>
-      <h2>Connection error</h2>
-      <p style="font-family:monospace;font-size:11px;background:#f5f5f5;padding:12px;border-radius:8px;text-align:left;word-break:break-all">${msg}</p>
-      <button class="btn-primary" onclick="loadApp()" style="margin-top:16px">Retry</button>
-    </div>`;
+    if (!cache) {
+      document.getElementById('tab-itinerary').innerHTML = `<div class="no-trip">
+        <div class="no-trip-icon"><i class="ti ti-alert-circle"></i></div>
+        <h2>Connection error</h2>
+        <p style="font-size:11px;color:var(--text-3);padding:8px 0">${msg}</p>
+        <button class="btn-primary" onclick="loadApp()" style="margin-top:16px">Retry</button>
+      </div>`;
+    } else {
+      showToast('Offline — showing cached data');
+    }
   }
 }
 
@@ -535,7 +668,86 @@ function renderNoTrip() {
 
 async function renderAll() {
   renderBanner();
+  fetchWeather();
   await Promise.all([renderItinerary(), renderBookings(), renderEssentials(), renderShare()]);
+}
+
+const WEATHER_CITIES = [
+  {name:'Delhi', q:'Delhi'},
+  {name:'Katra', q:'Katra,India'},
+  {name:'Udaipur', q:'Udaipur'},
+  {name:'Leh', q:'Leh,India'},
+  {name:'Patiala', q:'Patiala'}
+];
+
+async function fetchWeather() {
+  const strip = document.getElementById('weather-strip');
+  if (!strip) return;
+  strip.innerHTML = WEATHER_CITIES.map(c=>`<div class="weather-chip-sm" id="wc-${c.name}"><div class="weather-city">${c.name}</div><div class="weather-temp">…</div></div>`).join('');
+  for (const city of WEATHER_CITIES) {
+    try {
+      const r = await fetch(`https://wttr.in/${encodeURIComponent(city.q)}?format=j1`);
+      const d = await r.json();
+      const cur = d.current_condition?.[0];
+      if (!cur) continue;
+      const temp = cur.temp_C + '°';
+      const desc = cur.weatherDesc?.[0]?.value || '';
+      const el = document.getElementById('wc-'+city.name);
+      if (el) el.innerHTML = `<div class="weather-city">${city.name}</div><div class="weather-temp">${temp}</div><div class="weather-desc">${desc.substring(0,12)}</div>`;
+    } catch(e) {}
+  }
+}
+
+function renderProgressBar(days, phases) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const tripStart = new Date(currentTrip.start_date);
+  const tripEnd = new Date(currentTrip.end_date);
+  const totalDays = Math.round((tripEnd - tripStart) / 86400000) + 1;
+  const elapsed = Math.max(0, Math.min(totalDays, Math.round((today - tripStart) / 86400000)));
+  const pct = Math.round((elapsed / totalDays) * 100);
+  const daysToGo = Math.max(0, Math.round((tripStart - today) / 86400000));
+  const inTrip = today >= tripStart && today <= tripEnd;
+  const done = today > tripEnd;
+
+  let statusLabel = '';
+  if (done) statusLabel = 'Trip complete ✓';
+  else if (inTrip) statusLabel = `Day ${elapsed + 1} of ${totalDays}`;
+  else statusLabel = `${daysToGo} day${daysToGo===1?'':'s'} to go`;
+
+  let subLabel = '';
+  if (inTrip) {
+    const todayDay = days.find(d => { const dd = new Date(d.date); dd.setHours(0,0,0,0); return dd.getTime() === today.getTime(); });
+    subLabel = todayDay ? `Today: ${todayDay.title}` : '';
+  } else if (!done) {
+    subLabel = `Departs ${tripStart.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'})}`;
+  }
+
+  const phasePips = phases.map(ph => {
+    const phDays = days.filter(d => d.phase_id === ph.id);
+    const phStart = phDays.length ? new Date(phDays[0].date) : null;
+    const phEnd = phDays.length ? new Date(phDays[phDays.length-1].date) : null;
+    const phDone = phEnd && today > phEnd;
+    const phActive = phStart && phEnd && today >= phStart && today <= phEnd;
+    const bg = phActive ? ph.color : phDone ? ph.color+'88' : 'var(--border)';
+    const col = phActive || phDone ? '#fff' : 'var(--text-3)';
+    return `<span class="progress-phase-pip" style="background:${bg};color:${col}">${ph.name.split(' ')[0]}</span>`;
+  }).join('');
+
+  const existing = document.getElementById('progress-bar-section');
+  const html = `<div class="progress-bar-wrap" id="progress-bar-section">
+    <div class="progress-bar-header">
+      <span class="progress-bar-label">${statusLabel}</span>
+      <span class="progress-bar-sub">${subLabel}</span>
+    </div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="progress-milestones">${phasePips}</div>
+  </div>`;
+  if (existing) { existing.outerHTML = html; }
+  else {
+    const inner = document.getElementById('itin-inner');
+    if (inner) inner.insertAdjacentHTML('beforebegin', html);
+  }
 }
 
 function renderBanner() {
@@ -559,12 +771,32 @@ async function renderItinerary() {
     const bookings = await sbGet('bookings', `trip_id=eq.${currentTrip.id}`);
 
     updateBookingPills(bookings);
+    renderProgressBar(days, phases);
 
     let html = '';
     for (const ph of phases) {
       const phDays = days.filter(d => d.phase_id === ph.id);
+      // Extract destination keyword from phase name for Unsplash
+      const phKeywords = {
+        'Zero-Leave Entry & Katra': 'vaishno+devi+katra+india',
+        'Vaishno Devi': 'vaishno+devi+shrine+india',
+        'Udaipur Anniversary': 'udaipur+lake+palace+india',
+        'Leh Valley': 'leh+ladakh+mountains+india',
+        "Noida Parents' Base": 'noida+delhi+india',
+        'Panipat · Patiala · Chandigarh': 'patiala+punjab+india'
+      };
+      const imgKey = phKeywords[ph.name] || encodeURIComponent(ph.name + ' india travel');
+      const imgUrl = `https://source.unsplash.com/800x300/?${imgKey}`;
       html += `<div class="phase-block">
-        <div class="phase-header-row">
+        <div style="position:relative;height:120px;border-radius:${12}px;overflow:hidden;margin-bottom:10px">
+          <img src="${imgUrl}" alt="${esc(ph.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,rgba(0,0,0,.1) 60%)"></div>
+          <div style="position:absolute;bottom:10px;left:12px;right:12px">
+            <div style="font-family:var(--font-brand);font-size:17px;font-weight:500;color:#fff;letter-spacing:.03em">${esc(ph.name)}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">${esc(ph.date_range||'')}</div>
+          </div>
+        </div>
+        <div class="phase-header-row" style="display:none">
           <div class="phase-pip" style="background:${esc(ph.color||'#0F6E56')}"></div>
           <span class="phase-lbl" style="color:${esc(ph.color||'#0F6E56')}">${esc(ph.name)}</span>
           <span class="phase-rng">${esc(ph.date_range||'')}</span>
@@ -627,8 +859,13 @@ async function renderItinerary() {
                 </div>`).join('') : `<div style="font-size:11px;color:var(--text-3);padding:4px 0">No bookings linked</div>`}
               ${currentRole!=='viewer' ? `<button class="btn-add-item" style="color:${phColor};font-size:11px;margin-top:4px" onclick="event.stopPropagation();quickLinkBooking('${d.id}','${esc(d.title)}')"><i class="ti ti-link"></i> Link a booking</button>` : ''}
             </div>
-            <div class="tip-section-label" style="color:${phColor}">💡 Tip for the day</div>
-            ${tipContent}
+            <div class="tip-section-label" style="color:${phColor};margin-bottom:4px">💡 Suggested tip</div>
+            <div class="tip-readonly" style="white-space:pre-wrap;margin-bottom:10px;font-size:11px;opacity:.85">${esc(d.tip||'No tip yet.')}</div>
+            <div class="tip-section-label" style="color:${phColor};margin-bottom:4px">📝 Your personal note</div>
+            ${canEdit
+              ? `<textarea class="tip-textarea" rows="2" oninput="debounceNote('${d.id}',this.value)" onblur="saveNote('${d.id}',this.value)" placeholder="Add your own note for this day…">${esc(d.note||'')}</textarea>`
+              : `<div class="tip-readonly" style="white-space:pre-wrap">${esc(d.note||'No note added.')}</div>`
+            }
           </div>
         </div>`;
       }
@@ -656,17 +893,24 @@ function toggleDay(id) {
   card.classList.toggle('has-open');
 }
 
-let tipTimers = {};
+let tipTimers = {}, noteTimers = {};
 function debounceTip(id, val) {
   clearTimeout(tipTimers[id]);
   tipTimers[id] = setTimeout(() => saveTip(id, val), 800);
 }
 async function saveTip(id, val) {
+  try { await sbPatch('days', id, { tip: val }); } catch(e) { showToast('Tip save failed'); }
+}
+function debounceNote(id, val) {
+  clearTimeout(noteTimers[id]);
+  noteTimers[id] = setTimeout(() => saveNote(id, val), 800);
+}
+async function saveNote(id, val) {
   try {
-    await sbPatch('days', id, { tip: val });
+    await sbPatch('days', id, { note: val });
     const ta = document.querySelector(`#dc-${id} .tip-textarea`);
-    if (ta) { ta.style.borderColor = 'var(--teal)'; setTimeout(()=>ta.style.borderColor='', 1000); }
-  } catch(e) { console.error(e); showToast('Tip save failed'); }
+    if (ta) { ta.style.borderColor = 'var(--teal)'; setTimeout(()=>{ if(ta) ta.style.borderColor=''; }, 1200); }
+  } catch(e) { showToast('Note save failed'); }
 }
 
 async function saveDay(id) {
@@ -772,6 +1016,7 @@ async function toggleStatus(id, current) {
     btn.setAttribute('onclick', `toggleStatus('${id}','${next}')`);
     const bookings = await sbGet('bookings', `trip_id=eq.${currentTrip.id}`);
     updateBookingPills(bookings);
+    renderProgressBar(days, phases);
     showToast(next === 'booked' ? 'Marked as booked ✓' : 'Marked as pending');
   } catch(e) { showToast('Update failed'); }
 }
@@ -1015,6 +1260,7 @@ async function deleteBooking(id) {
     document.getElementById('bkitem-'+id)?.remove();
     const bookings = await sbGet('bookings', `trip_id=eq.${currentTrip.id}`);
     updateBookingPills(bookings);
+    renderProgressBar(days, phases);
     showToast('Booking deleted');
   } catch(e) { showToast('Delete failed'); }
 }
@@ -1123,16 +1369,27 @@ async function renderShare() {
         <div class="share-card-title"><i class="ti ti-clipboard-list"></i>Pending bookings</div>
         <div class="share-card-desc">Share with your travel agent or family — shows only unconfirmed items.</div>
         <div class="share-preview">${esc(pendingText)}</div>
-        <button class="btn-copy" onclick="copyText(this, \`${escJs(pendingText)}\`)"><i class="ti ti-copy"></i> Copy</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-copy" onclick="copyText(this, \`${escJs(pendingText)}\`)"><i class="ti ti-copy"></i> Copy</button>
+          <button class="btn-copy" style="background:#25D366" onclick="shareWhatsApp(\`${escJs(pendingText)}\`)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+        </div>
       </div>
       <div class="share-card">
         <div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div>
         <div class="share-card-desc">All days, confirmed bookings, and tips — ready to forward.</div>
         <div class="share-preview">${esc(itinText)}</div>
-        <button class="btn-copy" onclick="copyText(this, \`${escJs(itinText)}\`)"><i class="ti ti-copy"></i> Copy</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-copy" onclick="copyText(this, \`${escJs(itinText)}\`)"><i class="ti ti-copy"></i> Copy</button>
+          <button class="btn-copy" style="background:#25D366" onclick="shareWhatsApp(\`${escJs(itinText)}\`)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+        </div>
       </div>
     </div>`;
   } catch(e) { console.error(e); }
+}
+
+function shareWhatsApp(text) {
+  const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
 }
 
 function copyText(btn, text) {
