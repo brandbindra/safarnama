@@ -132,7 +132,7 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .phase-rng{font-size:9px;color:var(--text-3);margin-left:auto}
 
 .day-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden;transition:border-color .15s}
-.day-card.has-open{border-color:var(--teal-border);border-left:3px solid var(--teal)}
+.day-card.has-open{border-color:var(--border)}
 .day-card-header{display:flex;align-items:stretch;cursor:pointer}
 .day-date-col{width:54px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;background:var(--cream-2);border-right:1px solid var(--border)}
 .day-wd{font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
@@ -196,6 +196,7 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .check-item:active{background:var(--cream-2)}
 .check-box{width:18px;height:18px;border:1.5px solid var(--border-2);border-radius:5px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s;color:#F0FAF7}
 .check-item.checked .check-box{background:var(--teal);border-color:var(--teal)}
+.check-item .check-box{transition:all .15s}
 .check-item.checked .check-text{text-decoration:line-through;color:var(--text-3)}
 .check-item.checked .check-sub{text-decoration:line-through}
 .check-text{font-size:13px;color:var(--text);flex:1}
@@ -570,11 +571,13 @@ async function renderItinerary() {
             <input class="day-edit-input" placeholder="Subtitle" value="${esc(d.subtitle||'')}" id="esub-${d.id}" style="flex:1.5">
             <button class="btn-save-day" onclick="saveDay('${d.id}')">Save</button>
           </div>` : '';
-        html += `<div class="day-card" id="dc-${d.id}">
+        const phColor = ph.color || '#0F6E56';
+        const phColorLight = phColor + '18';
+        html += `<div class="day-card" id="dc-${d.id}" style="border-left:3px solid ${phColor}">
           <div class="day-card-header" onclick="toggleDay('${d.id}')">
-            <div class="day-date-col">
+            <div class="day-date-col" style="background:${phColorLight}">
               <span class="day-wd">${esc(d.weekday||'')}</span>
-              <span class="day-num">${esc(d.date ? new Date(d.date).getDate().toString() : '')}</span>
+              <span class="day-num" style="color:${phColor}">${esc(d.date ? new Date(d.date).getDate().toString() : '')}</span>
               <span class="day-mo">${esc(d.date ? new Date(d.date).toLocaleString('en',{month:'short'}) : '')}</span>
             </div>
             <div class="day-body">
@@ -582,11 +585,11 @@ async function renderItinerary() {
               <div class="day-sub">${esc(d.subtitle||'')}</div>
               <div class="day-tags">${tags}</div>
             </div>
-            <div class="day-chevron"><i class="ti ti-chevron-down"></i></div>
+            <div class="day-chevron" style="color:${phColor}"><i class="ti ti-chevron-down"></i></div>
           </div>
-          <div class="day-expanded">
+          <div class="day-expanded" style="border-top:1px solid ${phColor}22">
             ${editRow}
-            <div class="tip-section-label">💡 Tip for the day</div>
+            <div class="tip-section-label" style="color:${phColor}">💡 Tip for the day</div>
             ${tipContent}
           </div>
         </div>`;
@@ -641,8 +644,10 @@ async function renderBookings() {
     let html = '<div class="bk-body">';
     for (const g of groups) {
       const icon = iconMap[g] || 'ti-bookmark';
+      const catColors = {'Flights':'#1A5FA8','Hotels':'#A05C10','Transfers & Taxis':'#2E7D52','Special Bookings':'#5B3FA8'};
+      const catColor = catColors[g] || '#0F6E56';
       html += `<div class="bk-group">
-        <div class="bk-group-title"><i class="ti ${icon}"></i>${g}</div>`;
+        <div class="bk-group-title" style="color:${catColor};border-bottom-color:${catColor}22"><i class="ti ${icon}" style="color:${catColor}"></i>${g}</div>`;
       for (const b of bookings.filter(bk=>bk.category===g)) {
         const refField = canEdit
           ? `<input class="bk-ref-input" placeholder="Booking ref / PNR…" value="${esc(b.ref||'')}" onchange="saveBookingRef('${b.id}',this.value)">`
@@ -650,9 +655,10 @@ async function renderBookings() {
         const statusBtn = canEdit
           ? `<button class="status-toggle ${b.status}" id="stbtn-${b.id}" onclick="toggleStatus('${b.id}','${b.status}')">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</button>`
           : `<span class="status-readonly ${b.status==='booked'?'dtag-booked':'dtag-pending'} dtag">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</span>`;
-        html += `<div class="bk-item ${b.status}" id="bkitem-${b.id}">
+        const itemBorder = b.status === 'booked' ? 'var(--teal)' : catColor;
+        html += `<div class="bk-item ${b.status}" id="bkitem-${b.id}" style="border-left-color:${itemBorder}">
           <div class="bk-item-top">
-            <div class="bk-ico"><i class="ti ${icon}"></i></div>
+            <div class="bk-ico" style="color:${catColor}"><i class="ti ${icon}"></i></div>
             <div class="bk-info">
               <div class="bk-title">${esc(b.title)}</div>
               <div class="bk-detail">${esc(b.detail||'')}</div>
@@ -696,21 +702,24 @@ async function renderEssentials() {
     const canEdit = currentRole === 'owner' || currentRole === 'editor';
     const cats = [...new Set(items.map(i=>i.category))];
     const catIcons = { 'Documents':'ti-id', 'Packing — all phases':'ti-backpack', 'Packing — mountain':'ti-mountain', 'Packing — formal':'ti-tie', 'Packing — home stays':'ti-home', 'Health & safety':'ti-first-aid-kit', 'General':'ti-checklist' };
+    const catColors2 = { 'Documents':'#1A5FA8', 'Packing — all phases':'#0F6E56', 'Packing — mountain':'#5B3FA8', 'Packing — formal':'#A05C10', 'Packing — home stays':'#2E7D52', 'Health & safety':'#B83230', 'General':'#444' };
     let html = '<div class="ess-body">';
     for (const cat of cats) {
       const catItems = items.filter(i=>i.category===cat);
       const icon = catIcons[cat] || 'ti-checklist';
-      const addBtn = canEdit ? `<button class="btn-add-item" onclick="showAddItem('${esc(cat)}')"><i class="ti ti-plus"></i> Add</button>` : '';
+      const cc = catColors2[cat] || '#0F6E56';
+      const checked = catItems.filter(i=>i.checked).length;
+      const addBtn = canEdit ? `<button class="btn-add-item" onclick="showAddItem('${esc(cat)}')" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>` : '';
       html += `<div class="ess-section">
         <div class="ess-section-header">
-          <div class="ess-section-title"><i class="ti ${icon}"></i>${esc(cat)}</div>
+          <div class="ess-section-title" style="color:${cc}"><i class="ti ${icon}" style="color:${cc}"></i>${esc(cat)} <span style="font-weight:400;color:#9A9890;margin-left:4px">${checked}/${catItems.length}</span></div>
           ${addBtn}
         </div>
         <div class="checklist" id="cl-${btoa(cat).replace(/=/g,'')}">`;
       for (const item of catItems) {
         const delBtn = canEdit ? `<span class="check-del" onclick="deleteEssential(event,'${item.id}','${esc(cat)}')"><i class="ti ti-x"></i></span>` : '';
-        html += `<div class="check-item ${item.checked?'checked':''}" id="ci-${item.id}" onclick="toggleEssential('${item.id}',${item.checked})">
-          <div class="check-box">${item.checked?'<i class="ti ti-check"></i>':''}</div>
+        html += `<div class="check-item ${item.checked?'checked':''}" id="ci-${item.id}" onclick="toggleEssential('${item.id}',${item.checked},'${cc}')">
+          <div class="check-box" style="${item.checked?'background:'+cc+';border-color:'+cc:''}">${item.checked?'<i class="ti ti-check"></i>':''}</div>
           <div style="flex:1"><div class="check-text">${esc(item.item)}</div></div>
           ${delBtn}
         </div>`;
@@ -748,13 +757,16 @@ async function confirmAddItem(cat) {
   } catch(e) { showToast('Failed to add item'); }
 }
 
-async function toggleEssential(id, current) {
+async function toggleEssential(id, current, color) {
   try {
     await sbPatch('essentials', id, { checked: !current });
     const ci = document.getElementById('ci-'+id);
     ci.classList.toggle('checked', !current);
-    ci.querySelector('.check-box').innerHTML = !current ? '<i class="ti ti-check"></i>' : '';
-    ci.setAttribute('onclick', `toggleEssential('${id}',${!current})`);
+    const box = ci.querySelector('.check-box');
+    box.innerHTML = !current ? '<i class="ti ti-check"></i>' : '';
+    box.style.background = !current ? (color||'var(--teal)') : '';
+    box.style.borderColor = !current ? (color||'var(--teal)') : '';
+    ci.setAttribute('onclick', `toggleEssential('${id}',${!current},'${color||''}')`);
   } catch(e) {}
 }
 
