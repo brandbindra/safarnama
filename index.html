@@ -38,34 +38,7 @@
   --r:          12px;
   --r-sm:       8px;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --teal:       #1D9E75;
-    --teal-dark:  #9FE1CB;
-    --teal-mid:   #5DCAA5;
-    --teal-light: #0A3D2E;
-    --teal-pale:  #0D2E28;
-    --teal-border:#0F6E56;
-    --cream:      #0D1A16;
-    --cream-2:    #132318;
-    --cream-3:    #0A1A12;
-    --border:     #1A3A2A;
-    --border-2:   #2A5A3A;
-    --text:       #E0F5EE;
-    --text-2:     #9FE1CB;
-    --text-3:     #4A8A72;
-    --text-4:     #2A5A3A;
-    --amber:      #F0C060;
-    --amber-light:#2A1A00;
-    --amber-dark: #F0C060;
-    --amber-border:#5A3A00;
-    --green:      #9FE1CB;
-    --green-light:#0A3D2E;
-    --green-border:#0F6E56;
-    --red:        #FF6B6B;
-    --red-light:  #3D0A0A;
-  }
-}
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-size:14px;line-height:1.5;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
@@ -346,9 +319,8 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 
 <!-- PIN -->
 <div id="screen-pin" class="screen">
-  <div style="text-align:center;margin-bottom:6px">
-  <div style="font-family:var(--font-ui);font-size:9px;font-weight:500;color:var(--teal);letter-spacing:.26em;text-transform:uppercase;margin-bottom:3px">M A N I S H</div>
-  <div class="pin-logo">Explores</div>
+  <div style="text-align:center;margin-bottom:6px;font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:.06em">
+  <span style="font-weight:600;color:var(--text)">Manish</span> <span style="font-weight:400;color:var(--teal)">Explores</span>
 </div>
   <div class="pin-role-name" id="pin-role-label">Owner PIN</div>
   <div class="pin-dots">
