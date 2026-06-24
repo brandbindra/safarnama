@@ -647,7 +647,10 @@ async function renderBookings() {
       const catColors = {'Flights':'#1A5FA8','Hotels':'#A05C10','Transfers & Taxis':'#2E7D52','Special Bookings':'#5B3FA8'};
       const catColor = catColors[g] || '#0F6E56';
       html += `<div class="bk-group">
-        <div class="bk-group-title" style="color:${catColor};border-bottom-color:${catColor}22"><i class="ti ${icon}" style="color:${catColor}"></i>${g}</div>`;
+        <div class="bk-group-title" style="color:${catColor};border-bottom-color:${catColor}22;display:flex;align-items:center;justify-content:space-between">
+          <span><i class="ti ${icon}" style="color:${catColor};margin-right:6px"></i>${g}</span>
+          ${isOwner ? `<button class="btn-add-item" style="color:${catColor};font-size:11px" onclick="addBooking('${g}','${icon}','${catColor}')"><i class="ti ti-plus"></i> Add</button>` : ''}
+        </div>`;
       for (const b of bookings.filter(bk=>bk.category===g)) {
         const refField = canEdit
           ? `<input class="bk-ref-input" placeholder="Booking ref / PNR…" value="${esc(b.ref||'')}" onchange="saveBookingRef('${b.id}',this.value)">`
@@ -656,13 +659,25 @@ async function renderBookings() {
           ? `<button class="status-toggle ${b.status}" id="stbtn-${b.id}" onclick="toggleStatus('${b.id}','${b.status}')">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</button>`
           : `<span class="status-readonly ${b.status==='booked'?'dtag-booked':'dtag-pending'} dtag">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</span>`;
         const itemBorder = b.status === 'booked' ? 'var(--teal)' : catColor;
+        const editFields = isOwner ? `
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input class="bk-ref-input" placeholder="Title" value="${esc(b.title)}" id="btitle-${b.id}" onchange="saveBookingField('${b.id}','title',this.value)" style="font-weight:600">
+            <input class="bk-ref-input" placeholder="Detail / dates" value="${esc(b.detail||'')}" id="bdetail-${b.id}" onchange="saveBookingField('${b.id}','detail',this.value)">
+          </div>` : '';
+        const delBtn2 = isOwner ? `<button class="btn-del" onclick="deleteBooking('${b.id}')" style="color:var(--text-3);background:none;border:none;cursor:pointer;font-size:18px;padding:0 4px"><i class="ti ti-trash"></i></button>` : '';
         html += `<div class="bk-item ${b.status}" id="bkitem-${b.id}" style="border-left-color:${itemBorder}">
           <div class="bk-item-top">
             <div class="bk-ico" style="color:${catColor}"><i class="ti ${icon}"></i></div>
-            <div class="bk-info">
-              <div class="bk-title">${esc(b.title)}</div>
-              <div class="bk-detail">${esc(b.detail||'')}</div>
+            <div class="bk-info" style="flex:1">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between">
+                <div>
+                  <div class="bk-title">${esc(b.title)}</div>
+                  <div class="bk-detail">${esc(b.detail||'')}</div>
+                </div>
+                ${delBtn2}
+              </div>
               ${b.claude_tip ? `<span class="bk-tip">💡 ${esc(b.claude_tip)}</span>` : ''}
+              ${editFields}
             </div>
           </div>
           <div class="bk-actions">${refField}${statusBtn}</div>
@@ -695,29 +710,34 @@ async function toggleStatus(id, current) {
   } catch(e) { showToast('Update failed'); }
 }
 
+const ESS_CAT_ICONS  = { 'Documents':'ti-id', 'Packing — all phases':'ti-backpack', 'Packing — mountain':'ti-mountain', 'Packing — formal':'ti-tie', 'Packing — home stays':'ti-home', 'Health & safety':'ti-first-aid-kit', 'General':'ti-checklist' };
+const ESS_CAT_COLORS = { 'Documents':'#1A5FA8', 'Packing — all phases':'#0F6E56', 'Packing — mountain':'#5B3FA8', 'Packing — formal':'#A05C10', 'Packing — home stays':'#2E7D52', 'Health & safety':'#B83230', 'General':'#444' };
+let essCatIndex = {};
+
 async function renderEssentials() {
   if (!currentTrip) return;
   try {
     const items = await sbGet('essentials', `trip_id=eq.${currentTrip.id}&order=sort_order.asc`);
     const canEdit = currentRole === 'owner' || currentRole === 'editor';
     const cats = [...new Set(items.map(i=>i.category))];
-    const catIcons = { 'Documents':'ti-id', 'Packing — all phases':'ti-backpack', 'Packing — mountain':'ti-mountain', 'Packing — formal':'ti-tie', 'Packing — home stays':'ti-home', 'Health & safety':'ti-first-aid-kit', 'General':'ti-checklist' };
-    const catColors2 = { 'Documents':'#1A5FA8', 'Packing — all phases':'#0F6E56', 'Packing — mountain':'#5B3FA8', 'Packing — formal':'#A05C10', 'Packing — home stays':'#2E7D52', 'Health & safety':'#B83230', 'General':'#444' };
+    essCatIndex = {};
+    cats.forEach((c,i) => essCatIndex[i] = c);
     let html = '<div class="ess-body">';
-    for (const cat of cats) {
+    for (let ci=0; ci<cats.length; ci++) {
+      const cat = cats[ci];
       const catItems = items.filter(i=>i.category===cat);
-      const icon = catIcons[cat] || 'ti-checklist';
-      const cc = catColors2[cat] || '#0F6E56';
+      const icon = ESS_CAT_ICONS[cat] || 'ti-checklist';
+      const cc = ESS_CAT_COLORS[cat] || '#0F6E56';
       const checked = catItems.filter(i=>i.checked).length;
-      const addBtn = canEdit ? `<button class="btn-add-item" onclick="showAddItem('${esc(cat)}')" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>` : '';
+      const addBtn = canEdit ? `<button class="btn-add-item" onclick="showAddItem(${ci})" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>` : '';
       html += `<div class="ess-section">
         <div class="ess-section-header">
-          <div class="ess-section-title" style="color:${cc}"><i class="ti ${icon}" style="color:${cc}"></i>${esc(cat)} <span style="font-weight:400;color:#9A9890;margin-left:4px">${checked}/${catItems.length}</span></div>
+          <div class="ess-section-title" style="color:${cc}"><i class="ti ${icon}" style="color:${cc}"></i>&nbsp;${esc(cat)}&nbsp;<span style="font-weight:400;color:#9A9890">${checked}/${catItems.length}</span></div>
           ${addBtn}
         </div>
-        <div class="checklist" id="cl-${btoa(cat).replace(/=/g,'')}">`;
+        <div class="checklist" id="esslist-${ci}">`;
       for (const item of catItems) {
-        const delBtn = canEdit ? `<span class="check-del" onclick="deleteEssential(event,'${item.id}','${esc(cat)}')"><i class="ti ti-x"></i></span>` : '';
+        const delBtn = canEdit ? `<span class="check-del" onclick="deleteEssential(event,'${item.id}')"><i class="ti ti-x"></i></span>` : '';
         html += `<div class="check-item ${item.checked?'checked':''}" id="ci-${item.id}" onclick="toggleEssential('${item.id}',${item.checked},'${cc}')">
           <div class="check-box" style="${item.checked?'background:'+cc+';border-color:'+cc:''}">${item.checked?'<i class="ti ti-check"></i>':''}</div>
           <div style="flex:1"><div class="check-text">${esc(item.item)}</div></div>
@@ -725,28 +745,30 @@ async function renderEssentials() {
         </div>`;
       }
       if (canEdit) {
-        html += `<div class="add-item-row" id="add-row-${btoa(cat).replace(/=/g,'')} " style="display:none">
-          <input class="add-item-input" id="add-input-${btoa(cat).replace(/=/g,'')} " placeholder="New item…" onkeydown="if(event.key==='Enter')confirmAddItem('${esc(cat)}')">
-          <button class="btn-add-confirm" onclick="confirmAddItem('${esc(cat)}')">Add</button>
+        html += `<div class="add-item-row" id="essadd-${ci}" style="display:none">
+          <input class="add-item-input" id="essinput-${ci}" placeholder="New item…" onkeydown="if(event.key==='Enter')confirmAddItem(${ci})">
+          <button class="btn-add-confirm" style="background:${cc}" onclick="confirmAddItem(${ci})">Add</button>
         </div>`;
       }
       html += '</div></div>';
     }
     html += '</div>';
     document.getElementById('tab-essentials').innerHTML = html;
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('renderEssentials error:', e); document.getElementById('tab-essentials').innerHTML = `<div class="no-trip"><p style="color:red;padding:20px">${e.message}</p></div>`; }
 }
 
-function showAddItem(cat) {
-  const key = btoa(cat).replace(/=/g,'');
-  const row = document.getElementById('add-row-'+key+' ');
-  if (row) { row.style.display = row.style.display==='none'?'flex':'none'; if(row.style.display==='flex') document.getElementById('add-input-'+key+' ').focus(); }
+function showAddItem(ci) {
+  const row = document.getElementById('essadd-'+ci);
+  if (!row) return;
+  const visible = row.style.display === 'flex';
+  row.style.display = visible ? 'none' : 'flex';
+  if (!visible) document.getElementById('essinput-'+ci)?.focus();
 }
 
-async function confirmAddItem(cat) {
-  const key = btoa(cat).replace(/=/g,'');
-  const input = document.getElementById('add-input-'+key+' ');
-  if (!input || !input.value.trim()) return;
+async function confirmAddItem(ci) {
+  const cat = essCatIndex[ci];
+  const input = document.getElementById('essinput-'+ci);
+  if (!input || !input.value.trim() || !cat) return;
   try {
     const existing = await sbGet('essentials', `trip_id=eq.${currentTrip.id}&category=eq.${encodeURIComponent(cat)}&order=sort_order.desc&limit=1`);
     const nextOrder = existing.length ? (existing[0].sort_order||0)+1 : 100;
@@ -770,13 +792,62 @@ async function toggleEssential(id, current, color) {
   } catch(e) {}
 }
 
-async function deleteEssential(e, id, cat) {
+async function deleteEssential(e, id) {
   e.stopPropagation();
   try {
     await sbDelete('essentials', 'id', id);
     document.getElementById('ci-'+id)?.remove();
     showToast('Item removed');
   } catch(e) { showToast('Failed'); }
+}
+
+async function saveBookingField(id, field, val) {
+  try {
+    await sbPatch('bookings', id, { [field]: val });
+    if (field === 'title') {
+      const el = document.querySelector(`#bkitem-${id} .bk-title`);
+      if (el) el.textContent = val;
+    }
+    if (field === 'detail') {
+      const el = document.querySelector(`#bkitem-${id} .bk-detail`);
+      if (el) el.textContent = val;
+    }
+  } catch(e) { showToast('Save failed'); }
+}
+
+async function deleteBooking(id) {
+  if (!confirm('Delete this booking?')) return;
+  try {
+    await sbDelete('bookings', 'id', id);
+    document.getElementById('bkitem-'+id)?.remove();
+    const bookings = await sbGet('bookings', `trip_id=eq.${currentTrip.id}`);
+    updateBookingPills(bookings);
+    showToast('Booking deleted');
+  } catch(e) { showToast('Delete failed'); }
+}
+
+async function addBooking(category, icon, color) {
+  const title = prompt('Booking name (e.g. "Hotel Vivanta Katra — 2 nights"):');
+  if (!title || !title.trim()) return;
+  const detail = prompt('Details (e.g. "Aug 1–3 · Katra"):') || '';
+  try {
+    const existing = await sbGet('bookings', `trip_id=eq.${currentTrip.id}&category=eq.${encodeURIComponent(category)}&order=sort_order.desc&limit=1`);
+    const nextOrder = existing.length ? (existing[0].sort_order||0)+1 : 100;
+    await sbPost('bookings', {
+      trip_id: currentTrip.id,
+      category,
+      icon,
+      title: title.trim(),
+      detail: detail.trim(),
+      claude_tip: '',
+      status: 'pending',
+      ref: '',
+      cost: 0,
+      sort_order: nextOrder
+    });
+    await renderBookings();
+    showToast('Booking added');
+  } catch(e) { showToast('Failed to add booking'); }
 }
 
 async function renderShare() {
