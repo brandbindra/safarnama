@@ -478,7 +478,10 @@ async function enterApp() {
 
 async function loadApp() {
   try {
-    const settings = await sbGet('app_settings', 'order=created_at.desc&limit=1');
+    let settings = [];
+    try {
+      settings = await sbGet('app_settings', 'order=created_at.desc&limit=1');
+    } catch(e) { console.warn('Settings fetch failed:', e.message); }
     if (settings && settings.length) {
       pins.owner = settings[0].pin_owner || '1111';
       pins.editor = settings[0].pin_editor || '2222';
@@ -491,7 +494,17 @@ async function loadApp() {
     } else {
       renderNoTrip();
     }
-  } catch(e) { showToast('Connection error — check Supabase'); console.error(e); }
+  } catch(e) {
+    const msg = e.message || 'Unknown error';
+    showToast('Error: ' + msg.substring(0, 60));
+    console.error('loadApp error:', e);
+    document.getElementById('tab-itinerary').innerHTML = `<div class="no-trip">
+      <div class="no-trip-icon"><i class="ti ti-alert-circle"></i></div>
+      <h2>Connection error</h2>
+      <p style="font-family:monospace;font-size:11px;background:#f5f5f5;padding:12px;border-radius:8px;text-align:left;word-break:break-all">${msg}</p>
+      <button class="btn-primary" onclick="loadApp()" style="margin-top:16px">Retry</button>
+    </div>`;
+  }
 }
 
 function renderNoTrip() {
