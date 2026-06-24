@@ -684,8 +684,8 @@ function renderNoTrip() {
 
 async function renderAll() {
   renderBanner();
-  fetchWeather();
   await Promise.all([renderItinerary(), renderBookings(), renderEssentials(), renderShare()]);
+  setTimeout(fetchWeather, 500);
 }
 
 const WEATHER_CITIES = [
@@ -703,7 +703,7 @@ async function fetchWeather() {
   strip.innerHTML = WEATHER_CITIES.map(c =>
     `<div class="weather-chip-sm" id="wc-${c.name}">
       <div class="weather-city">${c.name}</div>
-      <div class="weather-temp">–</div>
+      <div class="weather-temp" style="font-size:11px;color:var(--text-3)">...</div>
     </div>`
   ).join('');
   // Fetch each city individually to avoid array response issues
@@ -768,10 +768,10 @@ function renderProgressBar(days, phases) {
   }).join('');
 
   const existing = document.getElementById('progress-bar-section');
-  const html = `<div class="progress-bar-wrap" id="progress-bar-section">
-    <div class="progress-bar-header">
-      <span class="progress-bar-label">${statusLabel}</span>
-      <span class="progress-bar-sub">${subLabel}</span>
+  const html = `<div class="progress-bar-wrap" id="progress-bar-section" style="padding:12px 14px 10px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:15px;font-weight:700;color:var(--teal);font-family:var(--font-brand)">${statusLabel}</span>
+      <span style="font-size:11px;color:var(--text-3);background:var(--cream-2);padding:2px 8px;border-radius:20px;border:1px solid var(--border)">${subLabel}</span>
     </div>
     <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
     <div class="progress-milestones">${phasePips}</div>
@@ -809,24 +809,32 @@ async function renderItinerary() {
     let html = '';
     for (const ph of phases) {
       const phDays = days.filter(d => d.phase_id === ph.id);
-      // Reliable travel photos via Teleport/Pexels CDN with fixed IDs
-      const phImages = {
-        'Zero-Leave Entry & Katra':       'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop',
-        'Vaishno Devi':                   'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop',
-        'Udaipur Anniversary':            'https://images.pexels.com/photos/3573382/pexels-photo-3573382.jpeg?w=800&h=300&fit=crop',
-        'Leh Valley':                     'https://images.pexels.com/photos/2108845/pexels-photo-2108845.jpeg?w=800&h=300&fit=crop',
-        "Noida Parents' Base":            'https://images.pexels.com/photos/1007426/pexels-photo-1007426.jpeg?w=800&h=300&fit=crop',
-        'Panipat · Patiala · Chandigarh': 'https://images.pexels.com/photos/3581368/pexels-photo-3581368.jpeg?w=800&h=300&fit=crop'
-      };
-      const imgUrl = phImages[ph.name] || `https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop`;
+      const hasPhoto = ph.photo_url;
+      const uploadBtn = (currentRole === 'owner') ? `
+        <label style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.45);color:#fff;border-radius:6px;padding:4px 9px;font-size:9px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;letter-spacing:.04em">
+          <i class="ti ti-camera" style="font-size:12px"></i>${hasPhoto?'Change':'Add photo'}
+          <input type="file" accept="image/*" style="display:none" onchange="uploadPhasePhoto('${ph.id}',this)">
+        </label>` : '';
       html += `<div class="phase-block">
-        <div style="position:relative;height:120px;border-radius:${12}px;overflow:hidden;margin-bottom:10px">
-          <img src="${imgUrl}" alt="${esc(ph.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'">
-          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,rgba(0,0,0,.1) 60%)"></div>
-          <div style="position:absolute;bottom:10px;left:12px;right:12px">
-            <div style="font-family:var(--font-brand);font-size:17px;font-weight:500;color:#fff;letter-spacing:.03em">${esc(ph.name)}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">${esc(ph.date_range||'')}</div>
-          </div>
+        <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;background:${ph.color||'#0F6E56'}22;border:1px solid ${ph.color||'#0F6E56'}33">
+          ${hasPhoto
+            ? `<img src="${esc(ph.photo_url)}" alt="${esc(ph.name)}" style="width:100%;height:130px;object-fit:cover;display:block">
+               <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%)"></div>
+               <div style="position:absolute;bottom:10px;left:12px;right:80px">
+                 <div style="font-family:var(--font-brand);font-size:18px;font-weight:500;color:#fff;letter-spacing:.03em">${esc(ph.name)}</div>
+                 <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">${esc(ph.date_range||'')}</div>
+               </div>`
+            : `<div style="padding:14px 14px 12px;display:flex;align-items:center;gap:10px">
+                 <div style="width:38px;height:38px;border-radius:50%;background:${ph.color||'#0F6E56'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                   <i class="ti ti-map-pin" style="color:#fff;font-size:18px"></i>
+                 </div>
+                 <div>
+                   <div style="font-family:var(--font-brand);font-size:17px;font-weight:500;color:${ph.color||'#0F6E56'}">${esc(ph.name)}</div>
+                   <div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>
+                 </div>
+               </div>`
+          }
+          ${uploadBtn}
         </div>
         <div class="phase-header-row" style="display:none">
           <div class="phase-pip" style="background:${esc(ph.color||'#0F6E56')}"></div>
@@ -1369,6 +1377,22 @@ async function openLinkFromBooking(bookingId) {
     document.getElementById('link-booking-list').innerHTML = html;
     openModal('modal-link');
   } catch(e) { showToast('Failed'); console.error(e); }
+}
+
+async function uploadPhasePhoto(phaseId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2000000) { showToast('Photo too large — max 2MB'); return; }
+  showToast('Uploading photo…');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      await sbPatch('phases', phaseId, { photo_url: e.target.result });
+      showToast('Photo saved ✓');
+      await renderItinerary();
+    } catch(err) { showToast('Upload failed'); console.error(err); }
+  };
+  reader.readAsDataURL(file);
 }
 
 async function uploadAttachment(bookingId, input) {
