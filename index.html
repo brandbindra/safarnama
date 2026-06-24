@@ -157,8 +157,8 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .progress-bar-sub{font-size:10px;color:var(--text-3)}
 .progress-bar-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px}
 .progress-bar-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .6s ease}
-.progress-milestones{display:flex;gap:4px;flex-wrap:wrap}
-.progress-phase-pip{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:.03em}
+.progress-milestones{display:none}
+.progress-phase-pip{display:none}
 .itin-body{padding:12px 14px}
 .phase-block{margin-bottom:20px}
 .phase-header-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -688,7 +688,6 @@ async function renderAll() {
   await Promise.all([renderItinerary(), renderBookings(), renderEssentials(), renderShare()]);
 }
 
-// open-meteo.com — no API key, no CORS issues
 const WEATHER_CITIES = [
   {name:'Delhi',   lat:28.6139, lon:77.2090},
   {name:'Katra',   lat:32.9916, lon:74.9320},
@@ -696,30 +695,36 @@ const WEATHER_CITIES = [
   {name:'Leh',     lat:34.1526, lon:77.5771},
   {name:'Patiala', lat:30.3398, lon:76.3869}
 ];
-
-const WMO_ICONS = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'❄️',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
+const WMO_ICONS = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'❄️',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈'};
 
 async function fetchWeather() {
   const strip = document.getElementById('weather-strip');
   if (!strip) return;
-  strip.innerHTML = WEATHER_CITIES.map(c=>`<div class="weather-chip-sm" id="wc-${c.name}"><div class="weather-city">${c.name}</div><div class="weather-temp" style="font-size:13px">…</div></div>`).join('');
-  try {
-    const lats = WEATHER_CITIES.map(c=>c.lat).join(',');
-    const lons = WEATHER_CITIES.map(c=>c.lon).join(',');
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current_weather=true&timezone=auto`;
-    const r = await fetch(url);
-    const results = await r.json();
-    // open-meteo returns array when multiple locations
-    const arr = Array.isArray(results) ? results : [results];
-    arr.forEach((d, i) => {
-      const city = WEATHER_CITIES[i];
-      if (!city || !d.current_weather) return;
-      const temp = Math.round(d.current_weather.temperature) + '°C';
-      const icon = WMO_ICONS[d.current_weather.weathercode] || '🌡';
-      const el = document.getElementById('wc-'+city.name);
-      if (el) el.innerHTML = `<div class="weather-city">${city.name}</div><div class="weather-temp">${icon} ${temp}</div>`;
-    });
-  } catch(e) { console.warn('Weather fetch failed:', e); }
+  strip.innerHTML = WEATHER_CITIES.map(c =>
+    `<div class="weather-chip-sm" id="wc-${c.name}">
+      <div class="weather-city">${c.name}</div>
+      <div class="weather-temp">–</div>
+    </div>`
+  ).join('');
+  // Fetch each city individually to avoid array response issues
+  for (const city of WEATHER_CITIES) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true&timezone=auto`;
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const cw = d.current_weather;
+      if (!cw) continue;
+      const temp = Math.round(cw.temperature) + '°';
+      const icon = WMO_ICONS[cw.weathercode] || '🌡';
+      const el = document.getElementById('wc-' + city.name);
+      if (el) el.innerHTML = `
+        <div class="weather-city">${city.name}</div>
+        <div class="weather-temp">${icon}${temp}</div>`;
+    } catch(e) {
+      console.warn('Weather failed for', city.name, e.message);
+    }
+  }
 }
 
 function renderProgressBar(days, phases) {
@@ -804,16 +809,16 @@ async function renderItinerary() {
     let html = '';
     for (const ph of phases) {
       const phDays = days.filter(d => d.phase_id === ph.id);
-      // Curated Wikimedia/public domain images per phase
+      // Reliable travel photos via Teleport/Pexels CDN with fixed IDs
       const phImages = {
-        'Zero-Leave Entry & Katra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Vaishno_Devi_Shrine.jpg/800px-Vaishno_Devi_Shrine.jpg',
-        'Vaishno Devi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Vaishno_Devi_Shrine.jpg/800px-Vaishno_Devi_Shrine.jpg',
-        'Udaipur Anniversary': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Lake_Pichola_with_City_Palace_Udaipur.jpg/800px-Lake_Pichola_with_City_Palace_Udaipur.jpg',
-        'Leh Valley': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Thikse_Monastery_Ladakh_India.jpg/800px-Thikse_Monastery_Ladakh_India.jpg',
-        "Noida Parents' Base": 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Delhi_India.jpg/800px-Delhi_India.jpg',
-        'Panipat · Patiala · Chandigarh': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Qila_Mubarak_Patiala.jpg/800px-Qila_Mubarak_Patiala.jpg'
+        'Zero-Leave Entry & Katra':       'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop',
+        'Vaishno Devi':                   'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop',
+        'Udaipur Anniversary':            'https://images.pexels.com/photos/3573382/pexels-photo-3573382.jpeg?w=800&h=300&fit=crop',
+        'Leh Valley':                     'https://images.pexels.com/photos/2108845/pexels-photo-2108845.jpeg?w=800&h=300&fit=crop',
+        "Noida Parents' Base":            'https://images.pexels.com/photos/1007426/pexels-photo-1007426.jpeg?w=800&h=300&fit=crop',
+        'Panipat · Patiala · Chandigarh': 'https://images.pexels.com/photos/3581368/pexels-photo-3581368.jpeg?w=800&h=300&fit=crop'
       };
-      const imgUrl = phImages[ph.name] || `https://picsum.photos/seed/${encodeURIComponent(ph.name)}/800/300`;
+      const imgUrl = phImages[ph.name] || `https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?w=800&h=300&fit=crop`;
       html += `<div class="phase-block">
         <div style="position:relative;height:120px;border-radius:${12}px;overflow:hidden;margin-bottom:10px">
           <img src="${imgUrl}" alt="${esc(ph.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'">
