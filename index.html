@@ -801,16 +801,26 @@ async function renderItinerary() {
             ? `<img src="${esc(ph.photo_url)}" alt="${esc(ph.name)}" style="width:100%;height:130px;object-fit:cover;display:block">
                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%)"></div>
                <div style="position:absolute;bottom:10px;left:12px;right:80px">
-                 <div style="font-family:var(--font-brand);font-size:18px;font-weight:500;color:#fff;letter-spacing:.03em">${esc(ph.name)}</div>
-                 <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">${esc(ph.date_range||'')}</div>
+                 ${currentRole==='owner'
+                   ? `<input value="${esc(ph.name)}" style="font-family:var(--font-brand);font-size:18px;font-weight:500;color:#fff;letter-spacing:.03em;border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePhaseName('${ph.id}','name',this.value)">
+                      <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:rgba(255,255,255,.7);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePhaseName('${ph.id}','date_range',this.value)">`
+                   : `<div style="font-family:var(--font-brand);font-size:18px;font-weight:500;color:#fff;letter-spacing:.03em">${esc(ph.name)}</div>
+                      <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">${esc(ph.date_range||'')}</div>`
+                 }
                </div>`
-            : `<div style="padding:14px 14px 12px;display:flex;align-items:center;gap:10px">
-                 <div style="width:38px;height:38px;border-radius:50%;background:${ph.color||'#0F6E56'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                   <i class="ti ti-map-pin" style="color:#fff;font-size:18px"></i>
+            : `<div style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+                 <div style="width:36px;height:36px;border-radius:50%;background:${ph.color||'#0F6E56'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                   <i class="ti ti-map-pin" style="color:#fff;font-size:16px"></i>
                  </div>
-                 <div>
-                   <div style="font-family:var(--font-brand);font-size:17px;font-weight:500;color:${ph.color||'#0F6E56'}">${esc(ph.name)}</div>
-                   <div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>
+                 <div style="flex:1;min-width:0">
+                   ${currentRole==='owner'
+                     ? `<input value="${esc(ph.name)}" style="font-family:var(--font-brand);font-size:16px;font-weight:500;color:${ph.color||'#0F6E56'};border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePhaseName('${ph.id}','name',this.value)" placeholder="Phase name">`
+                     : `<div style="font-family:var(--font-brand);font-size:17px;font-weight:500;color:${ph.color||'#0F6E56'}">${esc(ph.name)}</div>`
+                   }
+                   ${currentRole==='owner'
+                     ? `<input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePhaseName('${ph.id}','date_range',this.value)" placeholder="Date range e.g. Jul 31 – Aug 1">`
+                     : `<div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>`
+                   }
                  </div>
                </div>`
           }
@@ -1357,6 +1367,13 @@ async function openLinkFromBooking(bookingId) {
     document.getElementById('link-booking-list').innerHTML = html;
     openModal('modal-link');
   } catch(e) { showToast('Failed'); console.error(e); }
+}
+
+async function savePhaseName(phaseId, field, val) {
+  try {
+    await sbPatch('phases', phaseId, { [field]: val });
+    showToast('Phase updated ✓');
+  } catch(e) { showToast('Save failed'); }
 }
 
 async function uploadPhasePhoto(phaseId, input) {
