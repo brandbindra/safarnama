@@ -123,8 +123,8 @@ body{font-family:var(--font-ui);background:var(--cream);color:var(--text);font-s
 .badge-editor{background:#E6F5F2;color:#085041;border-color:#5DCAA5}
 .badge-viewer{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
 .app-tabs{display:flex}
-.app-tab{flex:1;text-align:center;padding:8px 2px;font-size:11px;font-weight:500;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
-.app-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.app-tab{flex:1;text-align:center;padding:10px 4px;font-size:12px;font-weight:500;color:var(--text-2);border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
+.app-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
 
 .tab-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .tab-panel{display:none;padding-bottom:20px}
@@ -507,13 +507,16 @@ function updateCountdownLogin() {
   const end = new Date(trip.end_date); end.setHours(0,0,0,0);
   const diff = Math.round((start - today) / 86400000);
   const totalDays = Math.round((end - start) / 86400000) + 1;
-  if (diff > 0) el.textContent = diff + ' day' + (diff===1?'':'s') + ' to departure ✈';
-  else if (diff === 0) el.textContent = 'Departure day! ✈';
-  else if (today <= end) {
+  if (diff > 0) {
+    el.innerHTML = diff + ' day' + (diff===1?'':'s') + ' to departure ✈<br><span style="font-size:10px;opacity:.7">' + trip.name + ' · ' + start.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'}) + '</span>';
+  } else if (diff === 0) {
+    el.textContent = 'Departure day! ✈';
+  } else if (today <= end) {
     const dayNum = Math.abs(diff) + 1;
-    el.textContent = 'Day ' + dayNum + ' of ' + totalDays + ' · Trip in progress 🌏';
+    el.textContent = 'Day ' + dayNum + ' of ' + totalDays + ' in progress 🌏';
+  } else {
+    el.innerHTML = trip.name + '<br><span style="font-size:10px;opacity:.7">' + start.toLocaleDateString('en',{month:'short',year:'numeric'}) + ' · Memories made ✓</span>';
   }
-  else el.textContent = trip.name + ' — memories made ✓';
 }
 
 function updateCountdown() {
@@ -732,9 +735,9 @@ function renderProgressBar(days, phases) {
   const done = today > tripEnd;
 
   let statusLabel = '';
-  if (done) statusLabel = 'Trip complete ✓';
-  else if (inTrip) statusLabel = `Day ${elapsed + 1} of ${totalDays}`;
-  else statusLabel = `${daysToGo} day${daysToGo===1?'':'s'} to go`;
+  if (done) statusLabel = currentTrip.name + ' · Trip complete ✓';
+  else if (inTrip) statusLabel = `Day ${elapsed + 1} of ${totalDays} · ${currentTrip.name}`;
+  else statusLabel = `${daysToGo} day${daysToGo===1?'':'s'} to departure`;
 
   let subLabel = '';
   if (inTrip) {
@@ -742,6 +745,8 @@ function renderProgressBar(days, phases) {
     subLabel = todayDay ? `Today: ${todayDay.title}` : '';
   } else if (!done) {
     subLabel = `Departs ${tripStart.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'})}`;
+  } else {
+    subLabel = `${tripStart.toLocaleDateString('en',{month:'short',year:'numeric'})} · Memories made`;
   }
 
   const phasePips = phases.map(ph => {
@@ -752,7 +757,9 @@ function renderProgressBar(days, phases) {
     const phActive = phStart && phEnd && today >= phStart && today <= phEnd;
     const bg = phActive ? ph.color : phDone ? ph.color+'88' : 'var(--border)';
     const col = phActive || phDone ? '#fff' : 'var(--text-3)';
-    return `<span class="progress-phase-pip" style="background:${bg};color:${col}">${ph.name.split(' ')[0]}</span>`;
+    const shortNames = {'Zero-Leave Entry & Katra':'Katra','Vaishno Devi':'Vaishno','Udaipur Anniversary':'Udaipur','Leh Valley':'Leh',"Noida Parents' Base":'Noida','Panipat · Patiala · Chandigarh':'Patiala'};
+    const label = shortNames[ph.name] || ph.name.split(' ')[0];
+    return `<span class="progress-phase-pip" style="background:${bg};color:${col};margin-right:4px">${label}</span>`;
   }).join('');
 
   const existing = document.getElementById('progress-bar-section');
