@@ -486,6 +486,77 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
   </div>
 </div>
 
+<!-- EDIT BOOKING MODAL -->
+<div class="modal-overlay" id="modal-edit-bk">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit booking</div>
+    <div id="edit-bk-category-label" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px"></div>
+
+    <!-- FLIGHT EDIT -->
+    <div id="edit-fields-Flights" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From city</label><input class="f-inp" id="efl-from" placeholder="e.g. Dubai"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To city</label><input class="f-inp" id="efl-to" placeholder="e.g. Delhi"></div>
+      </div>
+      <label class="f-label">Date</label>
+      <input class="f-inp" id="efl-date" type="date">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Departure time</label><input class="f-inp" id="efl-dep" type="time"></div>
+        <div style="flex:1"><label class="f-label">Arrival time</label><input class="f-inp" id="efl-arr" type="time"></div>
+      </div>
+    </div>
+
+    <!-- HOTEL EDIT -->
+    <div id="edit-fields-Hotels" style="display:none">
+      <label class="f-label" style="margin-top:0">Hotel name</label>
+      <input class="f-inp" id="eht-name" placeholder="e.g. JW Marriott Aerocity">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Check-in date</label><input class="f-inp" id="eht-cin" type="date"></div>
+        <div style="flex:1"><label class="f-label">Check-out date</label><input class="f-inp" id="eht-cout" type="date"></div>
+      </div>
+    </div>
+
+    <!-- TRANSFER EDIT -->
+    <div id="edit-fields-Transfers & Taxis" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From</label><input class="f-inp" id="etr-from" placeholder="e.g. Jammu airport"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To</label><input class="f-inp" id="etr-to" placeholder="e.g. Katra"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="etr-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="etr-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- SPECIAL EDIT -->
+    <div id="edit-fields-Special Bookings" style="display:none">
+      <label class="f-label" style="margin-top:0">Description</label>
+      <input class="f-inp" id="esp-name" placeholder="e.g. Vaishno Devi Helipad">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="esp-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="esp-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- OTHER EDIT -->
+    <div id="edit-fields-Other" style="display:none">
+      <label class="f-label" style="margin-top:0">Title</label>
+      <input class="f-inp" id="eot-title" placeholder="e.g. Travel insurance">
+      <label class="f-label">Details</label>
+      <input class="f-inp" id="eot-detail" placeholder="e.g. Policy number, dates">
+    </div>
+
+    <label class="f-label">Booking ref / PNR</label>
+    <input class="f-inp" id="ebk-ref" placeholder="e.g. 6E · QX2914">
+
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-edit-bk')">Cancel</button>
+      <button class="btn-mg" onclick="confirmEditBk()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -895,7 +966,10 @@ function renderBookings(){
             ${dayLbl?`<span class="bk-link-tag" style="background:var(--teal-light);color:var(--teal);border:1px solid var(--teal-border)"><i class="ti ti-calendar" style="font-size:9px"></i> ${dayLbl}</span>`:canEdit?`<span class="bk-link-tag" style="background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b);cursor:pointer" onclick="openLinkFromBk('${b.id}')"><i class="ti ti-link" style="font-size:9px"></i> Not linked — tap to link</span>`:''}
             ${editF}${attch}
           </div>
-          ${isOwner?`<button class="btn-del-sm" onclick="delBk('${b.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${isOwner?`<div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="btn-del-sm" onclick="openEditBk('${b.id}')" style="color:var(--teal)"><i class="ti ti-pencil"></i></button>
+            <button class="btn-del-sm" onclick="delBk('${b.id}')"><i class="ti ti-trash"></i></button>
+          </div>`:''}
         </div>
         <div class="bk-actions">${refF}${stBtn}</div>
       </div>`;
@@ -1121,6 +1195,123 @@ function waShare(text){window.open('https://wa.me/?text='+encodeURIComponent(tex
 function expData(){const blob=new Blob([JSON.stringify({trip:currentTrip,phases:allPhases,days:allDays,bookings:allBookings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(currentTrip.name||'trip').replace(/\s+/g,'-')+'-backup.json';a.click();}
 
 // ── SETTINGS ──
+let _addDayPhaseId = null;
+let _editBkId = null;
+
+function openEditBk(bkId){
+  const b = allBookings.find(bk=>bk.id===bkId);
+  if(!b) return;
+  _editBkId = bkId;
+  const cat = b.category;
+
+  // Show category label
+  document.getElementById('edit-bk-category-label').textContent = cat;
+
+  // Show correct fields, hide others
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{
+    const el=document.getElementById('edit-fields-'+c);
+    if(el) el.style.display = c===cat ? 'block' : 'none';
+  });
+
+  // Pre-fill fields
+  if(cat==='Flights'){
+    document.getElementById('efl-from').value = b.from_city||'';
+    document.getElementById('efl-to').value = b.to_city||'';
+    document.getElementById('efl-date').value = b.flight_date||'';
+    document.getElementById('efl-dep').value = b.dep_time||'';
+    document.getElementById('efl-arr').value = b.arr_time||'';
+  } else if(cat==='Hotels'){
+    document.getElementById('eht-name').value = b.title||'';
+    document.getElementById('eht-cin').value = b.checkin_date||'';
+    document.getElementById('eht-cout').value = b.checkout_date||'';
+  } else if(cat==='Transfers & Taxis'){
+    document.getElementById('etr-from').value = b.from_city||'';
+    document.getElementById('etr-to').value = b.to_city||'';
+    document.getElementById('etr-date').value = b.flight_date||'';
+    document.getElementById('etr-time').value = b.dep_time||'';
+  } else if(cat==='Special Bookings'){
+    document.getElementById('esp-name').value = b.title||'';
+    document.getElementById('esp-date').value = b.flight_date||'';
+    document.getElementById('esp-time').value = b.dep_time||'';
+  } else {
+    document.getElementById('eot-title').value = b.title||'';
+    document.getElementById('eot-detail').value = b.detail||'';
+  }
+  document.getElementById('ebk-ref').value = b.ref||'';
+  openModal('modal-edit-bk');
+}
+
+async function confirmEditBk(){
+  const b = allBookings.find(bk=>bk.id===_editBkId);
+  if(!b) return;
+  const cat = b.category;
+  let updates = {ref: document.getElementById('ebk-ref').value.trim()};
+
+  if(cat==='Flights'){
+    const from = document.getElementById('efl-from').value.trim();
+    const to = document.getElementById('efl-to').value.trim();
+    const date = document.getElementById('efl-date').value;
+    const dep = document.getElementById('efl-dep').value;
+    const arr = document.getElementById('efl-arr').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    updates.from_city=from; updates.to_city=to; updates.flight_date=date;
+    updates.dep_time=dep||null; updates.arr_time=arr||null;
+    updates.title=from+' → '+to;
+    updates.detail=fmtDate(date)+(dep?' · '+dep:'')+(arr?' → '+arr:'');
+    // Re-link to new date
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else if(cat==='Hotels'){
+    const name=document.getElementById('eht-name').value.trim();
+    const cin=document.getElementById('eht-cin').value;
+    const cout=document.getElementById('eht-cout').value;
+    if(!name||!cin||!cout){showToast('Enter hotel name and dates');return;}
+    if(cout<=cin){showToast('Check-out must be after check-in');return;}
+    updates.title=name; updates.checkin_date=cin; updates.checkout_date=cout;
+    updates.detail=fmtDate(cin)+' – '+fmtDate(cout);
+    const cinDay=allDays.find(d=>d.date===cin);
+    const coutDay=allDays.find(d=>d.date===cout);
+    updates.day_id=cinDay?cinDay.id:null;
+    updates.end_day_id=coutDay?coutDay.id:null;
+  } else if(cat==='Transfers & Taxis'){
+    const from=document.getElementById('etr-from').value.trim();
+    const to=document.getElementById('etr-to').value.trim();
+    const date=document.getElementById('etr-date').value;
+    const time=document.getElementById('etr-time').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    updates.from_city=from; updates.to_city=to; updates.flight_date=date;
+    updates.dep_time=time||null;
+    updates.title=from+' → '+to;
+    updates.detail=fmtDate(date)+(time?' · '+time:'');
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else if(cat==='Special Bookings'){
+    const name=document.getElementById('esp-name').value.trim();
+    const date=document.getElementById('esp-date').value;
+    const time=document.getElementById('esp-time').value;
+    if(!name||!date){showToast('Enter name and date');return;}
+    updates.title=name; updates.flight_date=date; updates.dep_time=time||null;
+    updates.detail=fmtDate(date)+(time?' · '+time:'');
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else {
+    updates.title=document.getElementById('eot-title').value.trim();
+    updates.detail=document.getElementById('eot-detail').value.trim();
+  }
+
+  try{
+    await sbPatch('bookings',_editBkId,updates);
+    const idx=allBookings.findIndex(bk=>bk.id===_editBkId);
+    if(idx>=0) allBookings[idx]={...allBookings[idx],...updates};
+    closeModal('modal-edit-bk');
+    renderBookings(); renderItinerary(); renderBanner();
+    showToast('Booking updated ✓');
+  } catch(e){ showToast('Save failed: '+e.message.substring(0,40)); }
+}
+
 let _addDayPhaseId = null;
 
 function openAddDayModal(phaseId, phaseName){
