@@ -161,6 +161,12 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 .btn-save-sm{background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--rs);padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--ui)}
 .lbk-row{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--cream);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:11px}
 .btn-link-sm{font-size:9px;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid var(--teal-border);border-radius:6px;padding:4px 9px;cursor:pointer;font-family:var(--ui)}
+.insert-day-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;opacity:0;transition:opacity .2s;margin:2px 0}
+.insert-day-btn:hover,.phase-block:hover .insert-day-btn{opacity:1}
+.insert-day-btn-inner{font-size:10px;font-weight:600;color:var(--teal);background:var(--cream);border:1px dashed var(--teal-border);border-radius:20px;padding:3px 12px;display:flex;align-items:center;gap:4px}
+.shift-btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.shift-btn{font-size:10px;font-weight:600;color:var(--text-2);background:var(--cream-2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:4px}
+.shift-btn:hover{border-color:var(--teal);color:var(--teal)}
 /* BOOKINGS */
 .bk-body{padding:12px 14px}
 .bk-group{margin-bottom:18px}
@@ -463,6 +469,27 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
     <div class="modal-btn-row">
       <button class="btn-mc" onclick="closeModal('modal-add-bk')">Cancel</button>
       <button class="btn-mg" onclick="confirmAddBk()">Add booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSERT DAY MODAL -->
+<div class="modal-overlay" id="modal-insert-day">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Insert a day</div>
+    <div class="modal-sub" id="insert-day-label">Inserting before selected day</div>
+    <div style="background:var(--amber-l);border:1px solid var(--amber-b);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--amber-d);margin-bottom:14px;line-height:1.5">
+      <i class="ti ti-info-circle" style="margin-right:4px"></i>
+      All days from this point onwards will have their dates shifted forward by 1 day automatically.
+    </div>
+    <label class="f-label" style="margin-top:0">New day title</label>
+    <input class="f-inp" id="insert-day-title" placeholder="e.g. Delhi overnight · Aerocity hotel">
+    <label class="f-label">Subtitle (optional)</label>
+    <input class="f-inp" id="insert-day-sub" placeholder="e.g. Transit stop">
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-insert-day')">Cancel</button>
+      <button class="btn-mg" onclick="confirmInsertDay()">Insert & shift dates →</button>
     </div>
   </div>
 </div>
@@ -888,9 +915,22 @@ function renderItinerary(){
         </div>
       </div>`;
     }
-    html+=`<div class="phase-block">${phHdr}`;
+    // Shift buttons for this phase
+    const shiftBtns=role==='owner'?`<div class="shift-btns">
+      <button class="shift-btn" onclick="shiftPhase('${ph.id}',-1)" title="Move all days back 1 day">← Back 1 day</button>
+      <button class="shift-btn" onclick="shiftPhase('${ph.id}',1)" title="Move all days forward 1 day">Forward 1 day →</button>
+      <button class="shift-btn" onclick="shiftPhaseN('${ph.id}')" title="Shift by custom number of days">Shift by N days</button>
+    </div>`:''
+    html+=`<div class="phase-block">${phHdr}${shiftBtns}`;
     const phDays=allDays.filter(d=>d.phase_id===ph.id);
-    phDays.forEach(d=>{
+    phDays.forEach((d,dIdx)=>{
+      // Insert day button BEFORE this day card (owner only)
+      if(role==='owner'){
+        const prevDay=dIdx>0?phDays[dIdx-1]:null;
+        html+=`<div class="insert-day-btn" onclick="openInsertDay('${ph.id}','${d.id}','${esc(ph.name)}')">
+          <div class="insert-day-btn-inner"><i class="ti ti-plus" style="font-size:10px"></i> Insert day here</div>
+        </div>`;
+      }
       const dt=parseDate(d.date),di=allDays.indexOf(d);
       const linked=allBookings.filter(b=>{
         if(b.day_id===d.id)return true;
@@ -935,6 +975,7 @@ function renderItinerary(){
         </div>
       </div>`;
     });
+    if(role==='owner'){html+=`<div class="insert-day-btn" onclick="openInsertDay('${ph.id}',null,'${esc(ph.name)}')"><div class="insert-day-btn-inner"><i class="ti ti-plus" style="font-size:10px"></i> Insert day at end</div></div>`;}
     if(role==='owner'){html+=`<button class="btn-add-ph" style="margin:4px 0 8px;border-color:${cc}44;color:${cc}" onclick="openAddDayModal('${ph.id}','${esc(ph.name)}')"><i class="ti ti-plus"></i> Add day to ${esc(ph.name)}</button>`;}
     html+='</div>';
   });
@@ -1397,6 +1438,197 @@ async function delTrip(id,name){
     showToast('Trip deleted');
     await loadHome();
   }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
+let _insertBeforeDayId = null;
+let _insertPhaseId = null;
+
+function openInsertDay(phaseId, beforeDayId, phaseName){
+  _insertPhaseId = phaseId;
+  _insertBeforeDayId = beforeDayId;
+  const label = beforeDayId
+    ? 'Inserting into: ' + phaseName + ' · all days from this point shift forward 1 day'
+    : 'Adding to end of: ' + phaseName;
+  document.getElementById('insert-day-label').textContent = label;
+  document.getElementById('insert-day-title').value = '';
+  document.getElementById('insert-day-sub').value = '';
+  openModal('modal-insert-day');
+}
+
+async function confirmInsertDay(){
+  const title = document.getElementById('insert-day-title').value.trim();
+  const subtitle = document.getElementById('insert-day-sub').value.trim();
+  if(!title){showToast('Enter a title');return;}
+
+  const btn = document.querySelector('#modal-insert-day .btn-mg');
+  btn.textContent = 'Working…'; btn.disabled = true;
+
+  try{
+    // Find insertion point
+    const phDays = allDays.filter(d=>d.phase_id===_insertPhaseId);
+    let insertSortOrder, insertDate, daysToShift;
+
+    if(_insertBeforeDayId){
+      const beforeDay = allDays.find(d=>d.id===_insertBeforeDayId);
+      insertSortOrder = beforeDay.sort_order;
+      insertDate = beforeDay.date;
+      // All days from this point forward (across ALL phases) need date+1
+      const beforeIdx = allDays.findIndex(d=>d.id===_insertBeforeDayId);
+      daysToShift = allDays.slice(beforeIdx);
+    } else {
+      // Insert at end of phase
+      const lastDay = phDays[phDays.length-1];
+      insertSortOrder = lastDay ? (lastDay.sort_order||0)+1 : 0;
+      // Date is last day + 1
+      const lastDate = lastDay ? parseDate(lastDay.date) : parseDate(currentTrip.start_date);
+      lastDate.setDate(lastDate.getDate()+1);
+      insertDate = lastDate.toISOString().split('T')[0];
+      daysToShift = [];
+    }
+
+    // Shift all affected days forward 1 day
+    if(daysToShift && daysToShift.length){
+      showToast('Shifting ' + daysToShift.length + ' days forward…');
+      for(const d of daysToShift){
+        const newDate = parseDate(d.date);
+        newDate.setDate(newDate.getDate()+1);
+        const newDateStr = newDate.toISOString().split('T')[0];
+        const newWeekday = newDate.toLocaleDateString('en',{weekday:'short'});
+        await sbPatch('days', d.id, {date: newDateStr, weekday: newWeekday});
+      }
+      // Also shift hotel booking dates that overlap
+      for(const b of allBookings){
+        if(b.category==='Hotels' && b.checkin_date && b.checkout_date){
+          const cin = parseDate(b.checkin_date);
+          const cout = parseDate(b.checkout_date);
+          const pivot = parseDate(insertDate);
+          if(cin >= pivot || cout > pivot){
+            const updates = {};
+            if(cin >= pivot){ cin.setDate(cin.getDate()+1); updates.checkin_date = cin.toISOString().split('T')[0]; }
+            if(cout > pivot){ cout.setDate(cout.getDate()+1); updates.checkout_date = cout.toISOString().split('T')[0]; }
+            await sbPatch('bookings', b.id, updates);
+          }
+        }
+        // Shift flight dates too
+        if((b.category==='Flights'||b.category==='Transfers & Taxis'||b.category==='Special Bookings') && b.flight_date){
+          const fd = parseDate(b.flight_date);
+          const pivot = parseDate(insertDate);
+          if(fd >= pivot){
+            fd.setDate(fd.getDate()+1);
+            await sbPatch('bookings', b.id, {flight_date: fd.toISOString().split('T')[0], detail: b.detail});
+          }
+        }
+      }
+      // Extend trip end date by 1
+      if(currentTrip.end_date){
+        const te = parseDate(currentTrip.end_date);
+        te.setDate(te.getDate()+1);
+        const newEnd = te.toISOString().split('T')[0];
+        await sbPatch('trips', currentTrip.id, {end_date: newEnd});
+        currentTrip.end_date = newEnd;
+      }
+    }
+
+    // Insert the new day
+    const newWeekday = parseDate(insertDate)?.toLocaleDateString('en',{weekday:'short'})||'';
+    await sbPost('days',{
+      trip_id: currentTrip.id,
+      phase_id: _insertPhaseId,
+      date: insertDate,
+      weekday: newWeekday,
+      title, subtitle,
+      tip:'', note:'',
+      sort_order: insertSortOrder - 0.5
+    });
+
+    // Re-fetch everything fresh
+    const [phases,days,bookings] = await Promise.all([
+      sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc')
+    ]);
+    allPhases=phases; allDays=days; allBookings=bookings;
+    closeModal('modal-insert-day');
+    renderBanner(); renderProgressBar(); renderItinerary();
+    showToast('Day inserted, dates shifted ✓');
+  }catch(e){
+    showToast('Failed: '+e.message.substring(0,50));
+  }finally{
+    btn.textContent='Insert & shift dates →'; btn.disabled=false;
+  }
+}
+
+async function shiftPhase(phaseId, days){
+  const ph = allPhases.find(p=>p.id===phaseId);
+  const dir = days > 0 ? 'forward' : 'back';
+  const abs = Math.abs(days);
+  if(!confirm(`Shift all days in "${ph?.name}" ${abs} day ${dir}?\nHotel and flight booking dates will also be updated.`)) return;
+  await doShiftPhase(phaseId, days);
+}
+
+async function shiftPhaseN(phaseId){
+  const ph = allPhases.find(p=>p.id===phaseId);
+  const n = prompt(`How many days to shift "${ph?.name}"?\nPositive = forward, negative = back\n(e.g. 2 or -1)`);
+  if(!n) return;
+  const days = parseInt(n);
+  if(isNaN(days)||days===0){showToast('Enter a valid number');return;}
+  if(!confirm(`Shift all days in "${ph?.name}" by ${days} day${Math.abs(days)>1?'s':''}?\nHotel and flight booking dates will also be updated.`)) return;
+  await doShiftPhase(phaseId, days);
+}
+
+async function doShiftPhase(phaseId, shiftDays){
+  const phDays = allDays.filter(d=>d.phase_id===phaseId);
+  if(!phDays.length){showToast('No days in this phase');return;}
+  showToast('Shifting dates…');
+  try{
+    // Shift all days in phase
+    for(const d of phDays){
+      const nd = parseDate(d.date);
+      nd.setDate(nd.getDate()+shiftDays);
+      const newDate = nd.toISOString().split('T')[0];
+      const newWd = nd.toLocaleDateString('en',{weekday:'short'});
+      await sbPatch('days', d.id, {date: newDate, weekday: newWd});
+    }
+    // Shift hotel bookings linked to days in this phase
+    const phDayIds = new Set(phDays.map(d=>d.id));
+    for(const b of allBookings){
+      if(b.category==='Hotels' && b.checkin_date && b.checkout_date){
+        const cinDay = allDays.find(d=>d.id===b.day_id);
+        if(cinDay && phDayIds.has(cinDay.id)){
+          const cin = parseDate(b.checkin_date); cin.setDate(cin.getDate()+shiftDays);
+          const cout = parseDate(b.checkout_date); cout.setDate(cout.getDate()+shiftDays);
+          await sbPatch('bookings', b.id, {
+            checkin_date: cin.toISOString().split('T')[0],
+            checkout_date: cout.toISOString().split('T')[0]
+          });
+        }
+      }
+      if((b.category==='Flights'||b.category==='Transfers & Taxis'||b.category==='Special Bookings') && b.flight_date){
+        const linkedDay = allDays.find(d=>d.id===b.day_id);
+        if(linkedDay && phDayIds.has(linkedDay.id)){
+          const fd = parseDate(b.flight_date); fd.setDate(fd.getDate()+shiftDays);
+          await sbPatch('bookings', b.id, {flight_date: fd.toISOString().split('T')[0]});
+        }
+      }
+    }
+    // Update trip end date if last phase
+    const lastPhase = allPhases[allPhases.length-1];
+    if(lastPhase?.id===phaseId && currentTrip.end_date){
+      const te = parseDate(currentTrip.end_date); te.setDate(te.getDate()+shiftDays);
+      const newEnd = te.toISOString().split('T')[0];
+      await sbPatch('trips', currentTrip.id, {end_date: newEnd});
+      currentTrip.end_date = newEnd;
+    }
+    // Re-fetch everything
+    const [phases,days,bookings] = await Promise.all([
+      sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc')
+    ]);
+    allPhases=phases; allDays=days; allBookings=bookings;
+    renderBanner(); renderProgressBar(); renderItinerary(); renderBookings();
+    showToast('Phase shifted ✓');
+  }catch(e){ showToast('Failed: '+e.message.substring(0,50)); }
 }
 
 function openAddPhaseModal(){
