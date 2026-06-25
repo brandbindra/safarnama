@@ -1312,8 +1312,6 @@ async function confirmEditBk(){
   } catch(e){ showToast('Save failed: '+e.message.substring(0,40)); }
 }
 
-let _addDayPhaseId = null;
-
 function openAddDayModal(phaseId, phaseName){
   _addDayPhaseId = phaseId;
   document.getElementById('add-day-phase-label').textContent = 'Adding to: ' + phaseName;
