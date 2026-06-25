@@ -1073,6 +1073,8 @@ async function confirmAddBk(){
         }
       }
     }
+    // Re-fetch fresh so all structured fields are current
+    allBookings = await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
     closeModal('modal-add-bk');
     renderBanner();renderItinerary();renderBookings();
     showToast('Booking added ✓');
@@ -1304,10 +1306,12 @@ async function confirmEditBk(){
 
   try{
     await sbPatch('bookings',_editBkId,updates);
-    const idx=allBookings.findIndex(bk=>bk.id===_editBkId);
-    if(idx>=0) allBookings[idx]={...allBookings[idx],...updates};
+    // Re-fetch fresh from Supabase so all fields including new dates are current
+    allBookings = await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
     closeModal('modal-edit-bk');
-    renderBookings(); renderItinerary(); renderBanner();
+    renderBanner();
+    renderItinerary();
+    renderBookings();
     showToast('Booking updated ✓');
   } catch(e){ showToast('Save failed: '+e.message.substring(0,40)); }
 }
