@@ -155,8 +155,8 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 .exp-ta{width:100%;font-size:12px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui);resize:none;line-height:1.5;min-height:60px}
 .exp-ta:focus{outline:none;border-color:var(--teal)}
 .exp-ro{font-size:12px;color:var(--text-2);line-height:1.6;background:var(--cream-2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 11px;white-space:pre-wrap}
-.exp-edit-row{display:flex;gap:8px;margin-bottom:8px}
-.exp-inp{flex:1;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)}
+.exp-edit-row{margin-bottom:8px}
+.exp-inp{width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)}
 .exp-inp:focus{outline:none;border-color:var(--teal)}
 .btn-save-sm{background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--rs);padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--ui)}
 .lbk-row{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--cream);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:11px}
@@ -882,8 +882,10 @@ function renderItinerary(){
                <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">`
             :`<div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc}">${esc(ph.name)}</div><div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>`}
         </div>
-        ${canEdit?`<label style="flex-shrink:0;font-size:10px;color:var(--text-3);cursor:pointer;display:flex;align-items:center;gap:3px"><i class="ti ti-camera" style="font-size:14px"></i><input type="file" accept="image/*" style="display:none" onchange="uploadPh('${ph.id}',this)"></label>`:''}
-        ${role==='owner'?`<button onclick="delPhase('${ph.id}')" style="flex-shrink:0;background:none;border:none;color:#B83230;cursor:pointer;font-size:18px;padding:2px 6px" title="Delete phase"><i class="ti ti-trash"></i></button>`:''}
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${canEdit?`<label style="font-size:10px;color:var(--text-3);cursor:pointer;display:flex;align-items:center;gap:2px;background:var(--cream-2);border:1px solid var(--border);border-radius:6px;padding:5px 8px"><i class="ti ti-camera" style="font-size:13px"></i><input type="file" accept="image/*" style="display:none" onchange="uploadPh('${ph.id}',this)"></label>`:''}
+          ${role==='owner'?`<button onclick="delPhase('${ph.id}')" style="background:none;border:1px solid #B83230;border-radius:6px;color:#B83230;cursor:pointer;font-size:13px;padding:5px 8px;display:flex;align-items:center;gap:3px"><i class="ti ti-trash"></i></button>`:''}
+        </div>
       </div>`;
     }
     html+=`<div class="phase-block">${phHdr}`;
@@ -899,11 +901,13 @@ function renderItinerary(){
       const tags=linked.map(b=>`<span class="dtag ${b.status==='booked'?'dtag-bk':'dtag-pend'}" onclick="event.stopPropagation();showTab('bookings')" style="cursor:pointer">${esc(b.title.substring(0,22))} ${b.status==='booked'?'✓':'⏳'}</span>`).join('');
       const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')">⚠ Link booking</span>`:'';
       const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
-      const editRow=role==='owner'?`<div class="exp-edit-row">
-          <input class="exp-inp" placeholder="Day title" value="${esc(d.title)}" id="etitle-${d.id}">
-          <input class="exp-inp" placeholder="Subtitle" value="${esc(d.subtitle||'')}" id="esub-${d.id}" style="flex:1.5">
-          <button class="btn-save-sm" onclick="saveDay('${d.id}')">Save</button>
-          <button class="btn-save-sm" style="background:#B83230;padding:7px 10px" onclick="delDay('${d.id}')" title="Delete day"><i class="ti ti-trash"></i></button>
+      const editRow=role==='owner'?`<div style="margin-bottom:10px">
+          <input class="exp-inp" placeholder="Day title" value="${esc(d.title)}" id="etitle-${d.id}" style="margin-bottom:6px">
+          <input class="exp-inp" placeholder="Subtitle" value="${esc(d.subtitle||'')}" id="esub-${d.id}" style="margin-bottom:8px">
+          <div style="display:flex;gap:8px">
+            <button class="btn-save-sm" style="flex:1" onclick="saveDay('${d.id}')"><i class="ti ti-check" style="margin-right:4px"></i>Save</button>
+            <button class="btn-save-sm" style="background:#B83230;flex:1" onclick="delDay('${d.id}')"><i class="ti ti-trash" style="margin-right:4px"></i>Delete day</button>
+          </div>
         </div>`:'';
       const tipA=canEdit?`<textarea class="exp-ta" rows="2" placeholder="Tip for this day…" oninput="debT('${d.id}','tip',this.value)" onblur="saveDFld('${d.id}','tip',this.value)">${esc(d.tip||'')}</textarea>`:`<div class="exp-ro">${esc(d.tip||'No tip.')}</div>`;
       const noteA=canEdit?`<textarea class="exp-ta" rows="2" placeholder="Your personal note…" oninput="debT('${d.id}','note',this.value)" onblur="saveDFld('${d.id}','note',this.value)">${esc(d.note||'')}</textarea>`:`<div class="exp-ro">${esc(d.note||'No note.')}</div>`;
