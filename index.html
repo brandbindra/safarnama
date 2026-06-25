@@ -884,8 +884,10 @@ async function remAttach(id){if(!confirm('Remove?'))return;try{await sbPatch('bo
 
 // ── LINK ──
 async function openLinkModal(dayId,dayTitle){
+  // Always refresh days so newly added days appear
+  try{allDays=await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');}catch(e){}
   document.getElementById('link-title').textContent='Link to: '+dayTitle.substring(0,28);
-  const linked=allBookings.filter(b=>{if(b.day_id===dayId)return true;if(b.day_id&&b.end_day_id){const si=allDays.findIndex(d=>d.id===b.day_id),ei=allDays.findIndex(d=>d.id===b.end_day_id),ti=allDays.findIndex(d=>d.id===dayId);return ti>=si&&ti<=ei;}return false;});
+  const linked=allBookings.filter(b=>{if(b.day_id===dayId)return true;if(b.day_id&&b.end_day_id){const si=allDays.findIndex(d=>d.id===b.day_id),ei=allDays.findIndex(d=>d.id===b.end_day_id),ti=allDays.findIndex(d=>d.id===dayId);return ti>=si&&ti<ei;}return false;});
   const unlinked=allBookings.filter(b=>!b.day_id);
   let html='';
   if(linked.length){html+=`<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">Linked</div>`;linked.forEach(b=>{const cc=CAT_CLR[b.category]||'#666';html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${cc};border-radius:8px;margin-bottom:6px"><div><div style="font-size:12px;font-weight:600">${esc(b.title)}</div><div style="font-size:10px;color:var(--text-3)">${esc(b.detail||'')}</div></div><button onclick="unlinkBk('${b.id}')" style="font-size:11px;color:var(--red);background:none;border:1px solid var(--red);border-radius:6px;padding:4px 8px;cursor:pointer">Unlink</button></div>`;});html+=`<div style="height:1px;background:var(--border);margin:10px 0"></div>`;}
@@ -915,6 +917,8 @@ async function openLinkModal(dayId,dayTitle){
 }
 
 async function openLinkFromBk(bkId){
+  // Always refresh days so newly added days appear
+  try{allDays=await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');}catch(e){}
   const b=allBookings.find(bk=>bk.id===bkId);if(!b)return;
   const isH=b.category==='Hotels',cc=CAT_CLR[b.category]||'#666';
   document.getElementById('link-title').textContent='Link: '+b.title.substring(0,28);
@@ -970,7 +974,7 @@ function renderShare(){
       const di=allDays.indexOf(d);
       iTxt+='\n  '+(d.weekday||'')+' '+fmtDate(d.date)+' — '+d.title+'\n';
       if(d.subtitle)iTxt+='  '+d.subtitle+'\n';
-      const dayBks=allBookings.filter(b=>{if(b.day_id===d.id)return true;if(b.day_id&&b.end_day_id){const si=allDays.findIndex(dd=>dd.id===b.day_id),ei=allDays.findIndex(dd=>dd.id===b.end_day_id);return di>=si&&di<=ei;}return false;});
+      const dayBks=allBookings.filter(b=>{if(b.day_id===d.id)return true;if(b.day_id&&b.end_day_id){const si=allDays.findIndex(dd=>dd.id===b.day_id),ei=allDays.findIndex(dd=>dd.id===b.end_day_id);return di>=si&&di<ei;}return false;});
       dayBks.forEach(b=>{iTxt+='  '+(b.status==='booked'?'✓':'⏳')+' '+b.title+(b.ref?' ['+b.ref+']':'')+'\n';});
       if(d.note)iTxt+='  Note: '+d.note+'\n';
     });
