@@ -1008,9 +1008,7 @@ async function confirmAddDay(){
   const d = new Date(date);
   const weekday = d.toLocaleDateString('en',{weekday:'short'});
   // Find sort order — insert after last day with same date, or at end
-  const sameDays = allDays.filter(d => d.date === date);
-  const lastSame = sameDays.length ? sameDays[sameDays.length-1] : null;
-  const insertAfterOrder = lastSame ? (lastSame.sort_order || 0) + 0.5 : (allDays.length ? Math.max(...allDays.map(d=>d.sort_order||0)) + 1 : 0);
+  const insertAfterOrder = allDays.length ? Math.max(...allDays.map(d=>d.sort_order||0)) + 1 : 0;
   try{
     const [newDay] = await sbPost('days',{
       trip_id: currentTrip.id,
