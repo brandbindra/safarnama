@@ -418,6 +418,25 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
   </div>
 </div>
 
+<!-- ADD DAY MODAL -->
+<div class="modal-overlay" id="modal-add-day">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a day</div>
+    <div class="modal-sub" id="add-day-phase-label">Adding to phase</div>
+    <label class="f-label" style="margin-top:0">Date</label>
+    <input class="f-inp" id="add-day-date" type="date">
+    <label class="f-label">Title</label>
+    <input class="f-inp" id="add-day-title" placeholder="e.g. Delhi overnight · Aerocity hotel">
+    <label class="f-label">Subtitle (optional)</label>
+    <input class="f-inp" id="add-day-sub" placeholder="e.g. Transit stop before Jammu flight">
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-add-day')">Cancel</button>
+      <button class="btn-mg" onclick="confirmAddDay()">Add day</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -786,6 +805,7 @@ function renderItinerary(){
         </div>
       </div>`;
     });
+    if(role==='owner'){html+=`<button class="btn-add-ph" style="margin:4px 0 8px;border-color:${cc}44;color:${cc}" onclick="openAddDayModal('${ph.id}','${esc(ph.name)}')"><i class="ti ti-plus"></i> Add day to ${esc(ph.name)}</button>`;}
     html+='</div>';
   });
   if(!allPhases.length)html='<div style="padding:24px;text-align:center;color:var(--text-3)">No phases. Edit this trip to add phases.</div>';
@@ -968,6 +988,51 @@ function waShare(text){window.open('https://wa.me/?text='+encodeURIComponent(tex
 function expData(){const blob=new Blob([JSON.stringify({trip:currentTrip,phases:allPhases,days:allDays,bookings:allBookings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(currentTrip.name||'trip').replace(/\s+/g,'-')+'-backup.json';a.click();}
 
 // ── SETTINGS ──
+let _addDayPhaseId = null;
+
+function openAddDayModal(phaseId, phaseName){
+  _addDayPhaseId = phaseId;
+  document.getElementById('add-day-phase-label').textContent = 'Adding to: ' + phaseName;
+  document.getElementById('add-day-date').value = '';
+  document.getElementById('add-day-title').value = '';
+  document.getElementById('add-day-sub').value = '';
+  openModal('modal-add-day');
+}
+
+async function confirmAddDay(){
+  const date = document.getElementById('add-day-date').value;
+  const title = document.getElementById('add-day-title').value.trim();
+  const subtitle = document.getElementById('add-day-sub').value.trim();
+  if(!date){showToast('Pick a date');return;}
+  if(!title){showToast('Enter a title');return;}
+  const d = new Date(date);
+  const weekday = d.toLocaleDateString('en',{weekday:'short'});
+  // Find sort order — insert after last day with same date, or at end
+  const sameDays = allDays.filter(d => d.date === date);
+  const lastSame = sameDays.length ? sameDays[sameDays.length-1] : null;
+  const insertAfterOrder = lastSame ? (lastSame.sort_order || 0) + 0.5 : (allDays.length ? Math.max(...allDays.map(d=>d.sort_order||0)) + 1 : 0);
+  try{
+    const [newDay] = await sbPost('days',{
+      trip_id: currentTrip.id,
+      phase_id: _addDayPhaseId,
+      date,
+      weekday,
+      title,
+      subtitle,
+      tip: '',
+      note: '',
+      sort_order: insertAfterOrder
+    });
+    // Re-fetch all days to get correct order
+    const days = await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    allDays = days;
+    closeModal('modal-add-day');
+    showToast('Day added ✓');
+    renderItinerary();
+    renderBanner();
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
 function openSettings(){document.getElementById('set-owner').value='';document.getElementById('set-editor').value='';document.getElementById('set-viewer').value='';openModal('modal-settings');}
 async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
 
