@@ -405,12 +405,61 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
       <div class="cat-pill" data-cat="Special Bookings" onclick="selCat(this)">🚁 Special</div>
       <div class="cat-pill" data-cat="Other" onclick="selCat(this)">📌 Other</div>
     </div>
-    <label class="f-label" style="margin-top:0">Title</label>
-    <input class="f-inp" id="bk-title-inp" placeholder="e.g. Dubai (DXB) → Delhi (DEL)">
-    <label class="f-label">Details / dates</label>
-    <input class="f-inp" id="bk-detail-inp" placeholder="e.g. Jul 31 evening">
-    <label class="f-label">Your tip (optional)</label>
-    <input class="f-inp" id="bk-tip-inp" placeholder="e.g. Book aisle seat">
+
+    <!-- FLIGHT FIELDS -->
+    <div id="fields-Flights">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From city</label><input class="f-inp" id="fl-from" placeholder="e.g. Dubai"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To city</label><input class="f-inp" id="fl-to" placeholder="e.g. Delhi"></div>
+      </div>
+      <label class="f-label">Date</label>
+      <input class="f-inp" id="fl-date" type="date">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Departure time</label><input class="f-inp" id="fl-dep" type="time"></div>
+        <div style="flex:1"><label class="f-label">Arrival time</label><input class="f-inp" id="fl-arr" type="time"></div>
+      </div>
+    </div>
+
+    <!-- HOTEL FIELDS -->
+    <div id="fields-Hotels" style="display:none">
+      <label class="f-label" style="margin-top:0">Hotel name</label>
+      <input class="f-inp" id="ht-name" placeholder="e.g. JW Marriott Aerocity">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Check-in date</label><input class="f-inp" id="ht-cin" type="date"></div>
+        <div style="flex:1"><label class="f-label">Check-out date</label><input class="f-inp" id="ht-cout" type="date"></div>
+      </div>
+    </div>
+
+    <!-- TRANSFER FIELDS -->
+    <div id="fields-Transfers & Taxis" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From</label><input class="f-inp" id="tr-from" placeholder="e.g. Jammu airport"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To</label><input class="f-inp" id="tr-to" placeholder="e.g. Katra"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="tr-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="tr-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- SPECIAL FIELDS -->
+    <div id="fields-Special Bookings" style="display:none">
+      <label class="f-label" style="margin-top:0">Description</label>
+      <input class="f-inp" id="sp-name" placeholder="e.g. Vaishno Devi Helipad">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="sp-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="sp-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- OTHER FIELDS -->
+    <div id="fields-Other" style="display:none">
+      <label class="f-label" style="margin-top:0">Title</label>
+      <input class="f-inp" id="ot-title" placeholder="e.g. Travel insurance">
+      <label class="f-label">Details</label>
+      <input class="f-inp" id="ot-detail" placeholder="e.g. Policy number, dates">
+    </div>
+
     <div class="modal-btn-row">
       <button class="btn-mc" onclick="closeModal('modal-add-bk')">Cancel</button>
       <button class="btn-mg" onclick="confirmAddBk()">Add booking</button>
@@ -860,20 +909,100 @@ function renderBookings(){
 
 function openAddBk(cat){
   selBkCat=cat||'Flights';
-  document.getElementById('bk-title-inp').value='';
-  document.getElementById('bk-detail-inp').value='';
-  document.getElementById('bk-tip-inp').value='';
+  // Reset all fields
+  ['fl-from','fl-to','fl-dep','fl-arr','ht-name','tr-from','tr-to','ot-title','ot-detail','sp-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fl-date','ht-cin','ht-cout','tr-date','sp-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fl-dep','fl-arr','tr-time','sp-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Show correct category pills and fields
   document.querySelectorAll('.cat-pill').forEach(p=>{const a=p.dataset.cat===selBkCat,cc=CAT_CLR[p.dataset.cat]||'#666';p.className='cat-pill'+(a?' active':'');p.style.background=a?cc:'';p.style.color=a?'#fff':'';p.style.borderColor=a?cc:'';});
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{const el=document.getElementById('fields-'+c);if(el)el.style.display=c===selBkCat?'block':'none';});
   openModal('modal-add-bk');
 }
-function selCat(el){selBkCat=el.dataset.cat;document.querySelectorAll('.cat-pill').forEach(p=>{const a=p.dataset.cat===selBkCat,cc=CAT_CLR[p.dataset.cat]||'#666';p.className='cat-pill'+(a?' active':'');p.style.background=a?cc:'';p.style.color=a?'#fff':'';p.style.borderColor=a?cc:'';});}
+function selCat(el){
+  selBkCat=el.dataset.cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>{const a=p.dataset.cat===selBkCat,cc=CAT_CLR[p.dataset.cat]||'#666';p.className='cat-pill'+(a?' active':'');p.style.background=a?cc:'';p.style.color=a?'#fff':'';p.style.borderColor=a?cc:'';});
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{const el=document.getElementById('fields-'+c);if(el)el.style.display=c===selBkCat?'block':'none';});
+}
 async function confirmAddBk(){
-  const t=document.getElementById('bk-title-inp').value.trim();
-  const d=document.getElementById('bk-detail-inp').value.trim();
-  const tip=document.getElementById('bk-tip-inp').value.trim();
-  if(!t){showToast('Enter a title');return;}
-  try{const no=allBookings.length?Math.max(...allBookings.map(b=>b.sort_order||0))+1:0;const[bk]=await sbPost('bookings',{trip_id:currentTrip.id,category:selBkCat,title:t,detail:d,claude_tip:tip,status:'pending',ref:'',cost:0,day_id:null,end_day_id:null,attachment_data:null,sort_order:no});allBookings.push(bk);closeModal('modal-add-bk');renderBookings();renderBanner();showToast('Booking added ✓');}
-  catch(e){showToast('Failed: '+e.message.substring(0,40));}
+  const nextOrder=allBookings.length?Math.max(...allBookings.map(b=>b.sort_order||0))+1:0;
+  let bkData={trip_id:currentTrip.id,category:selBkCat,status:'pending',ref:'',cost:0,attachment_data:null,sort_order:nextOrder,day_id:null,end_day_id:null,claude_tip:'',dep_time:null,arr_time:null,from_city:null,to_city:null,flight_date:null,checkin_date:null,checkout_date:null};
+
+  if(selBkCat==='Flights'){
+    const from=document.getElementById('fl-from').value.trim();
+    const to=document.getElementById('fl-to').value.trim();
+    const date=document.getElementById('fl-date').value;
+    const dep=document.getElementById('fl-dep').value;
+    const arr=document.getElementById('fl-arr').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    bkData.title=from+' → '+to;
+    bkData.detail=date+(dep?' · '+dep:'')+(arr?' → '+arr:'');
+    bkData.from_city=from;bkData.to_city=to;bkData.flight_date=date;
+    bkData.dep_time=dep||null;bkData.arr_time=arr||null;
+    // Auto-link to day with matching date
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay){bkData.day_id=matchDay.id;}
+  } else if(selBkCat==='Hotels'){
+    const name=document.getElementById('ht-name').value.trim();
+    const cin=document.getElementById('ht-cin').value;
+    const cout=document.getElementById('ht-cout').value;
+    if(!name||!cin||!cout){showToast('Enter hotel name and dates');return;}
+    if(cout<=cin){showToast('Check-out must be after check-in');return;}
+    bkData.title=name;
+    bkData.detail=fmtDate(cin)+' – '+fmtDate(cout);
+    bkData.checkin_date=cin;bkData.checkout_date=cout;
+    // Auto-link check-in to check-out days
+    const cinDay=allDays.find(d=>d.date===cin);
+    const coutDay=allDays.find(d=>d.date===cout);
+    if(cinDay)bkData.day_id=cinDay.id;
+    if(coutDay)bkData.end_day_id=coutDay.id;
+  } else if(selBkCat==='Transfers & Taxis'){
+    const from=document.getElementById('tr-from').value.trim();
+    const to=document.getElementById('tr-to').value.trim();
+    const date=document.getElementById('tr-date').value;
+    const time=document.getElementById('tr-time').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    bkData.title=from+' → '+to;
+    bkData.detail=fmtDate(date)+(time?' · '+time:'');
+    bkData.from_city=from;bkData.to_city=to;bkData.flight_date=date;
+    bkData.dep_time=time||null;
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay)bkData.day_id=matchDay.id;
+  } else if(selBkCat==='Special Bookings'){
+    const name=document.getElementById('sp-name').value.trim();
+    const date=document.getElementById('sp-date').value;
+    const time=document.getElementById('sp-time').value;
+    if(!name||!date){showToast('Enter name and date');return;}
+    bkData.title=name;
+    bkData.detail=fmtDate(date)+(time?' · '+time:'');
+    bkData.flight_date=date;bkData.dep_time=time||null;
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay)bkData.day_id=matchDay.id;
+  } else {
+    const t=document.getElementById('ot-title').value.trim();
+    if(!t){showToast('Enter a title');return;}
+    bkData.title=t;
+    bkData.detail=document.getElementById('ot-detail').value.trim();
+  }
+
+  try{
+    const[bk]=await sbPost('bookings',bkData);
+    allBookings.push(bk);
+
+    // Auto-update day title for flights if title is placeholder
+    if(selBkCat==='Flights'&&bk.day_id){
+      const dayIdx=allDays.findIndex(d=>d.id===bk.day_id);
+      if(dayIdx>=0){
+        const d=allDays[dayIdx];
+        if(!d.title||d.title==='(add title)'||d.title.trim()===''){
+          await sbPatch('days',d.id,{title:bkData.title});
+          allDays[dayIdx].title=bkData.title;
+        }
+      }
+    }
+    closeModal('modal-add-bk');
+    renderBanner();renderItinerary();renderBookings();
+    showToast('Booking added ✓');
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
 }
 async function saveBkF(id,f,v){try{await sbPatch('bookings',id,{[f]:v});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i][f]=v;}catch(e){showToast('Save failed');}}
 async function togBkSt(id,cur){const n=cur==='booked'?'pending':'booked';try{await sbPatch('bookings',id,{status:n});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].status=n;const item=document.getElementById('bkitem-'+id),btn=document.getElementById('stb-'+id);if(item){item.className='bk-item '+n;item.style.borderLeftColor=n==='booked'?'var(--teal)':(CAT_CLR[allBookings[i]?.category]||'#666');}if(btn){btn.className='st-btn '+n;btn.textContent=n==='booked'?'✓ Booked':'⏳ Pending';btn.setAttribute('onclick',`togBkSt('${id}','${n}')`);}renderBanner();showToast(n==='booked'?'Booked ✓':'Marked pending');}catch(e){showToast('Failed');}}
