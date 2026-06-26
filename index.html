@@ -1198,7 +1198,84 @@ async function saveBkF(id,f,v){try{await sbPatch('bookings',id,{[f]:v});const i=
 async function togBkSt(id,cur){const n=cur==='booked'?'pending':'booked';try{await sbPatch('bookings',id,{status:n});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].status=n;const item=document.getElementById('bkitem-'+id),btn=document.getElementById('stb-'+id);if(item){item.className='bk-item '+n;item.style.borderLeftColor=n==='booked'?'var(--teal)':(CAT_CLR[allBookings[i]?.category]||'#666');}if(btn){btn.className='st-btn '+n;btn.textContent=n==='booked'?'✓ Booked':'⏳ Pending';btn.setAttribute('onclick',`togBkSt('${id}','${n}')`);}renderBanner();showToast(n==='booked'?'Booked ✓':'Marked pending');}catch(e){showToast('Failed');}}
 async function delBk(id){if(!confirm('Delete this booking?'))return;try{await sbDel('bookings','id',id);allBookings=allBookings.filter(b=>b.id!==id);renderBookings();renderBanner();renderItinerary();showToast('Deleted');}catch(e){showToast('Failed');}}
 async function upAttach(id,inp){const f=inp.files[0];if(!f)return;if(f.size>2000000){showToast('Max 2MB');return;}showToast('Uploading…');const r=new FileReader();r.onload=async e=>{try{await sbPatch('bookings',id,{attachment_data:e.target.result});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=e.target.result;renderBookings();showToast('Saved ✓');}catch(err){showToast('Failed');}};r.readAsDataURL(f);}
-function viewAttach(id){const b=allBookings.find(b=>b.id===id);if(!b?.attachment_data)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';o.innerHTML=`<div style="position:relative;max-width:100%;max-height:90vh"><img src="${esc(b.attachment_data)}" style="max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain"><button onclick="this.parentElement.parentElement.remove()" style="position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-radius:50%;background:white;border:none;font-size:16px;cursor:pointer">×</button></div>`;document.body.appendChild(o);o.addEventListener('click',e=>{if(e.target===o)o.remove();});}
+function viewAttach(id){
+  const b=allBookings.find(bk=>bk.id===id);
+  if(!b?.attachment_data)return;
+  const o=document.createElement('div');
+  o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+  o.innerHTML=`
+    <div style="position:relative;max-width:100%;max-height:70vh;margin-bottom:16px">
+      <img src="${esc(b.attachment_data)}" style="max-width:100%;max-height:70vh;border-radius:8px;object-fit:contain;display:block" id="attach-view-img">
+      <button onclick="document.getElementById('attach-overlay').remove()" style="position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-radius:50%;background:white;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button onclick="shareAttach('${id}')" style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:6px"><i class="ti ti-share"></i> Share</button>
+      <button onclick="emailAttach('${id}')" style="background:#1A5FA8;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:6px"><i class="ti ti-mail"></i> Email</button>
+      <button onclick="printAttach('${id}')" style="background:#555;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:6px"><i class="ti ti-printer"></i> Print</button>
+    </div>`;
+  o.id='attach-overlay';
+  o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+  document.body.appendChild(o);
+}
+
+async function shareAttach(id){
+  const b=allBookings.find(bk=>bk.id===id);
+  if(!b?.attachment_data)return;
+  try{
+    // Convert base64 to blob for sharing
+    const res=await fetch(b.attachment_data);
+    const blob=await res.blob();
+    const file=new File([blob],'booking-'+b.title.replace(/[^a-z0-9]/gi,'-').substring(0,20)+'.'+blob.type.split('/')[1], {type:blob.type});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({
+        title:'Booking: '+b.title,
+        text:'Booking confirmation for '+b.title,
+        files:[file]
+      });
+    } else if(navigator.share){
+      // Fallback — share without file
+      await navigator.share({title:'Booking: '+b.title,text:'Booking: '+b.title+' — confirmation attached'});
+    } else {
+      showToast('Sharing not supported on this browser');
+    }
+  }catch(e){if(e.name!=='AbortError')showToast('Share failed: '+e.message.substring(0,40));}
+}
+
+function emailAttach(id){
+  const b=allBookings.find(bk=>bk.id===id);
+  if(!b)return;
+  // Open mail with subject and body — attachment via download link
+  const subject=encodeURIComponent('Booking: '+b.title);
+  const body=encodeURIComponent('Please find attached the booking confirmation for:
+
+'+b.title+'
+'+( b.detail||'')+'
+
+Ref: '+(b.ref||'TBD'));
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+  // Also trigger download so they can attach manually if needed
+  setTimeout(()=>{
+    const a=document.createElement('a');
+    a.href=b.attachment_data;
+    a.download='booking-'+b.title.replace(/[^a-z0-9]/gi,'-').substring(0,20)+'.jpg';
+    a.click();
+  },500);
+  showToast('Email app opening — file downloaded for attachment');
+}
+
+function printAttach(id){
+  const b=allBookings.find(bk=>bk.id===id);
+  if(!b?.attachment_data)return;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Booking: ${b.title}</title>
+    <style>body{margin:0;padding:16px;font-family:sans-serif}h2{font-size:16px;margin-bottom:8px;color:#333}p{font-size:13px;color:#666;margin-bottom:16px}img{max-width:100%;height:auto;border-radius:8px}@media print{h2,p{color:#000}}</style>
+    </head><body>
+    <h2>Booking: ${b.title}</h2>
+    <p>${b.detail||''} ${b.ref?'· Ref: '+b.ref:''}</p>
+    <img src="${b.attachment_data}" onload="window.print()">
+    </body></html>`);
+  w.document.close();
+}
 async function remAttach(id){if(!confirm('Remove?'))return;try{await sbPatch('bookings',id,{attachment_data:null});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=null;renderBookings();}catch(e){showToast('Failed');}}
 
 // ── LINK ──
