@@ -6,6 +6,7 @@
 <title>Manish Explores</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--teal:#0F6E56;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-pale:#F0FAF7;--teal-border:#9FE1CB;--cream:#FAFCFC;--cream-2:#F0FAF7;--border:#D8EDEA;--border-2:#B0D4CC;--text:#0D2E28;--text-2:#2A5A52;--text-3:#7AADA3;--text-4:#B0D4CC;--amber:#E8A020;--amber-l:#FDF3E3;--amber-d:#A05C10;--amber-b:#F0C878;--green:#085041;--green-l:#E1F5EE;--green-b:#9FE1CB;--red:#B83230;--brand:'Cormorant Garamond',serif;--ui:'Inter',sans-serif;--r:12px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -245,6 +246,17 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
+#map-container{height:340px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:12px}
+.budget-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.budget-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.budget-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+.budget-label{color:var(--text-2);flex:1}
+.budget-amt{font-weight:600;color:var(--text);min-width:80px;text-align:right}
+.budget-bar-wrap{flex:2;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.budget-bar{height:100%;border-radius:3px;transition:width .4s}
+.budget-total{display:flex;align-items:baseline;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:4px}
+.budget-total-label{font-size:12px;color:var(--text-3)}
+.budget-total-amt{font-family:var(--brand);font-size:22px;font-weight:500;color:var(--teal)}
 </style>
 </head>
 <body>
@@ -359,6 +371,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
       <div class="app-tab" onclick="showTab('bookings')">Bookings</div>
       <div class="app-tab" onclick="showTab('essentials')">Essentials</div>
       <div class="app-tab" onclick="showTab('share')">Share</div>
+      <div class="app-tab" onclick="showTab('map')">Map</div>
     </div>
   </div>
   <div class="wstrip" id="wstrip"></div>
@@ -368,6 +381,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
     <div class="tab-panel" id="tab-bookings"></div>
     <div class="tab-panel" id="tab-essentials"></div>
     <div class="tab-panel" id="tab-share"></div>
+    <div class="tab-panel" id="tab-map"></div>
   </div>
 </div>
 
@@ -576,6 +590,13 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 
     <label class="f-label">Booking ref / PNR</label>
     <input class="f-inp" id="ebk-ref" placeholder="e.g. 6E · QX2914">
+    <label class="f-label">Estimated cost</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="f-inp" id="ebk-cost" type="number" placeholder="0" style="max-width:120px">
+      <select class="f-inp" id="ebk-currency" style="max-width:90px">
+        <option>AED</option><option>INR</option><option>USD</option><option>GBP</option><option>EUR</option>
+      </select>
+    </div>
 
     <div class="modal-btn-row">
       <button class="btn-mc" onclick="closeModal('modal-edit-bk')">Cancel</button>
@@ -1117,7 +1138,9 @@ function selCat(el){
 }
 async function confirmAddBk(){
   const nextOrder=allBookings.length?Math.max(...allBookings.map(b=>b.sort_order||0))+1:0;
-  let bkData={trip_id:currentTrip.id,category:selBkCat,status:'pending',ref:'',cost:0,attachment_data:null,sort_order:nextOrder,day_id:null,end_day_id:null,claude_tip:'',dep_time:null,arr_time:null,from_city:null,to_city:null,flight_date:null,checkin_date:null,checkout_date:null};
+  const bkCost=parseFloat(document.getElementById('bk-cost-inp')?.value||0)||0;
+  const bkCurrency=document.getElementById('bk-currency')?.value||'AED';
+  let bkData={trip_id:currentTrip.id,category:selBkCat,status:'pending',ref:'',cost:bkCost,currency:bkCurrency,attachment_data:null,sort_order:nextOrder,day_id:null,end_day_id:null,claude_tip:'',dep_time:null,arr_time:null,from_city:null,to_city:null,flight_date:null,checkin_date:null,checkout_date:null};
 
   if(selBkCat==='Flights'){
     const from=document.getElementById('fl-from').value.trim();
@@ -1445,6 +1468,9 @@ function openEditBk(bkId){
     document.getElementById('eot-detail').value = b.detail||'';
   }
   document.getElementById('ebk-ref').value = b.ref||'';
+  document.getElementById('ebk-cost').value = b.cost||'';
+  const cur = document.getElementById('ebk-currency');
+  if(cur&&b.currency){[...cur.options].forEach(o=>{o.selected=o.value===b.currency;});}
   openModal('modal-edit-bk');
 }
 
@@ -1452,7 +1478,9 @@ async function confirmEditBk(){
   const b = allBookings.find(bk=>bk.id===_editBkId);
   if(!b) return;
   const cat = b.category;
-  let updates = {ref: document.getElementById('ebk-ref').value.trim()};
+  const editCost=parseFloat(document.getElementById('ebk-cost')?.value||0)||0;
+  const editCurrency=document.getElementById('ebk-currency')?.value||'AED';
+  let updates = {ref: document.getElementById('ebk-ref').value.trim(), cost:editCost, currency:editCurrency};
 
   if(cat==='Flights'){
     const from = document.getElementById('efl-from').value.trim();
@@ -1848,7 +1876,7 @@ function openSettings(){document.getElementById('set-owner').value='';document.g
 async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
 
 // ── TABS ──
-function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}}
+function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}}
 
 // ── WEATHER ──
 const WC=[{n:'Delhi',lat:28.6139,lon:77.2090},{n:'Katra',lat:32.9916,lon:74.9320},{n:'Udaipur',lat:24.5854,lon:73.7125},{n:'Leh',lat:34.1526,lon:77.5771},{n:'Patiala',lat:30.3398,lon:76.3869}];
@@ -1878,6 +1906,183 @@ document.addEventListener('touchstart',e=>{const el=document.getElementById('tab
 document.addEventListener('touchmove',e=>{if(!pulling)return;const el=document.getElementById('tab-scroll');if(!el||el.scrollTop>0)return;const dist=e.touches[0].clientY-sy;if(dist<0)return;const ind=document.getElementById('ptr-ind'),icon=document.getElementById('ptr-icon'),txt=document.getElementById('ptr-txt');if(dist>20){ind.classList.add('show');icon.style.transform=dist>T?'rotate(180deg)':`rotate(${dist*2}deg)`;txt.textContent=dist>T?'Release to refresh':'Pull to refresh';}},{passive:true});
 document.addEventListener('touchend',async e=>{if(!pulling)return;pulling=false;const dist=e.changedTouches[0].clientY-sy;const ind=document.getElementById('ptr-ind'),txt=document.getElementById('ptr-txt');if(dist>T){txt.textContent='Refreshing…';document.getElementById('ptr-icon').className='ti ti-loader spinning';await renderAll();txt.textContent='Updated ✓';setTimeout(()=>ind.classList.remove('show'),800);}else ind.classList.remove('show');document.getElementById('ptr-icon').style.transform='';document.getElementById('ptr-icon').className='ti ti-refresh';},{passive:true});
 })();
+
+// ── BUDGET + MAP ──
+const PHASE_COORDS = {
+  'delhi':    [28.6139, 77.2090],
+  'katra':    [32.9916, 74.9320],
+  'jammu':    [32.7266, 74.8570],
+  'vaishno':  [32.9916, 74.9320],
+  'udaipur':  [24.5854, 73.7125],
+  'leh':      [34.1526, 77.5771],
+  'noida':    [28.5355, 77.3910],
+  'patiala':  [30.3398, 76.3869],
+  'chandigarh':[30.7333,76.7794],
+  'panipat':  [29.3909, 76.9635],
+  'mumbai':   [19.0760, 72.8777],
+  'jaipur':   [26.9124, 75.7873],
+  'agra':     [27.1767, 78.0081],
+  'goa':      [15.2993, 74.1240],
+  'dubai':    [25.2048, 55.2708],
+  'bangalore':[12.9716, 77.5946],
+  'hyderabad':[17.3850, 78.4867],
+  'kolkata':  [22.5726, 88.3639],
+  'Chennai':  [13.0827, 80.2707],
+};
+
+let _leafletMap = null;
+
+function getCoords(name){
+  if(!name)return null;
+  const key=name.toLowerCase().replace(/[^a-z]/g,'');
+  for(const [k,v] of Object.entries(PHASE_COORDS)){
+    if(key.includes(k)||k.includes(key.substring(0,4)))return v;
+  }
+  return null;
+}
+
+function renderMapTab(){
+  const el=document.getElementById('tab-map');
+  if(!currentTrip){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-3)">Open a trip first.</div>';return;}
+  const canEdit=role==='owner'||role==='editor';
+
+  // Budget section
+  let budgetHtml='<div class="bk-body">';
+  budgetHtml+=renderBudgetSection(canEdit);
+
+  // Map section
+  budgetHtml+=`<div class="budget-card">
+    <div class="budget-title"><i class="ti ti-map-2" style="color:var(--teal)"></i>Trip map</div>
+    <div id="map-container"></div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:6px">Pins show each phase location. Tap a pin for details.</div>
+  </div>`;
+  budgetHtml+='</div>';
+  el.innerHTML=budgetHtml;
+
+  // Init Leaflet map after DOM is ready
+  setTimeout(()=>initMap(),100);
+}
+
+function renderBudgetSection(canEdit){
+  const cats=['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'];
+  const colors={'Flights':'#1A5FA8','Hotels':'#A05C10','Transfers & Taxis':'#2E7D52','Special Bookings':'#5B3FA8','Other':'#666'};
+  const icons={'Flights':'ti-plane','Hotels':'ti-building','Transfers & Taxis':'ti-car','Special Bookings':'ti-helicopter','Other':'ti-bookmark'};
+
+  // Group by currency
+  const currencies=[...new Set(allBookings.map(b=>b.currency||'AED').filter(Boolean))];
+  const mainCurrency=currencies[0]||'AED';
+
+  let totalAll=0;
+  let html='<div class="budget-card"><div class="budget-title"><i class="ti ti-wallet" style="color:var(--teal)"></i>Budget summary</div>';
+
+  const withCost=allBookings.filter(b=>b.cost>0);
+  if(!withCost.length){
+    html+='<div style="font-size:12px;color:var(--text-3);padding:8px 0">No costs entered yet. Edit any booking to add an estimated cost.</div></div>';
+    return html;
+  }
+
+  const maxAmt=Math.max(...cats.map(cat=>allBookings.filter(b=>b.category===cat).reduce((s,b)=>s+(b.cost||0),0)));
+
+  cats.forEach(cat=>{
+    const bks=allBookings.filter(b=>b.category===cat&&b.cost>0);
+    if(!bks.length)return;
+    const total=bks.reduce((s,b)=>s+(b.cost||0),0);
+    const cur=bks[0].currency||mainCurrency;
+    totalAll+=total;
+    const pct=maxAmt>0?Math.round(total/maxAmt*100):0;
+    const cc=colors[cat]||'#666';
+    html+=`<div class="budget-row">
+      <div class="budget-label"><i class="ti ${icons[cat]||'ti-bookmark'}" style="margin-right:4px;font-size:12px"></i>${cat}</div>
+      <div class="budget-bar-wrap"><div class="budget-bar" style="width:${pct}%;background:${cc}"></div></div>
+      <div class="budget-amt" style="color:${cc}">${cur} ${total.toLocaleString()}</div>
+    </div>`;
+  });
+
+  // Per-booking breakdown toggle
+  html+=`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--text-3);cursor:pointer;list-style:none">▸ Show per-booking breakdown</summary><div style="margin-top:8px">`;
+  allBookings.filter(b=>b.cost>0).forEach(b=>{
+    const cc=colors[b.category]||'#666';
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">
+      <span style="color:var(--text-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.title)}</span>
+      <span style="font-weight:600;color:${cc};flex-shrink:0;margin-left:8px">${(b.currency||mainCurrency)} ${(b.cost||0).toLocaleString()}</span>
+    </div>`;
+  });
+  html+='</div></details>';
+
+  html+=`<div class="budget-total">
+    <span class="budget-total-label">Estimated total</span>
+    <span class="budget-total-amt">${mainCurrency} ${totalAll.toLocaleString()}</span>
+  </div>`;
+  html+='</div>';
+  return html;
+}
+
+function initMap(){
+  if(typeof L==='undefined'){
+    // Load Leaflet
+    const script=document.createElement('script');
+    script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload=()=>drawMap();
+    document.head.appendChild(script);
+  } else {
+    drawMap();
+  }
+}
+
+function drawMap(){
+  const el=document.getElementById('map-container');
+  if(!el)return;
+
+  // Destroy existing map
+  if(_leafletMap){_leafletMap.remove();_leafletMap=null;}
+
+  // Find phase coords
+  const phasePoints=allPhases.map((ph,i)=>{
+    // Try phase name first
+    const coords=getCoords(ph.name)||getCoords(ph.date_range);
+    return {ph,coords,color:ph.color||'#0F6E56',idx:i};
+  }).filter(p=>p.coords);
+
+  if(!phasePoints.length){
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--text-3)"><i class="ti ti-map-off" style="font-size:24px;margin-right:8px"></i>No locations recognised. Phase names need to match known cities.</div>';
+    return;
+  }
+
+  const center=phasePoints[Math.floor(phasePoints.length/2)].coords;
+  _leafletMap=L.map('map-container',{zoomControl:true,scrollWheelZoom:false}).setView(center,5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',
+    maxZoom:18
+  }).addTo(_leafletMap);
+
+  // Draw route line
+  if(phasePoints.length>1){
+    const latlngs=phasePoints.map(p=>p.coords);
+    L.polyline(latlngs,{color:'#0F6E56',weight:2,dashArray:'6 4',opacity:.6}).addTo(_leafletMap);
+  }
+
+  // Add phase markers
+  phasePoints.forEach(({ph,coords,color})=>{
+    const phDays=allDays.filter(d=>d.phase_id===ph.id);
+    const popup=`<div style="font-family:sans-serif;min-width:140px">
+      <div style="font-weight:600;color:${color};font-size:14px;margin-bottom:4px">${ph.name}</div>
+      <div style="font-size:11px;color:#666">${ph.date_range||''}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">${phDays.length} day${phDays.length!==1?'s':''}</div>
+    </div>`;
+
+    const icon=L.divIcon({
+      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
+      className:'',iconSize:[14,14],iconAnchor:[7,7]
+    });
+    L.marker(coords,{icon}).addTo(_leafletMap).bindPopup(popup);
+  });
+
+  // Fit map to all points
+  if(phasePoints.length>1){
+    _leafletMap.fitBounds(phasePoints.map(p=>p.coords),{padding:[30,30]});
+  }
+}
 
 // INIT
 updateCountdown();
