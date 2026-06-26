@@ -1496,7 +1496,8 @@ async function confirmInsertDay(){
 
     if(_insertBeforeDayId){
       const beforeDay = allDays.find(d=>d.id===_insertBeforeDayId);
-      insertSortOrder = beforeDay.sort_order;
+      if(!beforeDay){showToast('Could not find day — try refreshing');btn.textContent='Insert & shift dates →';btn.disabled=false;return;}
+      insertSortOrder = (beforeDay.sort_order||0);
       insertDate = beforeDay.date;
       // All days from this point forward (across ALL phases) need date+1
       const beforeIdx = allDays.findIndex(d=>d.id===_insertBeforeDayId);
@@ -1555,7 +1556,7 @@ async function confirmInsertDay(){
       }
     }
 
-    // Insert the new day
+    // Insert the new day — use sort_order as integer (shifted days already moved up)
     const newWeekday = parseDate(insertDate)?.toLocaleDateString('en',{weekday:'short'})||'';
     await sbPost('days',{
       trip_id: currentTrip.id,
@@ -1564,7 +1565,7 @@ async function confirmInsertDay(){
       weekday: newWeekday,
       title, subtitle,
       tip:'', note:'',
-      sort_order: insertSortOrder - 0.5
+      sort_order: Math.floor(insertSortOrder)
     });
 
     // Re-fetch everything fresh
