@@ -1039,6 +1039,7 @@ function renderBookings(){
         <div style="display:flex;align-items:flex-start;justify-content:space-between">
           <div style="flex:1;min-width:0">
             <div class="bk-title">${esc(b.title)}</div>
+            ${(b.flight_date||b.checkin_date)?`<div style="font-size:10px;font-weight:600;color:var(--text-3);margin-top:1px">${fmtDate(b.flight_date||b.checkin_date)}${b.checkout_date?' – '+fmtDate(b.checkout_date):''}</div>`:''}
             <div class="bk-detail">${esc(b.detail||'')}</div>
             ${b.claude_tip?`<span class="bk-tip">💡 ${esc(b.claude_tip)}</span>`:''}
             ${dayLbl?`<span class="bk-link-tag" style="background:var(--teal-light);color:var(--teal);border:1px solid var(--teal-border)"><i class="ti ti-calendar" style="font-size:9px"></i> ${dayLbl}</span>`:canEdit?`<span class="bk-link-tag" style="background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b);cursor:pointer" onclick="openLinkFromBk('${b.id}')"><i class="ti ti-link" style="font-size:9px"></i> Not linked — tap to link</span>`:''}
@@ -1306,26 +1307,41 @@ function openEditBk(bkId){
     if(el) el.style.display = c===cat ? 'block' : 'none';
   });
 
-  // Pre-fill fields
+  // Pre-fill fields — use structured fields, fall back to parsing title/detail
   if(cat==='Flights'){
-    document.getElementById('efl-from').value = b.from_city||'';
-    document.getElementById('efl-to').value = b.to_city||'';
+    // from_city/to_city — parse from title if not stored (e.g. "Dubai → Delhi")
+    let fromCity = b.from_city||'';
+    let toCity = b.to_city||'';
+    if(!fromCity && b.title && b.title.includes('→')){
+      const parts = b.title.split('→');
+      fromCity = parts[0].trim();
+      toCity = parts[1]?.trim()||'';
+    }
+    document.getElementById('efl-from').value = fromCity;
+    document.getElementById('efl-to').value = toCity;
     document.getElementById('efl-date').value = b.flight_date||'';
-    document.getElementById('efl-dep').value = b.dep_time||'';
-    document.getElementById('efl-arr').value = b.arr_time||'';
+    // dep_time may come as "HH:MM:SS" from postgres — trim to HH:MM
+    document.getElementById('efl-dep').value = (b.dep_time||'').substring(0,5);
+    document.getElementById('efl-arr').value = (b.arr_time||'').substring(0,5);
   } else if(cat==='Hotels'){
     document.getElementById('eht-name').value = b.title||'';
     document.getElementById('eht-cin').value = b.checkin_date||'';
     document.getElementById('eht-cout').value = b.checkout_date||'';
   } else if(cat==='Transfers & Taxis'){
-    document.getElementById('etr-from').value = b.from_city||'';
-    document.getElementById('etr-to').value = b.to_city||'';
+    let tfrom = b.from_city||'';
+    let tto = b.to_city||'';
+    if(!tfrom && b.title && b.title.includes('→')){
+      const parts = b.title.split('→');
+      tfrom = parts[0].trim(); tto = parts[1]?.trim()||'';
+    }
+    document.getElementById('etr-from').value = tfrom;
+    document.getElementById('etr-to').value = tto;
     document.getElementById('etr-date').value = b.flight_date||'';
-    document.getElementById('etr-time').value = b.dep_time||'';
+    document.getElementById('etr-time').value = (b.dep_time||'').substring(0,5);
   } else if(cat==='Special Bookings'){
     document.getElementById('esp-name').value = b.title||'';
     document.getElementById('esp-date').value = b.flight_date||'';
-    document.getElementById('esp-time').value = b.dep_time||'';
+    document.getElementById('esp-time').value = (b.dep_time||'').substring(0,5);
   } else {
     document.getElementById('eot-title').value = b.title||'';
     document.getElementById('eot-detail').value = b.detail||'';
