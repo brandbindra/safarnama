@@ -942,6 +942,16 @@ function renderItinerary(){
       const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')">⚠ Link booking</span>`:'';
       const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
       const editRow=role==='owner'?`<div style="margin-bottom:10px">
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <div style="flex:1">
+              <div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Date</div>
+              <input class="exp-inp" type="date" value="${d.date||''}" id="edate-${d.id}">
+            </div>
+            <div style="flex:1">
+              <div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Weekday</div>
+              <input class="exp-inp" value="${esc(d.weekday||'')}" id="ewd-${d.id}" placeholder="e.g. Mon" style="text-align:center">
+            </div>
+          </div>
           <input class="exp-inp" placeholder="Day title" value="${esc(d.title)}" id="etitle-${d.id}" style="margin-bottom:6px">
           <input class="exp-inp" placeholder="Subtitle" value="${esc(d.subtitle||'')}" id="esub-${d.id}" style="margin-bottom:8px">
           <div style="display:flex;gap:8px">
@@ -986,7 +996,23 @@ function renderItinerary(){
 
 function toggleDay(id){document.getElementById('dc-'+id)?.classList.toggle('open');}
 async function savePh(id,f,v){try{await sbPatch('phases',id,{[f]:v});const i=allPhases.findIndex(p=>p.id===id);if(i>=0)allPhases[i][f]=v;}catch(e){showToast('Save failed');}}
-async function saveDay(id){const t=document.getElementById('etitle-'+id)?.value,s=document.getElementById('esub-'+id)?.value;try{await sbPatch('days',id,{title:t,subtitle:s});const i=allDays.findIndex(d=>d.id===id);if(i>=0){allDays[i].title=t;allDays[i].subtitle=s;}const c=document.getElementById('dc-'+id);if(c){c.querySelector('.day-title').textContent=t;c.querySelector('.day-sub').textContent=s;}showToast('Saved ✓');}catch(e){showToast('Save failed');}}
+async function saveDay(id){
+  const t=document.getElementById('etitle-'+id)?.value;
+  const s=document.getElementById('esub-'+id)?.value;
+  const date=document.getElementById('edate-'+id)?.value;
+  const wd=document.getElementById('ewd-'+id)?.value||
+    (date?parseDate(date)?.toLocaleDateString('en',{weekday:'short'}):'');
+  try{
+    const updates={title:t,subtitle:s};
+    if(date){updates.date=date;updates.weekday=wd;}
+    await sbPatch('days',id,updates);
+    const i=allDays.findIndex(d=>d.id===id);
+    if(i>=0){allDays[i].title=t;allDays[i].subtitle=s;if(date){allDays[i].date=date;allDays[i].weekday=wd;}}
+    // Re-render the card so date numeral and weekday update
+    renderItinerary();
+    showToast('Saved ✓');
+  }catch(e){showToast('Save failed');}
+}
 function debT(id,f,v){const T=f==='tip'?tipT:noteT;clearTimeout(T[id]);T[id]=setTimeout(()=>saveDFld(id,f,v),800);}
 async function saveDFld(id,f,v){try{await sbPatch('days',id,{[f]:v});const i=allDays.findIndex(d=>d.id===id);if(i>=0)allDays[i][f]=v;}catch(e){}}
 async function uploadPh(id,inp){const f=inp.files[0];if(!f)return;if(f.size>2000000){showToast('Max 2MB');return;}showToast('Uploading…');const r=new FileReader();r.onload=async e=>{try{await sbPatch('phases',id,{photo_url:e.target.result});const i=allPhases.findIndex(p=>p.id===id);if(i>=0)allPhases[i].photo_url=e.target.result;renderItinerary();showToast('Photo saved ✓');}catch(err){showToast('Upload failed');}};r.readAsDataURL(f);}
