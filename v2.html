@@ -1970,7 +1970,7 @@ function renderMapTab(){
   const canEdit=role==='owner'||role==='editor';
 
   let html='<div class="bk-body">';
-  html+=renderBudgetSection(canEdit);
+  if(role!=='viewer')html+=renderBudgetSection(canEdit);
 
   // Phase selector pills
   html+=`<div class="budget-card" style="padding-bottom:8px">
