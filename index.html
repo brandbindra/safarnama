@@ -611,7 +611,7 @@ async function sbDel(t,col,val){const r=await fetch(SB+'/'+t+'?'+col+'=eq.'+val,
 
 // ── UTILS ──
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escJ(s){return String(s||'').replace(/\\/g,'\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
+function escJ(s){return String(s||'').replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
 function parseDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function fmtDate(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{day:'numeric',month:'short'}):''}
 function fmtDay(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{weekday:'short'}):''}
@@ -969,9 +969,9 @@ function renderItinerary(){
         } else {
           label='📌 '+b.title.substring(0,18);
         }
-        return '<span onclick="event.stopPropagation();showTab('bookings')" style="cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+tcc+'15;color:'+tcc+';border:1px solid '+tcc+'44;display:inline-flex;align-items:center;gap:4px;margin-right:2px;white-space:nowrap">'+esc(label)+' '+stIcon+'</span>';
+        return '<span onclick="event.stopPropagation();showTab(\'bookings\')" style="cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+tcc+'15;color:'+tcc+';border:1px solid '+tcc+'44;display:inline-flex;align-items:center;gap:4px;margin-right:2px;white-space:nowrap">'+esc(label)+' '+stIcon+'</span>';
       }).join('');
-      const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')">⚠ Link booking</span>`:'';
+      const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')">⚠ Link booking</span>`:'';
       const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
       const editRow=role==='owner'?`<div style="margin-bottom:10px">
           <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -1011,7 +1011,7 @@ function renderItinerary(){
           ${editRow}
           <div class="exp-lbl" style="color:${cc}">📋 Linked bookings</div>
           <div style="margin-bottom:8px">${linked.length?lbkRows:'<div style="font-size:11px;color:var(--text-3)">None linked</div>'}</div>
-          ${canEdit?`<button class="btn-link-sm" onclick="openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')"><i class="ti ti-link" style="font-size:12px"></i> Link a booking</button>`:''}
+          ${canEdit?`<button class="btn-link-sm" onclick="openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')"><i class="ti ti-link" style="font-size:12px"></i> Link a booking</button>`:''}
           <div class="exp-lbl" style="color:${cc};margin-top:12px">💡 Tip</div>${tipA}
           <div class="exp-lbl" style="color:${cc}">📝 Personal note</div>${noteA}
         </div>
@@ -1199,50 +1199,34 @@ async function togBkSt(id,cur){const n=cur==='booked'?'pending':'booked';try{awa
 async function delBk(id){if(!confirm('Delete this booking?'))return;try{await sbDel('bookings','id',id);allBookings=allBookings.filter(b=>b.id!==id);renderBookings();renderBanner();renderItinerary();showToast('Deleted');}catch(e){showToast('Failed');}}
 async function upAttach(id,inp){const f=inp.files[0];if(!f)return;if(f.size>2000000){showToast('Max 2MB');return;}showToast('Uploading…');const r=new FileReader();r.onload=async e=>{try{await sbPatch('bookings',id,{attachment_data:e.target.result});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=e.target.result;renderBookings();showToast('Saved ✓');}catch(err){showToast('Failed');}};r.readAsDataURL(f);}
 function viewAttach(id){
-  const b=allBookings.find(bk=>bk.id===id);
+  const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b||!b.attachment_data)return;
   const o=document.createElement('div');
   o.id='attach-overlay';
   o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px';
-  // Image
   const img=document.createElement('img');
   img.src=b.attachment_data;
   img.style.cssText='max-width:100%;max-height:65vh;border-radius:8px;object-fit:contain';
   o.appendChild(img);
-  // Buttons row
-  const btns=document.createElement('div');
-  btns.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center';
-  // Close
-  const closeBtn=document.createElement('button');
-  closeBtn.textContent='× Close';
-  closeBtn.style.cssText='background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer';
-  closeBtn.onclick=function(){o.remove();};
-  btns.appendChild(closeBtn);
-  // Share (Web Share API)
-  const shareBtn=document.createElement('button');
-  shareBtn.innerHTML='<i class="ti ti-share"></i> Share';
-  shareBtn.style.cssText='background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer';
-  shareBtn.onclick=function(){shareAttach(id);};
-  btns.appendChild(shareBtn);
-  // Email
-  const emailBtn=document.createElement('button');
-  emailBtn.innerHTML='<i class="ti ti-mail"></i> Email';
-  emailBtn.style.cssText='background:#1A5FA8;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer';
-  emailBtn.onclick=function(){emailAttach(id);};
-  btns.appendChild(emailBtn);
-  // Print
-  const printBtn=document.createElement('button');
-  printBtn.innerHTML='<i class="ti ti-printer"></i> Print';
-  printBtn.style.cssText='background:#555;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer';
-  printBtn.onclick=function(){printAttach(id);};
-  btns.appendChild(printBtn);
-  o.appendChild(btns);
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center';
+  function makeBtn(label,bg,fn){
+    const btn=document.createElement('button');
+    btn.innerHTML=label;
+    btn.style.cssText='background:'+bg+';color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui)';
+    btn.onclick=fn;
+    row.appendChild(btn);
+  }
+  makeBtn('× Close','rgba(255,255,255,.2)',function(){o.remove();});
+  makeBtn('<i class="ti ti-share"></i> Share','#25D366',function(){shareAttach(id);});
+  makeBtn('<i class="ti ti-mail"></i> Email','#1A5FA8',function(){emailAttach(id);});
+  makeBtn('<i class="ti ti-printer"></i> Print','#555',function(){printAttach(id);});
+  o.appendChild(row);
   o.addEventListener('click',function(e){if(e.target===o)o.remove();});
   document.body.appendChild(o);
 }
-
 async function shareAttach(id){
-  const b=allBookings.find(bk=>bk.id===id);
+  const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b||!b.attachment_data)return;
   try{
     const res=await fetch(b.attachment_data);
@@ -1252,39 +1236,30 @@ async function shareAttach(id){
     if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({title:'Booking: '+b.title,files:[file]});
     } else if(navigator.share){
-      await navigator.share({title:'Booking: '+b.title,text:b.title+' - '+( b.detail||'')});
-    } else {
-      showToast('Sharing not supported on this browser');
-    }
+      await navigator.share({title:b.title,text:b.title+' '+(b.detail||'')});
+    } else { showToast('Sharing not supported'); }
   }catch(e){if(e.name!=='AbortError')showToast('Share failed');}
 }
-
 function emailAttach(id){
-  const b=allBookings.find(bk=>bk.id===id);
+  const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b)return;
   const sub=encodeURIComponent('Booking: '+b.title);
-  const body=encodeURIComponent('Booking confirmation for: '+b.title+'\n'+(b.detail||'')+'\nRef: '+(b.ref||'TBD'));
+  const body=encodeURIComponent('Booking: '+b.title+'
+'+(b.detail||'')+'
+Ref: '+(b.ref||'TBD'));
   window.location.href='mailto:?subject='+sub+'&body='+body;
-  if(b.attachment_data){
-    setTimeout(function(){
-      const a=document.createElement('a');
-      a.href=b.attachment_data;
-      a.download='booking.jpg';
-      a.click();
-    },600);
-  }
+  if(b.attachment_data){setTimeout(function(){const a=document.createElement('a');a.href=b.attachment_data;a.download='booking.jpg';a.click();},600);}
   showToast('Email app opening');
 }
-
 function printAttach(id){
-  const b=allBookings.find(bk=>bk.id===id);
+  const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b||!b.attachment_data)return;
   const w=window.open('','_blank');
   if(!w)return;
-  w.document.write('<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:16px;font-family:sans-serif}img{max-width:100%;height:auto}</style></head><body><h2>'+b.title+'</h2><p>'+(b.detail||'')+(b.ref?' | Ref: '+b.ref:'')+'</p><img src="'+b.attachment_data+'" onload="window.print()"></body></html>');
+  const html='<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:16px;font-family:sans-serif}img{max-width:100%;}</style></head><body><h2>'+b.title+'</h2><p>'+(b.detail||'')+'</p><img src="'+b.attachment_data+'" onload="window.print()"></body></html>';
+  w.document.write(html);
   w.document.close();
 }
-
 async function remAttach(id){if(!confirm('Remove?'))return;try{await sbPatch('bookings',id,{attachment_data:null});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=null;renderBookings();}catch(e){showToast('Failed');}}
 
 // ── LINK ──
@@ -1397,8 +1372,8 @@ function renderShare(){
       if(d.note)iTxt+='  Note: '+d.note+'\n';
     });
   });
-  const pE=pTxt.replace(/\\/g,'\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
-  const iE=iTxt.replace(/\\/g,'\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+  const pE=pTxt.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+  const iE=iTxt.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
   document.getElementById('tab-share').innerHTML=`<div class="share-body">
     <div class="share-card"><div class="share-card-title"><i class="ti ti-clipboard-list"></i>Pending bookings</div><div class="share-desc">Only unconfirmed items — send to travel agent or family.</div><div class="share-prev">${esc(pTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(pTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
     <div class="share-card"><div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div><div class="share-desc">All days, bookings and personal notes — ready to forward.</div><div class="share-prev">${esc(iTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(iTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
