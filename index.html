@@ -1028,7 +1028,10 @@ function renderBookings(){
   used.forEach(g=>{
     const cc=CAT_CLR[g]||'#666',icon=CAT_ICO[g]||'ti-bookmark';
     html+=`<div class="bk-group"><div class="bk-grp-title" style="color:${cc}"><span><i class="ti ${icon}" style="margin-right:5px"></i>${g}</span>${isOwner?`<button class="btn-add-bk" onclick="openAddBk('${g}')" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>`:''}</div>`;
-    allBookings.filter(b=>b.category===g).forEach(b=>{
+    [...allBookings.filter(b=>b.category===g)].sort((a,b)=>{
+      const getDate=bk=>bk.flight_date||bk.checkin_date||(bk.day_id?allDays.find(d=>d.id===bk.day_id)?.date:null)||'9999';
+      return getDate(a).localeCompare(getDate(b));
+    }).forEach(b=>{
       let dayLbl='';
       if(b.day_id){const sd=allDays.find(d=>d.id===b.day_id),ed=b.end_day_id?allDays.find(d=>d.id===b.end_day_id):null;dayLbl=ed?`${fmtDate(sd?.date)} → ${fmtDate(ed?.date)}`:`${fmtDay(sd?.date)} ${fmtDate(sd?.date)}`;}
       const refF=canEdit?`<input class="bk-ref-inp" placeholder="Booking ref / PNR…" value="${esc(b.ref||'')}" onchange="saveBkF('${b.id}','ref',this.value)">`:`<div class="bk-ref-ro">${esc(b.ref||'Not entered')}</div>`;
