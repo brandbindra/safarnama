@@ -927,7 +927,8 @@ function renderItinerary(){
         <div style="flex:1;min-width:0">
           ${canEdit
             ?`<input value="${esc(ph.name)}" style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc};border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePh('${ph.id}','name',this.value)">
-               <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">`
+               <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">
+               <input value="${esc(ph.map_city||'')}" placeholder="Map city (e.g. Katra, Leh)" style="font-size:10px;color:var(--teal);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px;font-style:italic" onchange="savePh('${ph.id}','map_city',this.value)">`
             :`<div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc}">${esc(ph.name)}</div><div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>`}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
@@ -1909,25 +1910,49 @@ document.addEventListener('touchend',async e=>{if(!pulling)return;pulling=false;
 
 // ── BUDGET + MAP ──
 const PHASE_COORDS = {
-  'delhi':    [28.6139, 77.2090],
-  'katra':    [32.9916, 74.9320],
-  'jammu':    [32.7266, 74.8570],
-  'vaishno':  [32.9916, 74.9320],
-  'udaipur':  [24.5854, 73.7125],
-  'leh':      [34.1526, 77.5771],
-  'noida':    [28.5355, 77.3910],
-  'patiala':  [30.3398, 76.3869],
-  'chandigarh':[30.7333,76.7794],
-  'panipat':  [29.3909, 76.9635],
-  'mumbai':   [19.0760, 72.8777],
-  'jaipur':   [26.9124, 75.7873],
-  'agra':     [27.1767, 78.0081],
-  'goa':      [15.2993, 74.1240],
-  'dubai':    [25.2048, 55.2708],
-  'bangalore':[12.9716, 77.5946],
-  'hyderabad':[17.3850, 78.4867],
-  'kolkata':  [22.5726, 88.3639],
-  'Chennai':  [13.0827, 80.2707],
+  'delhi':      [28.6139, 77.2090],
+  'newdelhi':   [28.6139, 77.2090],
+  'katra':      [32.9916, 74.9320],
+  'jammu':      [32.7266, 74.8570],
+  'vaishno':    [32.9916, 74.9320],
+  'vaishnodevi':[32.9916, 74.9320],
+  'udaipur':    [24.5854, 73.7125],
+  'leh':        [34.1526, 77.5771],
+  'ladakh':     [34.1526, 77.5771],
+  'noida':      [28.5355, 77.3910],
+  'patiala':    [30.3398, 76.3869],
+  'chandigarh': [30.7333, 76.7794],
+  'panipat':    [29.3909, 76.9635],
+  'mumbai':     [19.0760, 72.8777],
+  'jaipur':     [26.9124, 75.7873],
+  'agra':       [27.1767, 78.0081],
+  'goa':        [15.2993, 74.1240],
+  'dubai':      [25.2048, 55.2708],
+  'abudhabi':   [24.4539, 54.3773],
+  'sharjah':    [25.3463, 55.4209],
+  'bangalore':  [12.9716, 77.5946],
+  'bengaluru':  [12.9716, 77.5946],
+  'hyderabad':  [17.3850, 78.4867],
+  'kolkata':    [22.5726, 88.3639],
+  'chennai':    [13.0827, 80.2707],
+  'amritsar':   [31.6340, 74.8723],
+  'shimla':     [31.1048, 77.1734],
+  'manali':     [32.2396, 77.1887],
+  'srinagar':   [34.0837, 74.7973],
+  'gulmarg':    [34.0484, 74.3805],
+  'varanasi':   [25.3176, 82.9739],
+  'lucknow':    [26.8467, 80.9462],
+  'ahmedabad':  [23.0225, 72.5714],
+  'pune':       [18.5204, 73.8567],
+  'dehradun':   [30.3165, 78.0322],
+  'haridwar':   [29.9457, 78.1642],
+  'rishikesh':  [30.0869, 78.2676],
+  'london':     [51.5074, -0.1278],
+  'newyork':    [40.7128, -74.0060],
+  'paris':      [48.8566, 2.3522],
+  'singapore':  [1.3521, 103.8198],
+  'bangkok':    [13.7563, 100.5018],
+  'bali':       [-8.3405, 115.0920],
 };
 
 let _leafletMap = null;
@@ -1954,7 +1979,7 @@ function renderMapTab(){
   budgetHtml+=`<div class="budget-card">
     <div class="budget-title"><i class="ti ti-map-2" style="color:var(--teal)"></i>Trip map</div>
     <div id="map-container"></div>
-    <div style="font-size:11px;color:var(--text-3);margin-top:6px">Pins show each phase location. Tap a pin for details.</div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:6px">Pins show each phase location · Tap a pin for details · Set city in Itinerary tab → phase → Map city field</div>
   </div>`;
   budgetHtml+='</div>';
   el.innerHTML=budgetHtml;
@@ -2036,15 +2061,18 @@ function drawMap(){
   // Destroy existing map
   if(_leafletMap){_leafletMap.remove();_leafletMap=null;}
 
-  // Find phase coords
+  // Find phase coords — use manual map_city field first, then name
   const phasePoints=allPhases.map((ph,i)=>{
-    // Try phase name first
-    const coords=getCoords(ph.name)||getCoords(ph.date_range);
+    const coords=getCoords(ph.map_city)||getCoords(ph.name);
     return {ph,coords,color:ph.color||'#0F6E56',idx:i};
   }).filter(p=>p.coords);
 
   if(!phasePoints.length){
-    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--text-3)"><i class="ti ti-map-off" style="font-size:24px;margin-right:8px"></i>No locations recognised. Phase names need to match known cities.</div>';
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:20px;text-align:center">
+      <i class="ti ti-map-off" style="font-size:32px;color:var(--text-3)"></i>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">No map locations set</div>
+      <div style="font-size:12px;color:var(--text-3);line-height:1.5">As Owner, expand each phase in the Itinerary tab and type the main city in the <em>Map city</em> field (e.g. Katra, Leh, Udaipur).</div>
+    </div>`;
     return;
   }
 
