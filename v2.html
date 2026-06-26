@@ -707,6 +707,12 @@ function renderHome(trips){
   }
   if(role==='owner')html+=`<button class="btn-new-trip" onclick="startWizard()"><i class="ti ti-plus"></i> New trip</button>`;
   el.innerHTML=html;
+  // Load stats for each trip card
+  if(trips&&trips.length){
+    document.querySelectorAll('.trip-card').forEach((card,i)=>{
+      if(trips[i])loadTripStats(trips[i].id,card);
+    });
+  }
 }
 
 async function openTrip(id){
@@ -870,6 +876,13 @@ function renderBanner(){
   const booked=allBookings.filter(b=>b.status==='booked').length;
   const pend=allBookings.length-booked;
   document.getElementById('tab-itinerary').innerHTML=`
+    <div style="padding:8px 14px;background:var(--cream);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--cream-2);border:1px solid var(--border);border-radius:20px;padding:6px 12px">
+        <i class="ti ti-search" style="color:var(--text-3);font-size:14px"></i>
+        <input id="itin-search" placeholder="Search days, bookings…" style="border:none;background:transparent;font-size:13px;color:var(--text);outline:none;width:100%;font-family:var(--ui)" oninput="searchItinerary(this.value)">
+        <i class="ti ti-x" style="color:var(--text-4);font-size:14px;cursor:pointer" onclick="document.getElementById('itin-search').value='';searchItinerary('')"></i>
+      </div>
+    </div>
     <div class="trip-banner">
       <div class="banner-icon"><i class="ti ti-plane"></i></div>
       <div style="flex:1;min-width:0">
@@ -1355,6 +1368,10 @@ async function renderEssentials(){
     const cats=[...new Set(items.map(i=>i.category))];
     essCatIdx={};cats.forEach((c,i)=>essCatIdx[i]=c);
     let html='<div class="ess-body">';
+    html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="printEssentials()" style="display:flex;align-items:center;gap:6px;background:var(--text);color:#F0FAF7;border:none;border-radius:var(--rs);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)"><i class="ti ti-printer"></i> Print list</button>
+      <button onclick="shareEssentials()" style="display:flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:var(--rs);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)"><i class="ti ti-share"></i> Share</button>
+    </div>`;
     cats.forEach((cat,ci)=>{
       const catItems=items.filter(i=>i.category===cat);
       const cc=ESS_CLR[cat]||'#0F6E56',icon=ESS_ICO[cat]||'ti-checklist';
@@ -1404,6 +1421,7 @@ function renderShare(){
   document.getElementById('tab-share').innerHTML=`<div class="share-body">
     <div class="share-card"><div class="share-card-title"><i class="ti ti-clipboard-list"></i>Pending bookings</div><div class="share-desc">Only unconfirmed items — send to travel agent or family.</div><div class="share-prev">${esc(pTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(pTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
     <div class="share-card"><div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div><div class="share-desc">All days, bookings and personal notes — ready to forward.</div><div class="share-prev">${esc(iTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(iTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
+    <button class="btn-export" onclick="printItinerary()"><i class="ti ti-printer"></i> Print full itinerary (PDF)</button>
     <button class="btn-export" onclick="expData()"><i class="ti ti-download"></i> Export JSON backup</button>
   </div>`;
 }
@@ -1971,6 +1989,9 @@ function renderMapTab(){
 
   let html='<div class="bk-body">';
   if(role!=='viewer')html+=renderBudgetSection(canEdit);
+  if(role!=='viewer')html+=renderCurrencyConverter();
+  const depCheck=renderDepartureChecklist();
+  if(depCheck)html+=depCheck;
 
   // Phase selector pills
   html+=`<div class="budget-card" style="padding-bottom:8px">
@@ -2178,6 +2199,222 @@ function drawMap(phaseFilter){
 }
 
 
+
+// ── SEARCH ITINERARY ──
+function searchItinerary(q){
+  q=q.toLowerCase().trim();
+  document.querySelectorAll('.day-card').forEach(card=>{
+    if(!q){card.style.display='';card.style.opacity='1';return;}
+    const text=card.innerText.toLowerCase();
+    const match=text.includes(q);
+    card.style.display=match?'':'none';
+  });
+  // Show/hide phase blocks based on visible cards
+  document.querySelectorAll('.phase-block').forEach(ph=>{
+    const visible=[...ph.querySelectorAll('.day-card')].some(c=>c.style.display!=='none');
+    ph.style.opacity=q&&!visible?'0.3':'1';
+  });
+}
+
+// ── CURRENCY CONVERTER ──
+const FX={'AED':1,'INR':22.7,'USD':0.272,'GBP':0.215,'EUR':0.251,'SGD':0.363,'THB':9.8,'JPY':40.5};
+function renderCurrencyConverter(){
+  const currs=Object.keys(FX);
+  return `<div class="budget-card" style="margin-top:10px">
+    <div class="budget-title"><i class="ti ti-currency-exchange" style="color:var(--teal)"></i>Currency converter</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input id="cc-amt" type="number" placeholder="Amount" value="100" style="width:100px;font-size:14px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)" oninput="convertCurrency()">
+      <select id="cc-from" style="font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)" onchange="convertCurrency()">
+        ${currs.map(c=>`<option ${c==='AED'?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <span style="color:var(--text-3);font-size:16px">=</span>
+      <div id="cc-results" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+    <div style="font-size:9px;color:var(--text-3);margin-top:8px">Approximate rates · 1 AED reference</div>
+  </div>`;
+}
+function convertCurrency(){
+  const amt=parseFloat(document.getElementById('cc-amt')?.value||0);
+  const from=document.getElementById('cc-from')?.value||'AED';
+  const el=document.getElementById('cc-results');
+  if(!el||!amt)return;
+  const inAED=amt/FX[from];
+  const targets=['INR','USD','AED','GBP','EUR'].filter(c=>c!==from);
+  el.innerHTML=targets.map(c=>{
+    const val=(inAED*FX[c]);
+    const disp=val>=100?Math.round(val).toLocaleString():val.toFixed(2);
+    return `<div style="background:var(--cream-2);border:1px solid var(--border);border-radius:var(--rs);padding:6px 12px;text-align:center"><div style="font-size:9px;font-weight:700;color:var(--text-3)">${c}</div><div style="font-size:15px;font-weight:600;color:var(--teal)">${disp}</div></div>`;
+  }).join('');
+}
+
+// ── PRINT / SHARE ESSENTIALS ──
+function printEssentials(){
+  const el=document.getElementById('tab-essentials');
+  if(!el)return;
+  const w=window.open('','_blank');
+  if(!w)return;
+  const items=[...el.querySelectorAll('.check-item')].map(ci=>{
+    const checked=ci.classList.contains('checked');
+    const text=ci.querySelector('.check-text')?.innerText||'';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eee"><span style="font-size:16px">${checked?'✅':'⬜'}</span><span style="${checked?'text-decoration:line-through;color:#999':''}">${text}</span></div>`;
+  }).join('');
+  const cats=[...el.querySelectorAll('.ess-section-title')].map(e=>e.innerText).join(', ');
+  w.document.write(`<!DOCTYPE html><html><head><title>Packing List — ${currentTrip?.name||'Trip'}</title>
+  <style>body{margin:24px;font-family:sans-serif;max-width:600px}h1{font-size:20px;margin-bottom:4px}h2{font-size:14px;color:#666;font-weight:400;margin-bottom:20px}h3{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#0F6E56;margin:20px 0 8px}@media print{button{display:none}}</style>
+  </head><body>
+  <h1>Packing List</h1><h2>${currentTrip?.name||''} · ${currentTrip?.subtitle||''}</h2>
+  ${items}
+  <button onclick="window.print()" style="margin-top:20px;background:#0F6E56;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer">Print / Save PDF</button>
+  </body></html>`);
+  w.document.close();
+}
+
+async function shareEssentials(){
+  const el=document.getElementById('tab-essentials');
+  if(!el)return;
+  const items=[...el.querySelectorAll('.check-item')].map(ci=>{
+    const checked=ci.classList.contains('checked');
+    const text=ci.querySelector('.check-text')?.innerText||'';
+    return (checked?'✅ ':'⬜ ')+text;
+  }).join('\n');
+  const sep='─'.repeat(30);
+  const text='PACKING LIST — '+(currentTrip?.name||'Trip')+'\n'+sep+'\n\n'+items;
+  if(navigator.share){
+    try{await navigator.share({title:'Packing List',text});}catch(e){}
+  } else {
+    navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard ✓'));
+  }
+}
+
+// ── DEPARTURE CHECKLIST / REMINDER ──
+function checkPendingWarnings(){
+  if(!currentTrip||!allBookings.length)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const warnings=[];
+  allBookings.forEach(b=>{
+    if(b.status==='booked'||!b.flight_date)return;
+    const fd=parseDate(b.flight_date);
+    if(!fd)return;
+    const diff=Math.round((fd-today)/86400000);
+    if(diff>=0&&diff<=7){
+      warnings.push(`${b.category}: ${b.title} in ${diff===0?'TODAY':diff+' days'} — still pending`);
+    }
+  });
+  if(warnings.length){
+    const el=document.getElementById('prog-section');
+    if(el){
+      const warn=document.createElement('div');
+      warn.style.cssText='background:var(--amber-l);border:1px solid var(--amber-b);border-radius:var(--r);padding:10px 14px;margin:8px 14px;font-size:12px;color:var(--amber-d)';
+      warn.innerHTML='<i class="ti ti-alert-triangle" style="margin-right:6px"></i><strong>Pending soon:</strong> '+warnings.join(' · ');
+      el.appendChild(warn);
+    }
+  }
+}
+
+// ── TRIP SUMMARY STATS ──
+async function loadTripStats(tripId, cardEl){
+  try{
+    const [phases,days,bookings]=await Promise.all([
+      sbGet('phases','trip_id=eq.'+tripId+'&select=id'),
+      sbGet('days','trip_id=eq.'+tripId+'&select=id'),
+      sbGet('bookings','trip_id=eq.'+tripId+'&select=status')
+    ]);
+    const booked=bookings.filter(b=>b.status==='booked').length;
+    const pend=bookings.length-booked;
+    const statsEl=cardEl.querySelector('.trip-stats');
+    if(statsEl){
+      statsEl.innerHTML=`<span style="font-size:10px;color:var(--text-3)">${days.length} days · ${phases.length} phases</span>
+        ${pend>0?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b)">${pend} pending</span>`:''}
+        ${booked>0?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b)">${booked} confirmed ✓</span>`:''}`;
+    }
+  }catch(e){}
+}
+
+// ── PRINT FULL ITINERARY ──
+function printItinerary(){
+  if(!currentTrip)return;
+  const w=window.open('','_blank');
+  if(!w)return;
+  let html=`<!DOCTYPE html><html><head><title>${currentTrip.name}</title>
+  <style>body{margin:24px;font-family:Georgia,serif;max-width:700px;color:#1a1a1a}
+  h1{font-size:28px;margin-bottom:4px}h2{font-size:13px;font-weight:400;color:#666;margin-bottom:24px}
+  .phase{margin-bottom:28px}.phase-title{font-size:16px;font-weight:700;color:#0F6E56;border-bottom:2px solid #0F6E56;padding-bottom:4px;margin-bottom:12px}
+  .day{margin-bottom:12px;padding:10px 12px;border-left:3px solid #eee}
+  .day-date{font-size:11px;color:#888;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .day-title{font-size:15px;font-weight:600;margin:2px 0}
+  .day-sub{font-size:12px;color:#666}
+  .bk{font-size:11px;color:#1A5FA8;margin-top:4px}
+  @media print{button{display:none}}</style>
+  </head><body>
+  <h1>${currentTrip.name}</h1>
+  <h2>${currentTrip.subtitle||''} · ${fmtDate(currentTrip.start_date)} – ${fmtDate(currentTrip.end_date)}</h2>`;
+
+  allPhases.forEach(ph=>{
+    html+=`<div class="phase"><div class="phase-title">${ph.name} ${ph.date_range?'· '+ph.date_range:''}</div>`;
+    const phDays=allDays.filter(d=>d.phase_id===ph.id);
+    phDays.forEach(d=>{
+      const di=allDays.indexOf(d);
+      const dayBks=allBookings.filter(b=>{
+        if(b.category==='Hotels'&&b.checkin_date&&b.checkout_date)return d.date>=b.checkin_date&&d.date<b.checkout_date;
+        return b.day_id===d.id;
+      });
+      html+=`<div class="day">
+        <div class="day-date">${d.weekday||''} ${fmtDate(d.date)}</div>
+        <div class="day-title">${d.title}</div>
+        ${d.subtitle?`<div class="day-sub">${d.subtitle}</div>`:''}
+        ${dayBks.map(b=>`<div class="bk">${b.status==='booked'?'✓':'⏳'} ${b.title}${b.ref?' ['+b.ref+']':''}</div>`).join('')}
+        ${d.tip?`<div style="font-size:11px;color:#2E7D52;margin-top:4px;font-style:italic">💡 ${d.tip}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+=`<button onclick="window.print()" style="margin-top:20px;background:#0F6E56;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer">Print / Save PDF</button>`;
+  html+='</body></html>';
+  w.document.write(html);w.document.close();
+}
+
+// ── DEPARTURE CHECKLIST ──
+function renderDepartureChecklist(){
+  if(!currentTrip)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const dep=parseDate(currentTrip.start_date);
+  if(!dep)return;
+  const diff=Math.round((dep-today)/86400000);
+  if(diff>14||diff<-1)return; // only show within 14 days of departure
+
+  const checks=[
+    {label:'All passports valid (6+ months)',key:'passport'},
+    {label:'UAE residence visa copies printed',key:'visa'},
+    {label:'Travel insurance documents ready',key:'insurance'},
+    {label:'All e-tickets downloaded offline',key:'tickets'},
+    {label:'Hotel confirmations printed/saved',key:'hotels'},
+    {label:'Indian SIM / roaming activated',key:'sim'},
+    {label:'INR cash organised',key:'cash'},
+    {label:'Power bank fully charged',key:'powerbank'},
+    {label:'Medicines packed (personal + altitude)',key:'meds'},
+  ];
+  const stored=JSON.parse(localStorage.getItem('dep-checklist-'+currentTrip.id)||'{}');
+
+  let html=`<div class="budget-card" style="border:1px solid var(--amber-b);background:var(--amber-l)">
+    <div class="budget-title" style="color:var(--amber-d)"><i class="ti ti-checklist" style="color:var(--amber-d)"></i>Departure checklist · ${diff===0?'Today!':diff===1?'Tomorrow!':diff+' days'}</div>`;
+  checks.forEach(c=>{
+    const done=stored[c.key];
+    html+=`<div onclick="toggleDepCheck('${c.key}','${currentTrip.id}')" style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--amber-b);cursor:pointer">
+      <div style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--amber-d);background:${done?'var(--amber-d)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:11px">${done?'✓':''}</div>
+      <div style="font-size:12px;color:var(--amber-d);${done?'text-decoration:line-through;opacity:.6':''}">${c.label}</div>
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function toggleDepCheck(key,tripId){
+  const stored=JSON.parse(localStorage.getItem('dep-checklist-'+tripId)||'{}');
+  stored[key]=!stored[key];
+  localStorage.setItem('dep-checklist-'+tripId,JSON.stringify(stored));
+  // Re-render map tab if open
+  if(document.getElementById('tab-map').classList.contains('active'))renderMapTab();
+}
 
 // INIT
 updateCountdown();
