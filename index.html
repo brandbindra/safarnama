@@ -938,7 +938,17 @@ function renderItinerary(){
         return false;
       });
       const needsBk=!linked.length&&(d.title.includes('→')||['fly','hotel','check'].some(w=>d.title.toLowerCase().includes(w)));
-      const tags=linked.map(b=>`<span class="dtag ${b.status==='booked'?'dtag-bk':'dtag-pend'}" onclick="event.stopPropagation();showTab('bookings')" style="cursor:pointer">${esc(b.title.substring(0,22))} ${b.status==='booked'?'✓':'⏳'}</span>`).join('');
+      const tags=linked.map(b=>{
+        const tcc=b.category==='Flights'?'#1A5FA8':b.category==='Hotels'?'#A05C10':b.category==='Transfers & Taxis'?'#2E7D52':b.category==='Special Bookings'?'#5B3FA8':'#666';
+        const tico=b.category==='Flights'?'\u2708':b.category==='Hotels'?'\u{1F3E8}':b.category==='Transfers & Taxis'?'\u{1F697}':b.category==='Special Bookings'?'\u{1F681}':'\u{1F4CC}';
+        const st=b.status==='booked';
+        let short='';
+        if(b.category==='Flights'&&b.from_city&&b.to_city){short=b.from_city.split(' ')[0]+'\u2192'+b.to_city.split(' ')[0];}
+        else if(b.category==='Hotels'){const ni=b.checkin_date&&b.checkout_date?Math.round((parseDate(b.checkout_date)-parseDate(b.checkin_date))/86400000):1;const nn=Math.max(1,allDays.findIndex(dd=>dd.id===d.id)-allDays.findIndex(dd=>dd.id===b.day_id)+1);short=b.title.split(' ')[0]+(ni>1?' N'+nn:'');}
+        else{short=b.title.split('\u2192')[0].trim().split(' ').slice(0,2).join(' ');}
+        const ts=(b.dep_time||'').substring(0,5);
+        return '<span onclick="event.stopPropagation();showTab(\'bookings\')" style="cursor:pointer;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+tcc+'18;color:'+tcc+';border:1px solid '+tcc+'55;display:inline-flex;align-items:center;gap:3px;margin-right:3px">'+tico+' '+esc(short)+(ts?' '+ts:'')+(st?' \u2713':' \u23f3')+'</span>';
+      }).join('');
       const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')">⚠ Link booking</span>`:'';
       const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
       const editRow=role==='owner'?`<div style="margin-bottom:10px">
