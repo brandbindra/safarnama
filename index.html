@@ -1172,12 +1172,11 @@ async function openLinkModal(dayId,dayTitle){
   document.getElementById('link-title').textContent='Link to: '+dayTitle.substring(0,28);
   const thisDay=allDays.find(d=>d.id===dayId);
   const linked=allBookings.filter(b=>{
-    if(b.day_id===dayId)return true;
-    if(b.category==='Hotels'&&b.checkin_date&&b.checkout_date&&thisDay){
-      return thisDay.date>=b.checkin_date&&thisDay.date<b.checkout_date;
+    if(b.category==='Hotels'){
+      if(b.checkin_date&&b.checkout_date&&thisDay) return thisDay.date>=b.checkin_date&&thisDay.date<b.checkout_date;
+      return b.day_id===dayId;
     }
-    if(b.day_id&&b.end_day_id){const si=allDays.findIndex(d=>d.id===b.day_id),ei=allDays.findIndex(d=>d.id===b.end_day_id),ti=allDays.findIndex(d=>d.id===dayId);return ti>=si&&ti<ei;}
-    return false;
+    return b.day_id===dayId;
   });
   const unlinked=allBookings.filter(b=>!b.day_id);
   let html='';
@@ -1266,10 +1265,11 @@ function renderShare(){
       iTxt+='\n  '+(d.weekday||'')+' '+fmtDate(d.date)+' — '+d.title+'\n';
       if(d.subtitle)iTxt+='  '+d.subtitle+'\n';
       const dayBks=allBookings.filter(b=>{
-        if(b.day_id===d.id)return true;
-        if(b.category==='Hotels'&&b.checkin_date&&b.checkout_date){return d.date>=b.checkin_date&&d.date<b.checkout_date;}
-        if(b.day_id&&b.end_day_id){const si=allDays.findIndex(dd=>dd.id===b.day_id),ei=allDays.findIndex(dd=>dd.id===b.end_day_id);return di>=si&&di<ei;}
-        return false;
+        if(b.category==='Hotels'){
+          if(b.checkin_date&&b.checkout_date) return d.date>=b.checkin_date&&d.date<b.checkout_date;
+          return b.day_id===d.id;
+        }
+        return b.day_id===d.id;
       });
       dayBks.forEach(b=>{iTxt+='  '+(b.status==='booked'?'✓':'⏳')+' '+b.title+(b.ref?' ['+b.ref+']':'')+'\n';});
       if(d.note)iTxt+='  Note: '+d.note+'\n';
