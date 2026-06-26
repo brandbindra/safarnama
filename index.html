@@ -933,9 +933,13 @@ function renderItinerary(){
       }
       const dt=parseDate(d.date),di=allDays.indexOf(d);
       const linked=allBookings.filter(b=>{
-        if(b.day_id===d.id)return true;
-        if(b.day_id&&b.end_day_id){const si=allDays.findIndex(dd=>dd.id===b.day_id),ei=allDays.findIndex(dd=>dd.id===b.end_day_id);return di>=si&&di<=ei;}
-        return false;
+        // Hotels: use date range exclusively (checkin <= day < checkout)
+        if(b.category==='Hotels'){
+          if(b.checkin_date&&b.checkout_date) return d.date>=b.checkin_date&&d.date<b.checkout_date;
+          return b.day_id===d.id; // fallback: only check-in day
+        }
+        // All others: exact day match
+        return b.day_id===d.id;
       });
       const needsBk=!linked.length&&(d.title.includes('→')||['fly','hotel','check'].some(w=>d.title.toLowerCase().includes(w)));
       const tags=linked.map(b=>{
