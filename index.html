@@ -611,7 +611,7 @@ async function sbDel(t,col,val){const r=await fetch(SB+'/'+t+'?'+col+'=eq.'+val,
 
 // ── UTILS ──
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escJ(s){return String(s||'').replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
+function escJ(s){return String(s||'');}
 function parseDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function fmtDate(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{day:'numeric',month:'short'}):''}
 function fmtDay(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{weekday:'short'}):''}
@@ -969,9 +969,13 @@ function renderItinerary(){
         } else {
           label='📌 '+b.title.substring(0,18);
         }
-        return '<span onclick="event.stopPropagation();showTab(\'bookings\')" style="cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+tcc+'15;color:'+tcc+';border:1px solid '+tcc+'44;display:inline-flex;align-items:center;gap:4px;margin-right:2px;white-space:nowrap">'+esc(label)+' '+stIcon+'</span>';
+                const el=document.createElement('span');
+        el.style.cssText='cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+tcc+'15;color:'+tcc+';border:1px solid '+tcc+'44;display:inline-flex;align-items:center;gap:4px;margin-right:2px;white-space:nowrap';
+        el.innerHTML=esc(label)+' '+stIcon;
+        el.addEventListener('click',function(e){e.stopPropagation();showTab('bookings');});
+        return el.outerHTML;
       }).join('');
-      const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')">⚠ Link booking</span>`:'';
+      const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')">⚠ Link booking</span>`:'';
       const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
       const editRow=role==='owner'?`<div style="margin-bottom:10px">
           <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -1011,7 +1015,7 @@ function renderItinerary(){
           ${editRow}
           <div class="exp-lbl" style="color:${cc}">📋 Linked bookings</div>
           <div style="margin-bottom:8px">${linked.length?lbkRows:'<div style="font-size:11px;color:var(--text-3)">None linked</div>'}</div>
-          ${canEdit?`<button class="btn-link-sm" onclick="openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"\'")}')"><i class="ti ti-link" style="font-size:12px"></i> Link a booking</button>`:''}
+          ${canEdit?`<button class="btn-link-sm" onclick="openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')"><i class="ti ti-link" style="font-size:12px"></i> Link a booking</button>`:''}
           <div class="exp-lbl" style="color:${cc};margin-top:12px">💡 Tip</div>${tipA}
           <div class="exp-lbl" style="color:${cc}">📝 Personal note</div>${noteA}
         </div>
@@ -1244,9 +1248,7 @@ function emailAttach(id){
   const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b)return;
   const sub=encodeURIComponent('Booking: '+b.title);
-  const body=encodeURIComponent('Booking: '+b.title+'
-'+(b.detail||'')+'
-Ref: '+(b.ref||'TBD'));
+  const body=encodeURIComponent('Booking: '+b.title+'\nDetails: '+(b.detail||'')+'\nRef: '+(b.ref||'TBD'));
   window.location.href='mailto:?subject='+sub+'&body='+body;
   if(b.attachment_data){setTimeout(function(){const a=document.createElement('a');a.href=b.attachment_data;a.download='booking.jpg';a.click();},600);}
   showToast('Email app opening');
@@ -1372,8 +1374,8 @@ function renderShare(){
       if(d.note)iTxt+='  Note: '+d.note+'\n';
     });
   });
-  const pE=pTxt.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
-  const iE=iTxt.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+    const pE=esc(pTxt);
+  const iE=esc(iTxt);
   document.getElementById('tab-share').innerHTML=`<div class="share-body">
     <div class="share-card"><div class="share-card-title"><i class="ti ti-clipboard-list"></i>Pending bookings</div><div class="share-desc">Only unconfirmed items — send to travel agent or family.</div><div class="share-prev">${esc(pTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(pTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
     <div class="share-card"><div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div><div class="share-desc">All days, bookings and personal notes — ready to forward.</div><div class="share-prev">${esc(iTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(iTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
