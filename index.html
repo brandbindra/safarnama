@@ -116,7 +116,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 .prog-wrap{padding:12px 14px 10px}
 .prog-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
 .prog-label{font-family:var(--brand);font-size:16px;font-weight:500;color:var(--teal)}
-.prog-sub{font-size:10px;color:var(--text-3);background:var(--cream-2);padding:2px 8px;border-radius:20px;border:1px solid var(--border)}
+.prog-sub{font-size:11px;color:var(--teal-dark);background:var(--teal-light);padding:3px 10px;border-radius:20px;border:1px solid var(--teal-border);font-weight:500}
 .prog-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
 .prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .6s}
 /* ITINERARY */
@@ -1675,6 +1675,13 @@ async function doShiftPhase(phaseId, shiftDays){
     renderBanner(); renderProgressBar(); renderItinerary(); renderBookings();
     showToast('Phase shifted ✓');
   }catch(e){ showToast('Failed: '+e.message.substring(0,50)); }
+}
+
+function toggleShiftPanel(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const open=el.style.display==='flex';
+  el.style.display=open?'none':'flex';
 }
 
 function openAddPhaseModal(){
