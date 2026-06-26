@@ -606,6 +606,23 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
   </div>
 </div>
 
+<!-- REBUILD ESSENTIALS MODAL -->
+<div class="modal-overlay" id="modal-rebuild-ess">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Rebuild packing list</div>
+    <div class="modal-sub">Select trip types and we'll regenerate your essentials. Your existing custom items will be cleared.</div>
+    <div id="rebuild-pills" style="margin-bottom:16px"></div>
+    <div style="background:var(--amber-l);border:1px solid var(--amber-b);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--amber-d);margin-bottom:4px">
+      ⚠ This will delete your current essentials list and replace it with a fresh one.
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-rebuild-ess')">Cancel</button>
+      <button class="btn-mg" onclick="confirmRebuildEssentials()">Rebuild list</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -771,7 +788,37 @@ function renderWizStep(){
   else b.innerHTML=wiz4();
 }
 
-function wiz1(){return`<label class="f-label">Trip name</label><input class="f-inp" id="wiz-name" placeholder="e.g. India 2026" value="${esc(wizTrip.name||'')}"><label class="f-label">Subtitle (optional)</label><input class="f-inp" id="wiz-sub" placeholder="e.g. Katra · Udaipur · Leh" value="${esc(wizTrip.subtitle||'')}"><label class="f-label">Start date</label><input class="f-inp" id="wiz-start" type="date" value="${wizTrip.start_date||''}"><label class="f-label">End date</label><input class="f-inp" id="wiz-end" type="date" value="${wizTrip.end_date||''}">`;}
+const TRIP_TYPES=[
+  {id:'beach',icon:'🏖',label:'Beach / coastal'},
+  {id:'mountains',icon:'🏔',label:'Mountains / trekking'},
+  {id:'city',icon:'🕌',label:'City break / cultural'},
+  {id:'pilgrimage',icon:'🛕',label:'Pilgrimage / religious'},
+  {id:'nature',icon:'🌿',label:'Nature / wildlife'},
+  {id:'winter',icon:'❄️',label:'Winter / cold weather'},
+  {id:'summer',icon:'☀️',label:'Summer / hot weather'},
+  {id:'monsoon',icon:'🌧',label:'Monsoon / rainy season'},
+  {id:'family',icon:'👨‍👩‍👧',label:'Family with kids'},
+  {id:'elderly',icon:'👴',label:'With elderly parents'},
+  {id:'business',icon:'💼',label:'Business mixed'},
+];
+function wiz1(){
+  const sel=wizTrip.tripTypes||[];
+  const pills=TRIP_TYPES.map(t=>`<div onclick="toggleTripType('${t.id}')" id="tt-${t.id}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--cream);color:var(--text-2);cursor:pointer;font-size:12px;font-weight:500;margin:3px;transition:all .15s;${sel.includes(t.id)?'background:var(--teal);border-color:var(--teal);color:#fff;':''}">${t.icon} ${t.label}</div>`).join('');
+  return`<label class="f-label">Trip name</label><input class="f-inp" id="wiz-name" placeholder="e.g. India 2026" value="${esc(wizTrip.name||'')}"><label class="f-label">Subtitle (optional)</label><input class="f-inp" id="wiz-sub" placeholder="e.g. Katra · Udaipur · Leh" value="${esc(wizTrip.subtitle||'')}"><label class="f-label">Start date</label><input class="f-inp" id="wiz-start" type="date" value="${wizTrip.start_date||''}"><label class="f-label">End date</label><input class="f-inp" id="wiz-end" type="date" value="${wizTrip.end_date||''}"><label class="f-label">Trip type <span style="font-weight:400;text-transform:none;font-size:10px">(pick all that apply — shapes your packing list)</span></label><div style="margin-top:4px">${pills}</div>`;
+}
+function toggleTripType(id){
+  if(!wizTrip.tripTypes)wizTrip.tripTypes=[];
+  const idx=wizTrip.tripTypes.indexOf(id);
+  if(idx>=0)wizTrip.tripTypes.splice(idx,1);
+  else wizTrip.tripTypes.push(id);
+  const el=document.getElementById('tt-'+id);
+  if(el){
+    const active=wizTrip.tripTypes.includes(id);
+    el.style.background=active?'var(--teal)':'var(--cream)';
+    el.style.borderColor=active?'var(--teal)':'var(--border)';
+    el.style.color=active?'#fff':'var(--text-2)';
+  }
+}
 
 function wiz2(){
   let h='<div style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5">Add the legs of your trip as phases — e.g. Katra, Udaipur, Leh.</div>';
@@ -819,7 +866,7 @@ function addWizBk(){const cats=['Flights','Hotels','Transfers & Taxis','Special 
 async function saveWizard(){
   const btn=document.getElementById('wiz-next-btn');btn.textContent='Saving…';btn.disabled=true;
   try{
-    const[trip]=await sbPost('trips',{name:wizTrip.name,subtitle:wizTrip.subtitle||'',start_date:wizTrip.start_date,end_date:wizTrip.end_date});
+    const[trip]=await sbPost('trips',{name:wizTrip.name,subtitle:wizTrip.subtitle||'',start_date:wizTrip.start_date,end_date:wizTrip.end_date,trip_types:(wizTrip.tripTypes||[]).join(',')});
     const phRows=await sbPost('phases',wizPhases.map((p,i)=>({...p,trip_id:trip.id,sort_order:i})));
     const phMap=phRows.reduce((m,p)=>({...m,[p.sort_order]:p.id}),{});
     await sbPost('days',wizDays.map((d,i)=>({trip_id:trip.id,phase_id:phMap[d.phase_idx]||phRows[0]?.id,date:d.date,weekday:d.weekday,title:d.title||'(add title)',subtitle:d.subtitle||'',tip:'',note:'',sort_order:i})));
@@ -835,18 +882,85 @@ async function saveWizard(){
 }
 
 function getDefEss(tid,trip){
+  const types=trip.tripTypes||[];
   const s=trip.start_date?parseDate(trip.start_date):new Date();
   const m=s.getMonth()+1;
-  const isW=m>=11||m<=2,isM=m>=6&&m<=9;
+  const autoWinter=m>=11||m<=2;
+  const autoMonsoon=m>=6&&m<=9;
+  const autoSummer=m>=3&&m<=5||m===10;
   const items=[];let so=0;
   const add=(cat,item)=>items.push({trip_id:tid,category:cat,item,checked:false,sort_order:so++});
-  ['Passports — all travellers','UAE Residence Visa copies','Travel insurance documents','Hotel confirmation printouts','All flight e-tickets','Emergency contacts saved on phone'].forEach(i=>add('Documents',i));
-  ['Phone charger + adapter','Power bank (10000mAh+)','Sunscreen SPF50','Sunglasses','Sanitiser + masks','Camera + memory cards','Medicines (personal + general)','Small day bag / backpack'].forEach(i=>add('Packing — essentials',i));
-  if(isW)['Heavy winter jacket','Thermal innerwear','Gloves + woollen cap + scarf','Warm socks (3+ pairs)','Boots / closed shoes'].forEach(i=>add('Packing — weather',i));
-  else if(isM)['Rain jacket / poncho','Compact umbrella','Waterproof bag cover','Quick-dry clothes','Extra footwear'].forEach(i=>add('Packing — weather',i));
-  else['Light breathable clothes','Cotton t-shirts','Sun hat / cap','Light layer for evenings'].forEach(i=>add('Packing — weather',i));
-  ['Indian SIM or roaming enabled','Cash in INR','UPI app set up','Comfortable walking shoes'].forEach(i=>add('Packing — India specific',i));
-  ['Altitude sickness tablets (mountains)','ORS sachets','Basic first aid kit','Prescription medicines (extra)'].forEach(i=>add('Health & safety',i));
+
+  // ── ALWAYS: Documents ──
+  ['Passports — all travellers (6+ months validity)','UAE Residence Visa copies (physical + digital)','Travel insurance documents','All hotel confirmation printouts','All flight e-tickets (downloaded offline)','Emergency contacts card (written, not just phone)','Trip itinerary printout'].forEach(i=>add('📄 Documents & IDs',i));
+
+  // ── ALWAYS: Electronics ──
+  ['Phone charger + international adapter','Power bank (10000mAh+, fully charged)','Camera + spare memory cards + charger','Earphones / headphones','Laptop / tablet (if needed)','All cables in one pouch'].forEach(i=>add('🔌 Electronics & charging',i));
+
+  // ── ALWAYS: Health ──
+  ['Personal prescription medicines (extra supply)','Paracetamol + ibuprofen','Antacid + anti-diarrhoeal','ORS sachets (dehydration)','Antiseptic cream + plasters','Hand sanitiser + masks'].forEach(i=>add('💊 Health & medicines',i));
+
+  // ── ALWAYS: Clothing basics ──
+  ['Comfortable walking shoes','Casual everyday clothes','Undergarments + socks (extra pairs)','Light layer / cardigan for AC','Sleepwear'].forEach(i=>add('👕 Clothing essentials',i));
+
+  // ── BEACH ──
+  if(types.includes('beach')){
+    ['Swimwear (2 sets)','Rash guard / swim shirt','Flip flops / sandals','Waterproof dry bag','Snorkelling gear (if planned)','Beach towel'].forEach(i=>add('🏖 Beach & water',i));
+    ['Sunscreen SPF 50+ (water resistant)','After-sun lotion / aloe vera gel','Sunglasses (UV400)','Wide-brim sun hat','Lip balm with SPF'].forEach(i=>add('☀️ Sun protection',i));
+  }
+
+  // ── MOUNTAINS / TREKKING ──
+  if(types.includes('mountains')){
+    ['Sturdy trekking shoes / boots (broken in)','Trekking poles (if needed)','Thermal innerwear (top + bottom)','Fleece / mid-layer jacket','Windproof / waterproof outer jacket','Quick-dry trekking pants','Warm hat + gloves + neck gaiter','Woollen socks (3+ pairs)','Head torch + extra batteries','Trekking backpack (30-40L)','Small day pack'].forEach(i=>add('🏔 Trekking gear',i));
+    ['Altitude sickness tablets (Diamox — consult doctor)','Diamox started 1 day before ascent','Water purification tablets','High-energy snacks (trail mix, nuts, chocolate)','Blister prevention tape','Knee support (if needed)','Emergency whistle'].forEach(i=>add('⛰ Altitude & safety',i));
+  }
+
+  // ── PILGRIMAGE ──
+  if(types.includes('pilgrimage')){
+    ['Modest clothing covering shoulders + knees','Dupatta / scarf (women)','White / light coloured clothes (some shrines)','Comfortable flat footwear (easy to remove)','Small cloth bag (no leather at some shrines)','Reusable water bottle'].forEach(i=>add('🛕 Pilgrimage essentials',i));
+    ['Small amount of cash for offerings / prasad','Photograph ID for shrine registration','Darshan token / booking printout if pre-booked','Map / route of the pilgrimage route'].forEach(i=>add('📿 Pilgrimage documents',i));
+  }
+
+  // ── CITY / CULTURAL ──
+  if(types.includes('city')){
+    ['Comfortable city walking shoes','Smart casual outfit for restaurants/events','City guidebook or downloaded maps','Museum / attraction booking printouts','Small cross-body bag (pickpocket safe)'].forEach(i=>add('🕌 City break essentials',i));
+  }
+
+  // ── NATURE / WILDLIFE ──
+  if(types.includes('nature')){
+    ['Neutral / earth tone clothing (no bright colours)','Binoculars','Insect repellent (DEET-based)','Long-sleeved shirts + long pants','Waterproof footwear','Wildlife safari booking confirmation'].forEach(i=>add('🌿 Nature & wildlife',i));
+  }
+
+  // ── WINTER ──
+  if(types.includes('winter')||autoWinter){
+    ['Heavy down jacket','Thermal innerwear set','Woollen hat + gloves + scarf','Thermal socks (multiple)','Waterproof insulated boots','Hand warmers'].forEach(i=>add('❄️ Winter clothing',i));
+  }
+
+  // ── SUMMER ──
+  if(types.includes('summer')||autoSummer){
+    ['Light breathable cotton/linen clothes','Sun hat / cap','Sunscreen SPF 50+','Sunglasses (UV400)','Cooling face mist spray','Electrolyte sachets / ORS'].forEach(i=>add('☀️ Summer essentials',i));
+  }
+
+  // ── MONSOON ──
+  if(types.includes('monsoon')||autoMonsoon){
+    ['Compact umbrella','Rain jacket / waterproof poncho','Waterproof bag / dry bag for electronics','Quick-dry clothes','Extra footwear (sandals get wet)','Waterproof phone case','Anti-fungal powder'].forEach(i=>add('🌧 Monsoon protection',i));
+  }
+
+  // ── FAMILY WITH KIDS ──
+  if(types.includes('family')){
+    ['Children ID / passport copies','Kids medicines (paracetamol, fever strips)','Snacks + juice boxes for travel','Small backpack for each child','Entertainment (tablet, books, games)','Change of clothes in carry-on','Baby wipes + extra nappies if needed','Child-safe sunscreen','Night light / comfort toy'].forEach(i=>add('👨‍👩‍👧 Kids essentials',i));
+  }
+
+  // ── ELDERLY PARENTS ──
+  if(types.includes('elderly')){
+    ['Full list of all medications (typed, not handwritten)','Doctor letter for prescription medicines','Extra supply of all medicines (2 weeks extra)','Comfortable wide-fit shoes','Walking stick / mobility aid','Emergency contact card on person at all times','Health insurance card + doctor contact','Blood pressure monitor (if needed)','Reading glasses + spare pair'].forEach(i=>add('👴 Elderly care essentials',i));
+  }
+
+  // ── BUSINESS ──
+  if(types.includes('business')){
+    ['Business cards','Formal shirts + trousers / formal outfit','Belt + formal shoes','Laptop + charger + adapter','Presentation materials (USB + printed)','Meeting schedule printout','Receipts folder for expenses'].forEach(i=>add('💼 Work essentials',i));
+  }
+
   return items;
 }
 
@@ -1368,9 +1482,10 @@ async function renderEssentials(){
     const cats=[...new Set(items.map(i=>i.category))];
     essCatIdx={};cats.forEach((c,i)=>essCatIdx[i]=c);
     let html='<div class="ess-body">';
-    html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
+    html+=`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button onclick="printEssentials()" style="display:flex;align-items:center;gap:6px;background:var(--text);color:#F0FAF7;border:none;border-radius:var(--rs);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)"><i class="ti ti-printer"></i> Print list</button>
       <button onclick="shareEssentials()" style="display:flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:var(--rs);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)"><i class="ti ti-share"></i> Share</button>
+      ${role==='owner'?`<button onclick="openRebuildEssentials()" style="display:flex;align-items:center;gap:6px;background:transparent;color:var(--teal);border:1px solid var(--teal-border);border-radius:var(--rs);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)"><i class="ti ti-refresh"></i> Rebuild list</button>`:''}
     </div>`;
     cats.forEach((cat,ci)=>{
       const catItems=items.filter(i=>i.category===cat);
@@ -2414,6 +2529,38 @@ function toggleDepCheck(key,tripId){
   localStorage.setItem('dep-checklist-'+tripId,JSON.stringify(stored));
   // Re-render map tab if open
   if(document.getElementById('tab-map').classList.contains('active'))renderMapTab();
+}
+
+// ── REBUILD ESSENTIALS ──
+let _rebuildTypes = [];
+function openRebuildEssentials(){
+  _rebuildTypes = [];
+  const pills = TRIP_TYPES.map(t=>`<div onclick="toggleRebuildType('${t.id}')" id="rt-${t.id}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--cream);color:var(--text-2);cursor:pointer;font-size:12px;font-weight:500;margin:3px">${t.icon} ${t.label}</div>`).join('');
+  document.getElementById('rebuild-pills').innerHTML=pills;
+  openModal('modal-rebuild-ess');
+}
+function toggleRebuildType(id){
+  const idx=_rebuildTypes.indexOf(id);
+  if(idx>=0)_rebuildTypes.splice(idx,1); else _rebuildTypes.push(id);
+  const el=document.getElementById('rt-'+id);
+  if(el){const a=_rebuildTypes.includes(id);el.style.background=a?'var(--teal)':'var(--cream)';el.style.borderColor=a?'var(--teal)':'var(--border)';el.style.color=a?'#fff':'var(--text-2)';}
+}
+async function confirmRebuildEssentials(){
+  if(!_rebuildTypes.length){showToast('Pick at least one trip type');return;}
+  const btn=document.querySelector('#modal-rebuild-ess .btn-mg');
+  btn.textContent='Rebuilding…';btn.disabled=true;
+  try{
+    // Delete existing essentials
+    await sbDel('essentials','trip_id',currentTrip.id);
+    // Generate and insert new ones
+    const fakeTrip={...currentTrip,tripTypes:_rebuildTypes};
+    const newItems=getDefEss(currentTrip.id,fakeTrip);
+    await sbPost('essentials',newItems);
+    closeModal('modal-rebuild-ess');
+    showToast('Packing list rebuilt ✓');
+    await renderEssentials();
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+  btn.textContent='Rebuild list';btn.disabled=false;
 }
 
 // INIT
