@@ -1968,21 +1968,37 @@ function renderMapTab(){
   if(!currentTrip){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-3)">Open a trip first.</div>';return;}
   const canEdit=role==='owner'||role==='editor';
 
-  // Budget section
-  let budgetHtml='<div class="bk-body">';
-  budgetHtml+=renderBudgetSection(canEdit);
+  let html='<div class="bk-body">';
+  html+=renderBudgetSection(canEdit);
 
-  // Map section
-  budgetHtml+=`<div class="budget-card">
+  // Phase selector pills
+  html+=`<div class="budget-card" style="padding-bottom:8px">
     <div class="budget-title"><i class="ti ti-map-2" style="color:var(--teal)"></i>Trip map</div>
-    <div id="map-container"></div>
-    <div style="font-size:11px;color:var(--text-3);margin-top:6px">Pins show each phase location · Tap a pin for details · Set city in Itinerary tab → phase → Map city field</div>
+    <div id="map-phase-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button onclick="setMapPhase('all')" id="mpill-all" style="font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer;font-family:var(--ui)">All</button>
+      ${allPhases.map(ph=>`<button onclick="setMapPhase('${ph.id}')" id="mpill-${ph.id}" style="font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px solid ${ph.color||'#0F6E56'};background:transparent;color:${ph.color||'#0F6E56'};cursor:pointer;font-family:var(--ui)">${esc(ph.name.split(' ')[0])}</button>`).join('')}
+    </div>
+    <div id="map-container" style="height:360px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)"></div>
+    <div style="font-size:10px;color:var(--text-3);margin-top:6px">Tap a pin for day details · Tap a route line for flight info</div>
   </div>`;
-  budgetHtml+='</div>';
-  el.innerHTML=budgetHtml;
+  html+='</div>';
+  el.innerHTML=html;
+  setTimeout(()=>initMap('all'),150);
+}
 
-  // Init Leaflet map after DOM is ready
-  setTimeout(()=>initMap(),100);
+let _currentMapPhase='all';
+function setMapPhase(phaseId){
+  _currentMapPhase=phaseId;
+  // Update pill styles
+  document.querySelectorAll('[id^="mpill-"]').forEach(btn=>{
+    const pid=btn.id.replace('mpill-','');
+    const ph=allPhases.find(p=>p.id===pid);
+    const cc=ph?ph.color:'var(--teal)';
+    const active=pid===phaseId||(pid==='all'&&phaseId==='all');
+    btn.style.background=active?cc:'transparent';
+    btn.style.color=active?'#fff':cc;
+  });
+  drawMap(phaseId);
 }
 
 function renderBudgetSection(canEdit){
@@ -2039,30 +2055,27 @@ function renderBudgetSection(canEdit){
   return html;
 }
 
-function initMap(){
+function initMap(phaseId){
   if(typeof L==='undefined'){
-    // Load Leaflet
     const script=document.createElement('script');
     script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload=()=>drawMap();
+    script.onload=()=>drawMap(phaseId||'all');
     document.head.appendChild(script);
   } else {
-    drawMap();
+    drawMap(phaseId||'all');
   }
 }
 
-function extractCitiesFromText(text){
-  // Split by →, ·, -, comma, and common words
-  const parts = text.replace(/[·\-,]/g,' ').split(/→|\s+/).map(s=>s.trim().toLowerCase().replace(/[^a-z]/g,''));
-  const found = [];
+function extractCitiesFromDay(d){
+  const text=(d.title+' '+d.subtitle).replace(/[·,]/g,' ');
+  const parts=text.split(/→|\s+/).map(s=>s.trim().toLowerCase().replace(/[^a-z]/g,''));
+  const found=[];
   parts.forEach(part=>{
     if(!part||part.length<3)return;
-    // Skip common non-city words
-    const skip=['and','the','via','fly','to','from','in','at','day','stay','check','hotel','night','morning','afternoon','evening','depart','arrive','drive','trek','visit','back','return','base'];
+    const skip=['and','the','via','fly','to','from','in','at','day','stay','check','hotel','night','morning','afternoon','evening','depart','arrive','drive','trek','visit','back','return','base','route','lake','valley','palace','fort','temple','market'];
     if(skip.includes(part))return;
     if(PHASE_COORDS[part]){
       const coords=PHASE_COORDS[part];
-      // Avoid duplicates (same coords)
       if(!found.find(f=>f.coords[0]===coords[0]&&f.coords[1]===coords[1])){
         found.push({city:part,coords});
       }
@@ -2071,22 +2084,21 @@ function extractCitiesFromText(text){
   return found;
 }
 
-function drawMap(){
+function drawMap(phaseFilter){
   const el=document.getElementById('map-container');
   if(!el)return;
   if(_leafletMap){_leafletMap.remove();_leafletMap=null;}
 
-  // Extract all city points from day card titles and subtitles, in order
+  // Filter days by phase
+  const filteredDays=phaseFilter==='all'?allDays:allDays.filter(d=>d.phase_id===phaseFilter);
+
+  // Build ordered list of city points from day cards
   const allPoints=[];
-  allDays.forEach(d=>{
+  filteredDays.forEach(d=>{
     const ph=allPhases.find(p=>p.id===d.phase_id);
     const color=ph?.color||'#0F6E56';
-    const phName=ph?.name||'';
-    // Extract from title + subtitle + phase name
-    const text=(d.title+' '+d.subtitle+' '+phName);
-    const cities=extractCitiesFromText(text);
+    const cities=extractCitiesFromDay(d);
     cities.forEach(({city,coords})=>{
-      // Avoid exact duplicates consecutively
       const last=allPoints[allPoints.length-1];
       if(!last||last.coords[0]!==coords[0]||last.coords[1]!==coords[1]){
         allPoints.push({city,coords,color,day:d,ph});
@@ -2095,48 +2107,73 @@ function drawMap(){
   });
 
   if(!allPoints.length){
-    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:20px;text-align:center">
-      <i class="ti ti-map-off" style="font-size:32px;color:var(--text-3)"></i>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">No cities recognised</div>
-      <div style="font-size:12px;color:var(--text-3);line-height:1.5">City names in day card titles are matched automatically. Make sure titles include recognisable city names like Dubai, Delhi, Katra, Leh, Udaipur etc.</div>
-    </div>`;
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;padding:20px;text-align:center"><i class="ti ti-map-off" style="font-size:28px;color:var(--text-3)"></i><div style="font-size:12px;color:var(--text-3)">No cities recognised in this phase. Include city names like Dubai, Delhi, Katra, Leh in day card titles.</div></div>';
     return;
   }
 
   const center=allPoints[Math.floor(allPoints.length/2)].coords;
-  _leafletMap=L.map('map-container',{zoomControl:true,scrollWheelZoom:false}).setView(center,5);
+  _leafletMap=L.map('map-container',{zoomControl:true,scrollWheelZoom:false}).setView(center,phaseFilter==='all'?5:7);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© OpenStreetMap contributors',maxZoom:18
   }).addTo(_leafletMap);
 
-  // Draw route line through all points
-  if(allPoints.length>1){
-    L.polyline(allPoints.map(p=>p.coords),{color:'#0F6E56',weight:2,dashArray:'6 4',opacity:.5}).addTo(_leafletMap);
+  // Draw route segments between consecutive points
+  // Check if there's a flight booking between the two days
+  for(let i=0;i<allPoints.length-1;i++){
+    const from=allPoints[i];
+    const to=allPoints[i+1];
+    const fromDayIdx=allDays.findIndex(d=>d.id===from.day.id);
+    const toDayIdx=allDays.findIndex(d=>d.id===to.day.id);
+
+    // Find flight bookings between these days
+    const flightsBetween=allBookings.filter(b=>{
+      if(b.category!=='Flights')return false;
+      const bDayIdx=allDays.findIndex(d=>d.id===b.day_id);
+      return bDayIdx>=fromDayIdx&&bDayIdx<=toDayIdx;
+    });
+
+    const hasFlight=flightsBetween.length>0;
+    const segColor=hasFlight?'#1A5FA8':to.color;
+    const dashArray=hasFlight?'1 6':'6 4';
+    const weight=hasFlight?2.5:1.5;
+
+    const line=L.polyline([from.coords,to.coords],{
+      color:segColor,weight,dashArray,opacity:.7
+    }).addTo(_leafletMap);
+
+    // Popup on line click showing flight details
+    if(hasFlight){
+      const flightInfo=flightsBetween.map(b=>{
+        const dep=(b.dep_time||'').substring(0,5);
+        const arr=(b.arr_time||'').substring(0,5);
+        const ref=b.ref?` · ${b.ref}`:'';
+        const st=b.status==='booked'?'✓':'⏳';
+        return `<div style="padding:4px 0;border-bottom:1px solid #eee;font-size:11px"><span style="font-weight:600">${st} ${b.title}</span>${dep?`<br><span style="color:#666">${dep}${arr?' → '+arr:''}</span>`:''}${ref?`<br><span style="color:#1A5FA8">${ref}</span>`:''}<br><span style="font-size:10px;color:${b.status==='booked'?'#2E7D52':'#A05C10'}">${b.status==='booked'?'Confirmed':'Pending'}</span></div>`;
+      }).join('');
+      line.bindPopup(`<div style="font-family:sans-serif;min-width:160px"><div style="font-weight:700;font-size:12px;color:#1A5FA8;margin-bottom:6px">✈ Flights</div>${flightInfo}</div>`);
+    }
   }
 
-  // Add markers — sized by importance (phase changes = bigger)
-  allPoints.forEach(({city,coords,color,day,ph})=>{
-    const phDays=allDays.filter(d=>d.phase_id===ph?.id);
+  // Add city markers
+  allPoints.forEach(({city,coords,color,day,ph},i)=>{
+    const isFirst=i===0,isLast=i===allPoints.length-1;
+    const size=isFirst||isLast?14:10;
     const popup=`<div style="font-family:sans-serif;min-width:140px">
-      <div style="font-weight:600;font-size:13px;color:${color};margin-bottom:3px">${city.charAt(0).toUpperCase()+city.slice(1)}</div>
-      <div style="font-size:11px;color:#555;margin-bottom:2px">${day.title}</div>
-      <div style="font-size:10px;color:#888">${fmtDate(day.date)} · ${ph?.name||''}</div>
+      <div style="font-weight:700;font-size:13px;color:${color};margin-bottom:3px">${city.charAt(0).toUpperCase()+city.slice(1)}</div>
+      <div style="font-size:11px;color:#444;margin-bottom:2px">${esc(day.title)}</div>
+      <div style="font-size:10px;color:#888">${fmtDate(day.date)}${ph?' · '+ph.name:''}</div>
     </div>`;
     const icon=L.divIcon({
-      html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
-      className:'',iconSize:[12,12],iconAnchor:[6,6]
+      html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)"></div>`,
+      className:'',iconSize:[size,size],iconAnchor:[size/2,size/2]
     });
     L.marker(coords,{icon}).addTo(_leafletMap).bindPopup(popup);
   });
 
   if(allPoints.length>1){
-    _leafletMap.fitBounds(allPoints.map(p=>p.coords),{padding:[28,28]});
+    _leafletMap.fitBounds(allPoints.map(p=>p.coords),{padding:[30,30]});
   }
 }
 
-// INIT
-updateCountdown();
-</script>
-</body>
-</html>
+>
