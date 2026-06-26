@@ -928,7 +928,7 @@ function renderItinerary(){
           ${canEdit
             ?`<input value="${esc(ph.name)}" style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc};border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePh('${ph.id}','name',this.value)">
                <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">
-               <input value="${esc(ph.map_city||'')}" placeholder="Map city (e.g. Katra, Leh)" style="font-size:10px;color:var(--teal);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px;font-style:italic" onchange="savePh('${ph.id}','map_city',this.value)">`
+`
             :`<div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc}">${esc(ph.name)}</div><div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>`}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
@@ -1960,10 +1960,7 @@ let _leafletMap = null;
 function getCoords(name){
   if(!name)return null;
   const key=name.toLowerCase().replace(/[^a-z]/g,'');
-  for(const [k,v] of Object.entries(PHASE_COORDS)){
-    if(key.includes(k)||k.includes(key.substring(0,4)))return v;
-  }
-  return null;
+  return PHASE_COORDS[key]||null;
 }
 
 function renderMapTab(){
@@ -2054,61 +2051,87 @@ function initMap(){
   }
 }
 
+function extractCitiesFromText(text){
+  // Split by →, ·, -, comma, and common words
+  const parts = text.replace(/[·\-,]/g,' ').split(/→|\s+/).map(s=>s.trim().toLowerCase().replace(/[^a-z]/g,''));
+  const found = [];
+  parts.forEach(part=>{
+    if(!part||part.length<3)return;
+    // Skip common non-city words
+    const skip=['and','the','via','fly','to','from','in','at','day','stay','check','hotel','night','morning','afternoon','evening','depart','arrive','drive','trek','visit','back','return','base'];
+    if(skip.includes(part))return;
+    if(PHASE_COORDS[part]){
+      const coords=PHASE_COORDS[part];
+      // Avoid duplicates (same coords)
+      if(!found.find(f=>f.coords[0]===coords[0]&&f.coords[1]===coords[1])){
+        found.push({city:part,coords});
+      }
+    }
+  });
+  return found;
+}
+
 function drawMap(){
   const el=document.getElementById('map-container');
   if(!el)return;
-
-  // Destroy existing map
   if(_leafletMap){_leafletMap.remove();_leafletMap=null;}
 
-  // Find phase coords — use manual map_city field first, then name
-  const phasePoints=allPhases.map((ph,i)=>{
-    const coords=getCoords(ph.map_city)||getCoords(ph.name);
-    return {ph,coords,color:ph.color||'#0F6E56',idx:i};
-  }).filter(p=>p.coords);
+  // Extract all city points from day card titles and subtitles, in order
+  const allPoints=[];
+  allDays.forEach(d=>{
+    const ph=allPhases.find(p=>p.id===d.phase_id);
+    const color=ph?.color||'#0F6E56';
+    const phName=ph?.name||'';
+    // Extract from title + subtitle + phase name
+    const text=(d.title+' '+d.subtitle+' '+phName);
+    const cities=extractCitiesFromText(text);
+    cities.forEach(({city,coords})=>{
+      // Avoid exact duplicates consecutively
+      const last=allPoints[allPoints.length-1];
+      if(!last||last.coords[0]!==coords[0]||last.coords[1]!==coords[1]){
+        allPoints.push({city,coords,color,day:d,ph});
+      }
+    });
+  });
 
-  if(!phasePoints.length){
+  if(!allPoints.length){
     el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:20px;text-align:center">
       <i class="ti ti-map-off" style="font-size:32px;color:var(--text-3)"></i>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">No map locations set</div>
-      <div style="font-size:12px;color:var(--text-3);line-height:1.5">As Owner, expand each phase in the Itinerary tab and type the main city in the <em>Map city</em> field (e.g. Katra, Leh, Udaipur).</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">No cities recognised</div>
+      <div style="font-size:12px;color:var(--text-3);line-height:1.5">City names in day card titles are matched automatically. Make sure titles include recognisable city names like Dubai, Delhi, Katra, Leh, Udaipur etc.</div>
     </div>`;
     return;
   }
 
-  const center=phasePoints[Math.floor(phasePoints.length/2)].coords;
+  const center=allPoints[Math.floor(allPoints.length/2)].coords;
   _leafletMap=L.map('map-container',{zoomControl:true,scrollWheelZoom:false}).setView(center,5);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors',
-    maxZoom:18
+    attribution:'© OpenStreetMap contributors',maxZoom:18
   }).addTo(_leafletMap);
 
-  // Draw route line
-  if(phasePoints.length>1){
-    const latlngs=phasePoints.map(p=>p.coords);
-    L.polyline(latlngs,{color:'#0F6E56',weight:2,dashArray:'6 4',opacity:.6}).addTo(_leafletMap);
+  // Draw route line through all points
+  if(allPoints.length>1){
+    L.polyline(allPoints.map(p=>p.coords),{color:'#0F6E56',weight:2,dashArray:'6 4',opacity:.5}).addTo(_leafletMap);
   }
 
-  // Add phase markers
-  phasePoints.forEach(({ph,coords,color})=>{
-    const phDays=allDays.filter(d=>d.phase_id===ph.id);
+  // Add markers — sized by importance (phase changes = bigger)
+  allPoints.forEach(({city,coords,color,day,ph})=>{
+    const phDays=allDays.filter(d=>d.phase_id===ph?.id);
     const popup=`<div style="font-family:sans-serif;min-width:140px">
-      <div style="font-weight:600;color:${color};font-size:14px;margin-bottom:4px">${ph.name}</div>
-      <div style="font-size:11px;color:#666">${ph.date_range||''}</div>
-      <div style="font-size:11px;color:#888;margin-top:4px">${phDays.length} day${phDays.length!==1?'s':''}</div>
+      <div style="font-weight:600;font-size:13px;color:${color};margin-bottom:3px">${city.charAt(0).toUpperCase()+city.slice(1)}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:2px">${day.title}</div>
+      <div style="font-size:10px;color:#888">${fmtDate(day.date)} · ${ph?.name||''}</div>
     </div>`;
-
     const icon=L.divIcon({
-      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
-      className:'',iconSize:[14,14],iconAnchor:[7,7]
+      html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
+      className:'',iconSize:[12,12],iconAnchor:[6,6]
     });
     L.marker(coords,{icon}).addTo(_leafletMap).bindPopup(popup);
   });
 
-  // Fit map to all points
-  if(phasePoints.length>1){
-    _leafletMap.fitBounds(phasePoints.map(p=>p.coords),{padding:[30,30]});
+  if(allPoints.length>1){
+    _leafletMap.fitBounds(allPoints.map(p=>p.coords),{padding:[28,28]});
   }
 }
 
