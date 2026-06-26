@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Manish Explores</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+:root{--teal:#0F6E56;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-pale:#F0FAF7;--teal-border:#9FE1CB;--cream:#FAFCFC;--cream-2:#F0FAF7;--border:#D8EDEA;--border-2:#B0D4CC;--text:#0D2E28;--text-2:#2A5A52;--text-3:#7AADA3;--text-4:#B0D4CC;--amber:#E8A020;--amber-l:#FDF3E3;--amber-d:#A05C10;--amber-b:#F0C878;--green:#085041;--green-l:#E1F5EE;--green-b:#9FE1CB;--red:#B83230;--brand:'Cormorant Garamond',serif;--ui:'Inter',sans-serif;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:14px;line-height:1.5;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+/* LOGIN */
+.login-hero{background:var(--teal);padding:52px 28px 36px;text-align:center;flex-shrink:0}
+.login-compass{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(240,250,247,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:rgba(240,250,247,.8);font-size:24px}
+.login-tagline{font-size:10px;font-weight:300;color:rgba(240,250,247,.45);letter-spacing:.16em;text-transform:uppercase;margin-top:10px}
+.login-body{padding:24px 20px 32px;overflow-y:auto;flex:1}
+.role-btn{width:100%;padding:14px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--cream);display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;transition:all .15s;text-align:left}
+.role-btn:active{transform:scale(.98)}
+.role-btn.primary{background:var(--teal);border-color:var(--teal)}
+.role-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.role-btn.primary .role-icon{background:rgba(240,250,247,.18);color:#F0FAF7}
+.role-btn:not(.primary) .role-icon{background:var(--teal-light);color:var(--teal)}
+.role-name{font-size:14px;font-weight:500}
+.role-btn.primary .role-name{color:#F0FAF7}
+.role-btn:not(.primary) .role-name{color:var(--text)}
+.role-desc{font-size:11px;margin-top:2px}
+.role-btn.primary .role-desc{color:rgba(240,250,247,.6)}
+.role-btn:not(.primary) .role-desc{color:var(--text-3)}
+.role-arr{font-size:16px;color:var(--text-4)}
+.role-btn.primary .role-arr{color:rgba(240,250,247,.5)}
+/* PIN */
+#screen-pin{background:var(--cream);justify-content:center;align-items:center;padding:32px 24px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin:24px 0 32px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border-2);background:transparent;transition:all .15s}
+.pin-dot.filled{background:var(--teal);border-color:var(--teal)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.pin-key{padding:16px;border-radius:var(--r);border:1px solid var(--border);background:var(--cream);font-size:20px;font-weight:500;color:var(--text);text-align:center;cursor:pointer;font-family:var(--ui)}
+.pin-key:active{background:var(--teal-light);border-color:var(--teal-border)}
+.pin-back{margin-top:20px;font-size:13px;color:var(--text-3);text-align:center;cursor:pointer;padding:8px}
+/* HOME */
+#screen-home{background:var(--cream)}
+.home-header{background:var(--teal);padding:40px 20px 24px;flex-shrink:0}
+.home-content{flex:1;overflow-y:auto;padding:16px}
+.trip-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px 14px 20px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden}
+.trip-card-accent{position:absolute;left:0;top:0;bottom:0;width:4px}
+.trip-card-name{font-family:var(--brand);font-size:20px;font-weight:500;color:var(--text);margin-bottom:2px}
+.trip-card-sub{font-size:11px;color:var(--text-3)}
+.trip-card-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-4);font-size:18px}
+.btn-new-trip{width:100%;padding:14px;background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+/* WIZARD */
+#screen-wizard{background:var(--cream)}
+.wiz-hdr{background:var(--teal);padding:20px 16px;flex-shrink:0;display:flex;align-items:center;gap:12px}
+.wiz-back{color:rgba(240,250,247,.7);font-size:20px;cursor:pointer;padding:4px;background:none;border:none}
+.wiz-prog{height:3px;background:rgba(240,250,247,.2);flex-shrink:0}
+.wiz-prog-fill{height:100%;background:#F0FAF7;transition:width .3s}
+.wiz-body{flex:1;overflow-y:auto;padding:16px}
+.wiz-foot{padding:12px 16px;border-top:1px solid var(--border);background:var(--cream);flex-shrink:0;display:flex;gap:10px}
+/* FORM */
+.f-label{font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;margin-top:16px;display:block}
+.f-label:first-child{margin-top:0}
+.f-inp{width:100%;font-size:14px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream);color:var(--text);font-family:var(--ui)}
+.f-inp:focus{outline:none;border-color:var(--teal)}
+.f-inp::placeholder{color:var(--text-4)}
+/* PHASE WIZ CARD */
+.ph-wiz{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.ph-wiz-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.btn-add-ph{width:100%;padding:11px;border:1.5px dashed var(--border-2);border-radius:var(--r);background:transparent;color:var(--text-3);font-size:13px;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+/* DAY WIZ */
+.day-wiz{background:var(--cream);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.day-wiz-date{flex-shrink:0;width:44px;text-align:center}
+.day-wiz-inp{flex:1;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--cream-2);color:var(--text);font-family:var(--ui)}
+.day-wiz-inp:focus{outline:none;border-color:var(--teal)}
+/* CAT PICKER */
+.cat-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cat-pill{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--cream);color:var(--text-2);cursor:pointer}
+/* APP */
+#screen-app{background:var(--cream)}
+.app-hdr{background:var(--cream);border-bottom:1px solid var(--border);flex-shrink:0;padding:12px 16px 0}
+.app-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.app-wm{font-family:var(--brand);font-size:22px;font-weight:500;letter-spacing:.05em}
+.app-wm .w1{font-weight:600;color:var(--text)}
+.app-wm .w2{font-weight:400;color:var(--teal)}
+.app-right{display:flex;align-items:center;gap:8px}
+.rbadge{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
+.badge-owner{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-border)}
+.badge-editor{background:#E6F5F2;color:#085041;border-color:#5DCAA5}
+.badge-viewer{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
+.icon-btn{background:none;border:none;color:var(--text-3);font-size:18px;cursor:pointer;padding:4px;display:flex;align-items:center}
+.app-tabs{display:flex}
+.app-tab{flex:1;text-align:center;padding:10px 4px;font-size:12px;font-weight:500;color:var(--text-2);border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap}
+.app-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
+.wstrip{display:flex;gap:6px;padding:6px 14px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.wstrip::-webkit-scrollbar{display:none}
+.wchip{background:var(--cream-2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;flex-shrink:0;text-align:center;min-width:68px}
+.wcity{font-size:8px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.wtemp{font-size:13px;font-weight:500;color:var(--teal)}
+.ptr-ind{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text-3);height:0;overflow:hidden;transition:height .2s}
+.ptr-ind.show{height:40px}
+.tab-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tab-panel{display:none;padding-bottom:24px}
+.tab-panel.active{display:block}
+/* BANNER */
+.trip-banner{background:var(--teal);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.banner-icon{width:42px;height:42px;border-radius:10px;background:rgba(240,250,247,.15);display:flex;align-items:center;justify-content:center;font-size:20px;color:#F0FAF7;flex-shrink:0}
+.banner-name{font-family:var(--brand);font-size:16px;color:#F0FAF7;font-weight:500}
+.banner-dates{font-size:10px;color:rgba(240,250,247,.65);margin-top:1px}
+.trip-pills{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.tpill{font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(240,250,247,.15);color:#F0FAF7;border:1px solid rgba(240,250,247,.25)}
+.tpill.good{background:rgba(157,225,203,.25);border-color:rgba(157,225,203,.4)}
+/* PROGRESS */
+.prog-wrap{padding:12px 14px 10px}
+.prog-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.prog-label{font-family:var(--brand);font-size:16px;font-weight:500;color:var(--teal)}
+.prog-sub{font-size:11px;color:var(--teal-dark);background:var(--teal-light);padding:3px 10px;border-radius:20px;border:1px solid var(--teal-border);font-weight:500}
+.prog-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .6s}
+/* ITINERARY */
+.itin-body{padding:12px 14px}
+.phase-block{margin-bottom:20px}
+.ph-nophoto{padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--r)}
+.ph-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ph-name-inp{font-family:var(--brand);font-size:17px;font-weight:500;border:none;background:transparent;width:100%;outline:none;padding:0}
+.ph-range-inp{font-size:10px;border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px;color:var(--text-3)}
+.ph-photo-wrap{height:130px;position:relative;border-radius:var(--r);overflow:hidden}
+.ph-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%)}
+.ph-text-over{position:absolute;bottom:10px;left:12px;right:80px}
+.ph-upload-btn{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.45);color:#fff;border-radius:6px;padding:4px 9px;font-size:9px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+/* DAY CARDS */
+.day-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden}
+.day-hdr{display:flex;align-items:stretch;cursor:pointer}
+.date-col{width:54px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;border-right:1px solid var(--border)}
+.day-wd{font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.day-num{font-family:var(--brand);font-size:22px;font-weight:500;line-height:1}
+.day-mo{font-size:8px;color:var(--text-3)}
+.day-body{flex:1;padding:10px;min-width:0}
+.day-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.day-sub{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.dtag{font-size:8px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:.03em}
+.dtag-bk{background:var(--green-l);color:var(--green);border:1px solid var(--green-b)}
+.dtag-pend{background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b)}
+.dtag-warn{background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b);cursor:pointer}
+.day-chev{display:flex;align-items:center;padding:0 10px;color:var(--text-4);font-size:14px;transition:transform .2s;flex-shrink:0}
+.day-card.open .day-chev{transform:rotate(180deg)}
+.day-exp{display:none;padding:12px 14px;border-top:1px solid var(--border)}
+.day-card.open .day-exp{display:block}
+.exp-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;margin-top:10px}
+.exp-lbl:first-child{margin-top:0}
+.exp-ta{width:100%;font-size:12px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui);resize:none;line-height:1.5;min-height:60px}
+.exp-ta:focus{outline:none;border-color:var(--teal)}
+.exp-ro{font-size:12px;color:var(--text-2);line-height:1.6;background:var(--cream-2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 11px;white-space:pre-wrap}
+.exp-edit-row{margin-bottom:8px}
+.exp-inp{width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)}
+.exp-inp:focus{outline:none;border-color:var(--teal)}
+.btn-save-sm{background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--rs);padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--ui)}
+.lbk-row{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--cream);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:11px}
+.btn-link-sm{font-size:9px;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid var(--teal-border);border-radius:6px;padding:4px 9px;cursor:pointer;font-family:var(--ui)}
+.insert-day-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;opacity:0;transition:opacity .2s;margin:2px 0}
+.insert-day-btn:hover,.phase-block:hover .insert-day-btn{opacity:1}
+.insert-day-btn-inner{font-size:10px;font-weight:600;color:var(--teal);background:var(--cream);border:1px dashed var(--teal-border);border-radius:20px;padding:3px 12px;display:flex;align-items:center;gap:4px}
+.shift-btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.shift-btn{font-size:10px;font-weight:600;color:var(--text-2);background:var(--cream-2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:4px}
+.shift-btn:hover{border-color:var(--teal);color:var(--teal)}
+/* BOOKINGS */
+.bk-body{padding:12px 14px}
+.bk-group{margin-bottom:18px}
+.bk-grp-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:0 0 7px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.bk-item{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:11px 12px;margin-bottom:6px;border-left:3px solid var(--border)}
+.bk-item.booked{border-left-color:var(--teal)}
+.bk-item.pending{border-left-color:var(--amber)}
+.bk-title{font-size:13px;font-weight:600;color:var(--text)}
+.bk-detail{font-size:11px;color:var(--text-3);margin-top:2px}
+.bk-tip{font-size:10px;color:var(--teal);background:var(--teal-light);border-radius:5px;padding:4px 8px;margin-top:6px;display:block}
+.bk-actions{display:flex;gap:6px;margin-top:9px;align-items:center}
+.bk-ref-inp{flex:1;font-size:11px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui);min-width:0}
+.bk-ref-inp:focus{outline:none;border-color:var(--teal)}
+.bk-ref-ro{flex:1;font-size:11px;padding:7px 9px;color:var(--text-2);background:var(--cream-2);border-radius:var(--rs);border:1px solid var(--border)}
+.st-btn{font-size:9px;font-weight:700;padding:7px 11px;border-radius:20px;border:none;cursor:pointer;white-space:nowrap;letter-spacing:.04em;font-family:var(--ui)}
+.st-btn.pending{background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b)}
+.st-btn.booked{background:var(--green-l);color:var(--green);border:1px solid var(--green-b)}
+.bk-edit-flds{display:flex;gap:6px;margin-top:8px}
+.bk-edit-inp{flex:1;font-size:11px;padding:6px 9px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui)}
+.bk-edit-inp:focus{outline:none;border-color:var(--teal)}
+.bk-link-tag{font-size:9px;padding:2px 7px;border-radius:4px;display:inline-block;margin-top:5px;cursor:pointer}
+.bk-attach-btn{font-size:10px;color:var(--text-3);background:none;border:1px dashed var(--border-2);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:var(--ui);margin-top:6px;display:inline-flex;align-items:center;gap:4px}
+.bk-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;margin-top:6px}
+.btn-del-sm{background:none;border:none;color:var(--text-4);cursor:pointer;font-size:18px;padding:0 4px}
+.btn-add-bk{font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;font-family:var(--ui)}
+/* ESSENTIALS */
+.ess-body{padding:12px 14px}
+.ess-section{margin-bottom:20px}
+.ess-sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ess-sec-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.btn-add-item{background:none;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;font-family:var(--ui)}
+.checklist{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);cursor:pointer}
+.check-item:last-child{border-bottom:none}
+.check-item:active{background:var(--cream-2)}
+.check-box{width:18px;height:18px;border:1.5px solid var(--border-2);border-radius:5px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#F0FAF7}
+.check-item.checked .check-text{text-decoration:line-through;color:var(--text-3)}
+.check-text{font-size:13px;color:var(--text);flex:1}
+.check-del{color:var(--text-4);font-size:16px;padding:2px 4px;cursor:pointer;flex-shrink:0}
+.add-item-row{display:flex;gap:8px;padding:10px 13px;border-top:1px solid var(--border);background:var(--cream-2)}
+.add-item-inp{flex:1;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream);color:var(--text);font-family:var(--ui)}
+.add-item-inp:focus{outline:none;border-color:var(--teal)}
+.btn-add-confirm{color:#F0FAF7;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui)}
+/* SHARE */
+.share-body{padding:12px 14px}
+.share-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.share-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+.share-card-title i{color:var(--teal);font-size:16px}
+.share-desc{font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5}
+.share-prev{background:var(--cream-2);border:1px solid var(--border);border-radius:var(--rs);padding:11px;font-size:10px;color:var(--text-2);font-family:monospace;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-bottom:10px;line-height:1.6}
+.share-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-copy{background:var(--text);color:#F0FAF7;border:none;border-radius:var(--rs);padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:6px}
+.btn-copy.copied{background:var(--teal)}
+.btn-wa{background:#25D366;color:#F0FAF7;border:none;border-radius:var(--rs);padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:6px}
+.btn-export{background:transparent;color:var(--text-2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:4px}
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,46,40,.5);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--cream);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
+.modal-title{font-family:var(--brand);font-size:22px;font-weight:500;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text-3);margin-bottom:16px;line-height:1.5}
+.modal-btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-mc{flex:1;background:transparent;border:1px solid var(--border);border-radius:var(--r);padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--ui);color:var(--text-2)}
+.btn-mg{flex:2;background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--r);padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--ui)}
+/* SETTINGS */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.set-label{font-size:13px;color:var(--text)}
+.set-sub{font-size:10px;color:var(--text-3);margin-top:2px}
+.set-inp{width:80px;font-size:14px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--cream-2);color:var(--text);font-family:var(--ui);text-align:center;letter-spacing:.1em}
+.set-inp:focus{outline:none;border-color:var(--teal)}
+/* UTILS */
+.btn-primary{background:var(--teal);color:#F0FAF7;border:none;border-radius:var(--r);padding:13px 24px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--ui);width:100%}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#F0FAF7;font-size:12px;font-weight:500;padding:9px 18px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:300}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-hero">
+    <div class="login-compass"><i class="ti ti-compass"></i></div>
+    <div style="font-family:'Cormorant Garamond',serif;line-height:1.1">
+      <div style="font-size:18px;font-weight:500;color:rgba(240,250,247,.85);letter-spacing:.22em;text-transform:uppercase;margin-bottom:3px">Manish</div>
+      <div style="font-size:46px;font-weight:500;color:#F0FAF7;letter-spacing:.06em">Explores</div>
+    </div>
+    <div class="login-tagline">Crafted for the Bindras</div>
+    <div id="login-countdown" style="margin-top:12px;font-size:12px;color:rgba(240,250,247,.7);font-weight:300"></div>
+  </div>
+  <div class="login-body">
+    <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">Who are you?</div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:20px">Each role has a PIN · set by the owner</div>
+    <button class="role-btn primary" onclick="startPin('owner')">
+      <div class="role-icon"><i class="ti ti-crown"></i></div>
+      <div style="flex:1"><div class="role-name">Owner</div><div class="role-desc">Full access · create trips · manage PINs</div></div>
+      <div class="role-arr"><i class="ti ti-arrow-right"></i></div>
+    </button>
+    <button class="role-btn" onclick="startPin('editor')">
+      <div class="role-icon"><i class="ti ti-pencil"></i></div>
+      <div style="flex:1"><div class="role-name">Editor</div><div class="role-desc">Update bookings · enter refs & status</div></div>
+      <div class="role-arr"><i class="ti ti-arrow-right"></i></div>
+    </button>
+    <button class="role-btn" onclick="startPin('viewer')">
+      <div class="role-icon"><i class="ti ti-eye"></i></div>
+      <div style="flex:1"><div class="role-name">Viewer</div><div class="role-desc">Read-only · perfect for family</div></div>
+      <div class="role-arr"><i class="ti ti-arrow-right"></i></div>
+    </button>
+  </div>
+</div>
+
+<!-- PIN -->
+<div id="screen-pin" class="screen">
+  <div style="background:var(--teal);padding:40px 28px 32px;text-align:center;flex-shrink:0">
+    <div style="font-family:'Cormorant Garamond',serif;line-height:1.1">
+      <div style="font-size:14px;color:rgba(240,250,247,.7);letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px">Manish</div>
+      <div style="font-size:34px;font-weight:500;color:#F0FAF7;letter-spacing:.06em">Explores</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px">
+    <div style="font-size:12px;color:var(--text-3);text-align:center" id="pin-role-label">Enter PIN</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-key" onclick="pinKey('1')">1</button><button class="pin-key" onclick="pinKey('2')">2</button><button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button><button class="pin-key" onclick="pinKey('5')">5</button><button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button><button class="pin-key" onclick="pinKey('8')">8</button><button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key"></button><button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key" style="font-size:16px;color:var(--text-3)" onclick="pinDel()"><i class="ti ti-backspace"></i></button>
+    </div>
+    <div class="pin-back" onclick="showScreen('screen-login')">← Back</div>
+  </div>
+</div>
+
+<!-- TRIP HOME -->
+<div id="screen-home" class="screen">
+  <div class="home-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div style="font-size:10px;color:rgba(240,250,247,.5);letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px">Manish</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:#F0FAF7">Explores</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="home-badge" class="rbadge badge-owner">Owner</span>
+        <button class="icon-btn" id="home-settings-btn" onclick="openSettings()" style="color:rgba(240,250,247,.7);display:none"><i class="ti ti-settings"></i></button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:rgba(240,250,247,.45);margin-top:6px">Your trips</div>
+  </div>
+  <div class="home-content" id="home-content">
+    <div style="text-align:center;padding:40px;color:var(--text-3)"><i class="ti ti-loader spinning" style="font-size:24px"></i></div>
+  </div>
+</div>
+
+<!-- WIZARD -->
+<div id="screen-wizard" class="screen">
+  <div class="wiz-hdr">
+    <button class="wiz-back" onclick="wizBack()"><i class="ti ti-arrow-left"></i></button>
+    <div style="flex:1">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:#F0FAF7" id="wiz-title">New trip</div>
+      <div style="font-size:10px;color:rgba(240,250,247,.5);letter-spacing:.06em" id="wiz-step-lbl">Step 1 of 4</div>
+    </div>
+  </div>
+  <div class="wiz-prog"><div class="wiz-prog-fill" id="wiz-prog" style="width:25%"></div></div>
+  <div class="wiz-body" id="wiz-body"></div>
+  <div class="wiz-foot">
+    <button class="btn-mc" id="wiz-back-btn" onclick="wizBack()">Cancel</button>
+    <button class="btn-mg" id="wiz-next-btn" onclick="wizNext()">Next →</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="screen-app" class="screen">
+  <div class="app-hdr">
+    <div class="app-top">
+      <div class="app-wm"><span class="w1">Manish </span><span class="w2">Explores</span></div>
+      <div class="app-right">
+        <span class="rbadge badge-owner" id="app-badge">Owner</span>
+        <button class="icon-btn" id="app-settings-btn" onclick="openSettings()" style="display:none"><i class="ti ti-settings"></i></button>
+        <button class="icon-btn" onclick="goHome()" title="All trips"><i class="ti ti-layout-grid"></i></button>
+      </div>
+    </div>
+    <div class="app-tabs">
+      <div class="app-tab active" onclick="showTab('itinerary')">Itinerary</div>
+      <div class="app-tab" onclick="showTab('bookings')">Bookings</div>
+      <div class="app-tab" onclick="showTab('essentials')">Essentials</div>
+      <div class="app-tab" onclick="showTab('share')">Share</div>
+    </div>
+  </div>
+  <div class="wstrip" id="wstrip"></div>
+  <div class="ptr-ind" id="ptr-ind"><i class="ti ti-refresh" id="ptr-icon"></i><span id="ptr-txt">Pull to refresh</span></div>
+  <div class="tab-content" id="tab-scroll">
+    <div class="tab-panel active" id="tab-itinerary"></div>
+    <div class="tab-panel" id="tab-bookings"></div>
+    <div class="tab-panel" id="tab-essentials"></div>
+    <div class="tab-panel" id="tab-share"></div>
+  </div>
+</div>
+
+<!-- LINK MODAL -->
+<div class="modal-overlay" id="modal-link">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="link-title">Link booking</div>
+    <div class="modal-sub">Connect a booking to this day so it shows as a status tag.</div>
+    <div id="link-list" style="max-height:320px;overflow-y:auto"></div>
+    <div class="modal-btn-row"><button class="btn-mc" style="flex:1" onclick="closeModal('modal-link')">Close</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Settings</div>
+    <div>
+      <div class="set-row"><div><div class="set-label">Owner PIN</div><div class="set-sub">Full access</div></div><input class="set-inp" id="set-owner" type="password" maxlength="4" placeholder="••••"></div>
+      <div class="set-row"><div><div class="set-label">Editor PIN</div><div class="set-sub">Update bookings</div></div><input class="set-inp" id="set-editor" type="password" maxlength="4" placeholder="••••"></div>
+      <div class="set-row"><div><div class="set-label">Viewer PIN</div><div class="set-sub">Read-only</div></div><input class="set-inp" id="set-viewer" type="password" maxlength="4" placeholder="••••"></div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-settings')">Cancel</button>
+      <button class="btn-mg" onclick="savePins()">Save PINs</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BOOKING MODAL -->
+<div class="modal-overlay" id="modal-add-bk">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add booking</div>
+    <div class="cat-picker" id="cat-picker">
+      <div class="cat-pill active" data-cat="Flights" onclick="selCat(this)" style="background:#1A5FA8;color:#fff;border-color:#1A5FA8">✈ Flights</div>
+      <div class="cat-pill" data-cat="Hotels" onclick="selCat(this)">🏨 Hotels</div>
+      <div class="cat-pill" data-cat="Transfers & Taxis" onclick="selCat(this)">🚗 Transfers</div>
+      <div class="cat-pill" data-cat="Special Bookings" onclick="selCat(this)">🚁 Special</div>
+      <div class="cat-pill" data-cat="Other" onclick="selCat(this)">📌 Other</div>
+    </div>
+
+    <!-- FLIGHT FIELDS -->
+    <div id="fields-Flights">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From city</label><input class="f-inp" id="fl-from" placeholder="e.g. Dubai"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To city</label><input class="f-inp" id="fl-to" placeholder="e.g. Delhi"></div>
+      </div>
+      <label class="f-label">Date</label>
+      <input class="f-inp" id="fl-date" type="date">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Departure time</label><input class="f-inp" id="fl-dep" type="time"></div>
+        <div style="flex:1"><label class="f-label">Arrival time</label><input class="f-inp" id="fl-arr" type="time"></div>
+      </div>
+    </div>
+
+    <!-- HOTEL FIELDS -->
+    <div id="fields-Hotels" style="display:none">
+      <label class="f-label" style="margin-top:0">Hotel name</label>
+      <input class="f-inp" id="ht-name" placeholder="e.g. JW Marriott Aerocity">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Check-in date</label><input class="f-inp" id="ht-cin" type="date"></div>
+        <div style="flex:1"><label class="f-label">Check-out date</label><input class="f-inp" id="ht-cout" type="date"></div>
+      </div>
+    </div>
+
+    <!-- TRANSFER FIELDS -->
+    <div id="fields-Transfers & Taxis" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From</label><input class="f-inp" id="tr-from" placeholder="e.g. Jammu airport"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To</label><input class="f-inp" id="tr-to" placeholder="e.g. Katra"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="tr-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="tr-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- SPECIAL FIELDS -->
+    <div id="fields-Special Bookings" style="display:none">
+      <label class="f-label" style="margin-top:0">Description</label>
+      <input class="f-inp" id="sp-name" placeholder="e.g. Vaishno Devi Helipad">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="sp-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="sp-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- OTHER FIELDS -->
+    <div id="fields-Other" style="display:none">
+      <label class="f-label" style="margin-top:0">Title</label>
+      <input class="f-inp" id="ot-title" placeholder="e.g. Travel insurance">
+      <label class="f-label">Details</label>
+      <input class="f-inp" id="ot-detail" placeholder="e.g. Policy number, dates">
+    </div>
+
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-add-bk')">Cancel</button>
+      <button class="btn-mg" onclick="confirmAddBk()">Add booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSERT DAY MODAL -->
+<div class="modal-overlay" id="modal-insert-day">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Insert a day</div>
+    <div class="modal-sub" id="insert-day-label">Inserting before selected day</div>
+    <div style="background:var(--amber-l);border:1px solid var(--amber-b);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--amber-d);margin-bottom:14px;line-height:1.5">
+      <i class="ti ti-info-circle" style="margin-right:4px"></i>
+      All days from this point onwards will have their dates shifted forward by 1 day automatically.
+    </div>
+    <label class="f-label" style="margin-top:0">New day title</label>
+    <input class="f-inp" id="insert-day-title" placeholder="e.g. Delhi overnight · Aerocity hotel">
+    <label class="f-label">Subtitle (optional)</label>
+    <input class="f-inp" id="insert-day-sub" placeholder="e.g. Transit stop">
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-insert-day')">Cancel</button>
+      <button class="btn-mg" onclick="confirmInsertDay()">Insert & shift dates →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD DAY MODAL -->
+<div class="modal-overlay" id="modal-add-day">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a day</div>
+    <div class="modal-sub" id="add-day-phase-label">Adding to phase</div>
+    <label class="f-label" style="margin-top:0">Date</label>
+    <input class="f-inp" id="add-day-date" type="date">
+    <label class="f-label">Title</label>
+    <input class="f-inp" id="add-day-title" placeholder="e.g. Delhi overnight · Aerocity hotel">
+    <label class="f-label">Subtitle (optional)</label>
+    <input class="f-inp" id="add-day-sub" placeholder="e.g. Transit stop before Jammu flight">
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-add-day')">Cancel</button>
+      <button class="btn-mg" onclick="confirmAddDay()">Add day</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT BOOKING MODAL -->
+<div class="modal-overlay" id="modal-edit-bk">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit booking</div>
+    <div id="edit-bk-category-label" style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px"></div>
+
+    <!-- FLIGHT EDIT -->
+    <div id="edit-fields-Flights" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From city</label><input class="f-inp" id="efl-from" placeholder="e.g. Dubai"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To city</label><input class="f-inp" id="efl-to" placeholder="e.g. Delhi"></div>
+      </div>
+      <label class="f-label">Date</label>
+      <input class="f-inp" id="efl-date" type="date">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Departure time</label><input class="f-inp" id="efl-dep" type="time"></div>
+        <div style="flex:1"><label class="f-label">Arrival time</label><input class="f-inp" id="efl-arr" type="time"></div>
+      </div>
+    </div>
+
+    <!-- HOTEL EDIT -->
+    <div id="edit-fields-Hotels" style="display:none">
+      <label class="f-label" style="margin-top:0">Hotel name</label>
+      <input class="f-inp" id="eht-name" placeholder="e.g. JW Marriott Aerocity">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Check-in date</label><input class="f-inp" id="eht-cin" type="date"></div>
+        <div style="flex:1"><label class="f-label">Check-out date</label><input class="f-inp" id="eht-cout" type="date"></div>
+      </div>
+    </div>
+
+    <!-- TRANSFER EDIT -->
+    <div id="edit-fields-Transfers & Taxis" style="display:none">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label" style="margin-top:0">From</label><input class="f-inp" id="etr-from" placeholder="e.g. Jammu airport"></div>
+        <div style="flex:1"><label class="f-label" style="margin-top:0">To</label><input class="f-inp" id="etr-to" placeholder="e.g. Katra"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="etr-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="etr-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- SPECIAL EDIT -->
+    <div id="edit-fields-Special Bookings" style="display:none">
+      <label class="f-label" style="margin-top:0">Description</label>
+      <input class="f-inp" id="esp-name" placeholder="e.g. Vaishno Devi Helipad">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="f-label">Date</label><input class="f-inp" id="esp-date" type="date"></div>
+        <div style="flex:1"><label class="f-label">Time</label><input class="f-inp" id="esp-time" type="time"></div>
+      </div>
+    </div>
+
+    <!-- OTHER EDIT -->
+    <div id="edit-fields-Other" style="display:none">
+      <label class="f-label" style="margin-top:0">Title</label>
+      <input class="f-inp" id="eot-title" placeholder="e.g. Travel insurance">
+      <label class="f-label">Details</label>
+      <input class="f-inp" id="eot-detail" placeholder="e.g. Policy number, dates">
+    </div>
+
+    <label class="f-label">Booking ref / PNR</label>
+    <input class="f-inp" id="ebk-ref" placeholder="e.g. 6E · QX2914">
+
+    <div class="modal-btn-row">
+      <button class="btn-mc" onclick="closeModal('modal-edit-bk')">Cancel</button>
+      <button class="btn-mg" onclick="confirmEditBk()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB='https://havxrcqrmdmzqleqhmep.supabase.co/rest/v1';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhdnhyY3FybWRtenFsZXFobWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODczMjUsImV4cCI6MjA5Nzg2MzMyNX0.9F5VmOqw0JlyjbkkhBqLb9DUt_9Qql0OE9_ccuktYdM';
+const SH={'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK,'Prefer':'return=representation'};
+const CAT_CLR={'Flights':'#1A5FA8','Hotels':'#A05C10','Transfers & Taxis':'#2E7D52','Special Bookings':'#5B3FA8','Other':'#666'};
+const CAT_ICO={'Flights':'ti-plane','Hotels':'ti-building','Transfers & Taxis':'ti-car','Special Bookings':'ti-helicopter','Other':'ti-bookmark'};
+const PH_CLR=['#1A5FA8','#2E7D52','#A05C10','#5B3FA8','#0F6E56','#C45E2A','#B83230','#1A7A6E'];
+const ESS_CLR={'Documents':'#1A5FA8','Packing — essentials':'#0F6E56','Packing — weather':'#5B3FA8','Packing — India specific':'#A05C10','Health & safety':'#B83230'};
+const ESS_ICO={'Documents':'ti-id','Packing — essentials':'ti-backpack','Packing — weather':'ti-cloud','Packing — India specific':'ti-map-pin','Health & safety':'ti-first-aid-kit'};
+
+let role=null,pins={owner:'1111',editor:'2222',viewer:'3333'};
+let pinBuf='',pendingRole=null;
+let currentTrip=null,allPhases=[],allDays=[],allBookings=[];
+let wizStep=1,wizTrip={},wizPhases=[],wizDays=[],wizBookings=[];
+let essCatIdx={},noteT={},tipT={};
+let selBkCat='Flights';
+
+// ── SUPABASE ──
+async function sbGet(t,q=''){const r=await fetch(SB+'/'+t+'?'+q,{headers:SH});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPost(t,b){const r=await fetch(SB+'/'+t,{method:'POST',headers:SH,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPatch(t,id,b){const r=await fetch(SB+'/'+t+'?id=eq.'+id,{method:'PATCH',headers:{...SH,'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbDel(t,col,val){const r=await fetch(SB+'/'+t+'?'+col+'=eq.'+val,{method:'DELETE',headers:SH});if(!r.ok)throw new Error(await r.text());}
+
+// ── UTILS ──
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJ(s){return String(s||'');}
+function parseDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function fmtDate(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{day:'numeric',month:'short'}):''}
+function fmtDay(s){const d=parseDate(s);return d?d.toLocaleDateString('en',{weekday:'short'}):''}
+function showToast(m,dur=2200){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+const CKEY='manishexplores_v3';
+function saveCache(d){try{localStorage.setItem(CKEY,JSON.stringify(d));}catch(e){}}
+function loadCache(){try{const d=localStorage.getItem(CKEY);return d?JSON.parse(d):null;}catch(e){return null;}}
+
+// ── PIN ──
+function startPin(r){pendingRole=r;pinBuf='';[0,1,2,3].forEach(i=>{const d=document.getElementById('pd'+i);d.classList.remove('filled','error');});document.getElementById('pin-role-label').textContent=r.charAt(0).toUpperCase()+r.slice(1)+' PIN';showScreen('screen-pin');}
+function pinKey(k){if(!k||pinBuf.length>=4)return;pinBuf+=k;updDots();if(pinBuf.length===4)setTimeout(checkPin,120);}
+function pinDel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);updDots();}}
+function updDots(){[0,1,2,3].forEach(i=>{const d=document.getElementById('pd'+i);d.classList.toggle('filled',i<pinBuf.length);d.classList.remove('error');});}
+function checkPin(){if(pinBuf===pins[pendingRole]){role=pendingRole;enterApp();}else{[0,1,2,3].forEach(i=>document.getElementById('pd'+i).classList.add('error'));setTimeout(()=>{pinBuf='';updDots();},700);}}
+
+// ── ENTER APP ──
+async function enterApp(){
+  showScreen('screen-home');
+  const b=document.getElementById('home-badge');
+  b.textContent=role.charAt(0).toUpperCase()+role.slice(1);b.className='rbadge badge-'+role;
+  document.getElementById('home-settings-btn').style.display=role==='owner'?'flex':'none';
+  await loadHome();updateCountdown();
+}
+
+function goHome(){showScreen('screen-home');loadHome();}
+
+// ── HOME ──
+async function loadHome(){
+  const el=document.getElementById('home-content');
+  el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-3)"><i class="ti ti-loader spinning" style="font-size:24px"></i></div>';
+  try{
+    const sets=await sbGet('app_settings','limit=1').catch(()=>[]);
+    if(sets&&sets.length){pins.owner=sets[0].pin_owner||'1111';pins.editor=sets[0].pin_editor||'2222';pins.viewer=sets[0].pin_viewer||'3333';}
+    const trips=await sbGet('trips','order=created_at.desc');
+    renderHome(trips);
+    saveCache({...(loadCache()||{}),trips});
+  }catch(e){
+    const c=loadCache();
+    if(c&&c.trips)renderHome(c.trips);
+    else el.innerHTML='<div style="padding:20px;text-align:center;color:var(--red)">Connection error. Check your internet.</div>';
+  }
+}
+
+function renderHome(trips){
+  const el=document.getElementById('home-content');
+  let html='';
+  if(!trips||!trips.length){
+    html='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;color:var(--teal-border);margin-bottom:16px"><i class="ti ti-map-2"></i></div><div style="font-family:var(--brand);font-size:24px;font-weight:500;margin-bottom:8px">No trips yet</div><div style="font-size:13px;color:var(--text-3);line-height:1.6;margin-bottom:24px">Create your first trip and start planning.</div></div>';
+  } else {
+    trips.forEach((t,i)=>{
+      const cc=PH_CLR[i%PH_CLR.length];
+      const today=new Date();today.setHours(0,0,0,0);
+      const ts=t.start_date?parseDate(t.start_date):null;
+      const te=t.end_date?parseDate(t.end_date):null;
+      let status='';
+      if(ts&&te){if(today<ts){const d=Math.round((ts-today)/86400000);status=`<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:${cc}18;color:${cc};border:1px solid ${cc}44">${d} days away</span>`;}
+      else if(today>=ts&&today<=te)status='<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b)">In progress 🌏</span>';
+      else status='<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--border);color:var(--text-3)">Completed</span>';}
+      html+=`<div class="trip-card" onclick="openTrip('${t.id}')">
+        <div class="trip-card-accent" style="background:${cc}"></div>
+        <div class="trip-card-name">${esc(t.name)}</div>
+        <div class="trip-card-sub">${t.start_date?fmtDate(t.start_date):''}${t.end_date?' – '+fmtDate(t.end_date):''}</div>
+        ${t.subtitle?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${esc(t.subtitle)}</div>`:''}
+        <div style="margin-top:8px">${status}</div>
+        <div class="trip-card-arrow"><i class="ti ti-arrow-right"></i></div>
+      </div>`;
+    });
+  }
+  if(role==='owner')html+=`<button class="btn-new-trip" onclick="startWizard()"><i class="ti ti-plus"></i> New trip</button>`;
+  el.innerHTML=html;
+}
+
+async function openTrip(id){
+  try{
+    const trips=await sbGet('trips','id=eq.'+id);
+    currentTrip=trips[0];
+    const b=document.getElementById('app-badge');
+    b.textContent=role.charAt(0).toUpperCase()+role.slice(1);b.className='rbadge badge-'+role;
+    document.getElementById('app-settings-btn').style.display=role==='owner'?'flex':'none';
+    showScreen('screen-app');showTab('itinerary');
+    await renderAll();setTimeout(fetchWeather,600);
+  }catch(e){showToast('Failed to open trip');}
+}
+
+// ── WIZARD ──
+function startWizard(){wizStep=1;wizTrip={};wizPhases=[];wizDays=[];wizBookings=[];renderWizStep();showScreen('screen-wizard');}
+function wizBack(){if(wizStep>1){wizStep--;renderWizStep();}else showScreen('screen-home');}
+async function wizNext(){
+  if(wizStep===1){
+    const n=document.getElementById('wiz-name')?.value?.trim();
+    const s=document.getElementById('wiz-start')?.value;
+    const e=document.getElementById('wiz-end')?.value;
+    if(!n||!s||!e){showToast('Fill in all fields');return;}
+    wizTrip={name:n,subtitle:document.getElementById('wiz-sub')?.value?.trim()||'',start_date:s,end_date:e};
+    wizStep=2;renderWizStep();
+  } else if(wizStep===2){
+    if(!wizPhases.length){showToast('Add at least one phase');return;}
+    // Generate days
+    wizDays=[];
+    const s=parseDate(wizTrip.start_date),e=parseDate(wizTrip.end_date);
+    let cur=new Date(s);
+    while(cur<=e){
+      const ds=cur.toISOString().split('T')[0];
+      wizDays.push({date:ds,weekday:cur.toLocaleDateString('en',{weekday:'short'}),title:'',subtitle:'',phase_idx:0});
+      cur=new Date(cur.getTime()+86400000);
+    }
+    wizStep=3;renderWizStep();
+  } else if(wizStep===3){
+    wizStep=4;renderWizStep();
+  } else {
+    await saveWizard();
+  }
+}
+
+function renderWizStep(){
+  const steps=['Trip details','Phases','Days','Bookings'];
+  document.getElementById('wiz-title').textContent=steps[wizStep-1];
+  document.getElementById('wiz-step-lbl').textContent='Step '+wizStep+' of 4';
+  document.getElementById('wiz-prog').style.width=(wizStep/4*100)+'%';
+  document.getElementById('wiz-back-btn').textContent=wizStep===1?'Cancel':'← Back';
+  document.getElementById('wiz-next-btn').textContent=wizStep===4?'Create trip ✓':'Next →';
+  const b=document.getElementById('wiz-body');
+  if(wizStep===1)b.innerHTML=wiz1();
+  else if(wizStep===2)b.innerHTML=wiz2();
+  else if(wizStep===3)b.innerHTML=wiz3();
+  else b.innerHTML=wiz4();
+}
+
+function wiz1(){return`<label class="f-label">Trip name</label><input class="f-inp" id="wiz-name" placeholder="e.g. India 2026" value="${esc(wizTrip.name||'')}"><label class="f-label">Subtitle (optional)</label><input class="f-inp" id="wiz-sub" placeholder="e.g. Katra · Udaipur · Leh" value="${esc(wizTrip.subtitle||'')}"><label class="f-label">Start date</label><input class="f-inp" id="wiz-start" type="date" value="${wizTrip.start_date||''}"><label class="f-label">End date</label><input class="f-inp" id="wiz-end" type="date" value="${wizTrip.end_date||''}">`;}
+
+function wiz2(){
+  let h='<div style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5">Add the legs of your trip as phases — e.g. Katra, Udaipur, Leh.</div>';
+  wizPhases.forEach((p,i)=>{h+=`<div class="ph-wiz"><div class="ph-wiz-dot" style="background:${p.color}"></div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(p.name)}</div><div style="font-size:11px;color:var(--text-3)">${p.date_range||''}</div></div><div style="cursor:pointer;color:var(--text-4);font-size:18px;padding:4px" onclick="wizPhases.splice(${i},1);renderWizStep()"><i class="ti ti-x"></i></div></div>`;});
+  h+=`<button class="btn-add-ph" onclick="addWizPh()"><i class="ti ti-plus"></i> Add phase</button>`;
+  return h;
+}
+function addWizPh(){const n=prompt('Phase name (e.g. Katra):');if(!n?.trim())return;const r=prompt('Date range (e.g. Jul 31 – Aug 1):')||'';wizPhases.push({name:n.trim(),date_range:r,color:PH_CLR[wizPhases.length%PH_CLR.length]});renderWizStep();}
+
+function wiz3(){
+  if(!wizDays.length)return'<div style="color:var(--text-3);padding:20px;text-align:center">No days — check trip dates.</div>';
+  let h='<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.5">Fill in each day and assign to a phase.</div>';
+  wizDays.forEach((d,i)=>{
+    const dt=parseDate(d.date);
+    const ph=wizPhases[d.phase_idx]||wizPhases[0];
+    const cc=ph?.color||PH_CLR[0];
+    const phOpts=wizPhases.map((p,pi)=>`<option value="${pi}" ${d.phase_idx===pi?'selected':''}>${p.name}</option>`).join('');
+    h+=`<div class="day-wiz" style="border-left:3px solid ${cc}">
+      <div class="day-wiz-date"><div style="font-size:8px;color:var(--text-3);text-transform:uppercase">${d.weekday}</div><div style="font-family:var(--brand);font-size:20px;font-weight:500;color:${cc};line-height:1">${dt?dt.getDate():''}</div><div style="font-size:8px;color:var(--text-3)">${dt?dt.toLocaleString('en',{month:'short'}):''}</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+        <input class="day-wiz-inp" placeholder="What happens today?" value="${esc(d.title)}" oninput="wizDays[${i}].title=this.value">
+        ${wizPhases.length>1?`<select style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;background:var(--cream-2);color:var(--text);font-family:var(--ui)" onchange="wizDays[${i}].phase_idx=parseInt(this.value);renderWizStep()">${phOpts}</select>`:''}
+      </div>
+    </div>`;
+  });
+  return h;
+}
+
+function wiz4(){
+  let h='<div style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5">Add flights, hotels, transfers. You can add more anytime later.</div>';
+  const cats=['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'];
+  cats.forEach(cat=>{
+    const bks=wizBookings.filter(b=>b.category===cat);
+    if(!bks.length)return;
+    const cc=CAT_CLR[cat]||'#666';
+    h+=`<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${cc};margin-bottom:6px">${cat}</div>`;
+    bks.forEach(b=>{const ri=wizBookings.indexOf(b);h+=`<div style="background:var(--cream);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid ${cc};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:600">${esc(b.title)}</div><div style="font-size:11px;color:var(--text-3)">${esc(b.detail||'')}</div></div><div style="cursor:pointer;color:var(--text-4);font-size:18px;padding:4px" onclick="wizBookings.splice(${ri},1);renderWizStep()"><i class="ti ti-x"></i></div></div>`;});
+    h+='</div>';
+  });
+  h+=`<button class="btn-add-ph" onclick="addWizBk()"><i class="ti ti-plus"></i> Add booking</button>`;
+  return h;
+}
+function addWizBk(){const cats=['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'];const ci=prompt('Category:\n1. Flights\n2. Hotels\n3. Transfers & Taxis\n4. Special Bookings\n5. Other\n\nEnter number or name:');if(!ci)return;const cn=parseInt(ci);const cat=cats[isNaN(cn)?cats.findIndex(c=>c.toLowerCase().startsWith(ci.toLowerCase().trim())):cn-1]||'Other';const title=prompt('Booking title:');if(!title?.trim())return;const detail=prompt('Details / dates:')||'';wizBookings.push({category:cat,title:title.trim(),detail,status:'pending',ref:'',cost:0});renderWizStep();}
+
+async function saveWizard(){
+  const btn=document.getElementById('wiz-next-btn');btn.textContent='Saving…';btn.disabled=true;
+  try{
+    const[trip]=await sbPost('trips',{name:wizTrip.name,subtitle:wizTrip.subtitle||'',start_date:wizTrip.start_date,end_date:wizTrip.end_date});
+    const phRows=await sbPost('phases',wizPhases.map((p,i)=>({...p,trip_id:trip.id,sort_order:i})));
+    const phMap=phRows.reduce((m,p)=>({...m,[p.sort_order]:p.id}),{});
+    await sbPost('days',wizDays.map((d,i)=>({trip_id:trip.id,phase_id:phMap[d.phase_idx]||phRows[0]?.id,date:d.date,weekday:d.weekday,title:d.title||'(add title)',subtitle:d.subtitle||'',tip:'',note:'',sort_order:i})));
+    if(wizBookings.length)await sbPost('bookings',wizBookings.map((b,i)=>({...b,trip_id:trip.id,claude_tip:'',day_id:null,end_day_id:null,attachment_data:null,sort_order:i})));
+    await sbPost('essentials',getDefEss(trip.id,wizTrip));
+    const s=await sbGet('app_settings','limit=1').catch(()=>[]);
+    if(!s.length)await sbPost('app_settings',{pin_owner:'1111',pin_editor:'2222',pin_viewer:'3333'});
+    showToast('Trip created ✓');currentTrip=trip;
+    const b=document.getElementById('app-badge');b.textContent='Owner';b.className='rbadge badge-owner';
+    document.getElementById('app-settings-btn').style.display='flex';
+    showScreen('screen-app');showTab('itinerary');await renderAll();
+  }catch(e){showToast('Save failed: '+e.message.substring(0,40));btn.textContent='Create trip ✓';btn.disabled=false;}
+}
+
+function getDefEss(tid,trip){
+  const s=trip.start_date?parseDate(trip.start_date):new Date();
+  const m=s.getMonth()+1;
+  const isW=m>=11||m<=2,isM=m>=6&&m<=9;
+  const items=[];let so=0;
+  const add=(cat,item)=>items.push({trip_id:tid,category:cat,item,checked:false,sort_order:so++});
+  ['Passports — all travellers','UAE Residence Visa copies','Travel insurance documents','Hotel confirmation printouts','All flight e-tickets','Emergency contacts saved on phone'].forEach(i=>add('Documents',i));
+  ['Phone charger + adapter','Power bank (10000mAh+)','Sunscreen SPF50','Sunglasses','Sanitiser + masks','Camera + memory cards','Medicines (personal + general)','Small day bag / backpack'].forEach(i=>add('Packing — essentials',i));
+  if(isW)['Heavy winter jacket','Thermal innerwear','Gloves + woollen cap + scarf','Warm socks (3+ pairs)','Boots / closed shoes'].forEach(i=>add('Packing — weather',i));
+  else if(isM)['Rain jacket / poncho','Compact umbrella','Waterproof bag cover','Quick-dry clothes','Extra footwear'].forEach(i=>add('Packing — weather',i));
+  else['Light breathable clothes','Cotton t-shirts','Sun hat / cap','Light layer for evenings'].forEach(i=>add('Packing — weather',i));
+  ['Indian SIM or roaming enabled','Cash in INR','UPI app set up','Comfortable walking shoes'].forEach(i=>add('Packing — India specific',i));
+  ['Altitude sickness tablets (mountains)','ORS sachets','Basic first aid kit','Prescription medicines (extra)'].forEach(i=>add('Health & safety',i));
+  return items;
+}
+
+// ── RENDER ALL ──
+async function renderAll(){
+  renderBanner();
+  try{
+    const[phases,days,bookings]=await Promise.all([
+      sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc')
+    ]);
+    allPhases=phases;allDays=days;allBookings=bookings;
+    saveCache({trip:currentTrip,phases,days,bookings});
+    renderBanner();renderProgressBar();
+    renderItinerary();renderBookings();renderShare();
+    await renderEssentials();
+  }catch(e){
+    const c=loadCache();
+    if(c&&c.phases){allPhases=c.phases;allDays=c.days;allBookings=c.bookings;renderBanner();renderProgressBar();renderItinerary();renderBookings();renderShare();}
+    showToast('Offline — showing cached data');
+  }
+}
+
+function renderBanner(){
+  if(!currentTrip)return;
+  const booked=allBookings.filter(b=>b.status==='booked').length;
+  const pend=allBookings.length-booked;
+  document.getElementById('tab-itinerary').innerHTML=`
+    <div class="trip-banner">
+      <div class="banner-icon"><i class="ti ti-plane"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="banner-name">${esc(currentTrip.name)}</div>
+        <div class="banner-dates">${esc(currentTrip.subtitle||'')}</div>
+        <div class="trip-pills">
+          ${pend>0?`<span class="tpill">${pend} pending</span>`:''}
+          ${booked>0?`<span class="tpill good">${booked} confirmed ✓</span>`:''}
+          ${allBookings.length===0?'<span class="tpill">No bookings yet</span>':''}
+        </div>
+      </div>
+    </div>
+    <div id="prog-section"></div>
+    <div class="itin-body" id="itin-inner"></div>`;
+  renderProgressBar();
+}
+
+function renderProgressBar(){
+  const el=document.getElementById('prog-section');if(!el||!currentTrip?.start_date)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const ts=parseDate(currentTrip.start_date),te=parseDate(currentTrip.end_date);
+  const total=Math.round((te-ts)/86400000)+1;
+  const elapsed=Math.max(0,Math.min(total,Math.round((today-ts)/86400000)));
+  const pct=Math.round(elapsed/total*100);
+  const dTo=Math.max(0,Math.round((ts-today)/86400000));
+  const inTrip=today>=ts&&today<=te,done=today>te;
+  const lbl=done?currentTrip.name+' · Complete ✓':inTrip?`Day ${elapsed+1} of ${total}`:`${dTo} day${dTo===1?'':'s'} to departure`;
+  const todayDay=inTrip?allDays.find(d=>{const dd=parseDate(d.date);dd&&dd.setHours(0,0,0,0);return dd&&dd.getTime()===today.getTime()}):null;
+  const sub=inTrip?(todayDay?.title||''):`Departs ${fmtDate(currentTrip.start_date)}`;
+  el.innerHTML=`<div class="prog-wrap"><div class="prog-top"><span class="prog-label">${lbl}</span><span class="prog-sub">${sub}</span></div><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div></div>`;
+}
+
+// ── ITINERARY ──
+function renderItinerary(){
+  const el=document.getElementById('itin-inner');if(!el)return;
+  const canEdit=role==='owner'||role==='editor';
+  let html='';
+  allPhases.forEach(ph=>{
+    const cc=ph.color||'#0F6E56',cl=cc+'18';
+    let phHdr='';
+    if(ph.photo_url){
+      phHdr=`<div class="ph-photo-wrap" style="margin-bottom:10px">
+        <img src="${esc(ph.photo_url)}" alt="${esc(ph.name)}">
+        <div class="ph-overlay"></div>
+        <div class="ph-text-over">
+          ${canEdit
+            ?`<input value="${esc(ph.name)}" style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff;border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePh('${ph.id}','name',this.value)">
+               <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:rgba(255,255,255,.7);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">`
+            :`<div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:#fff">${esc(ph.name)}</div><div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">${esc(ph.date_range||'')}</div>`}
+        </div>
+        ${canEdit?`<label class="ph-upload-btn"><i class="ti ti-camera" style="font-size:11px"></i>Change<input type="file" accept="image/*" style="display:none" onchange="uploadPh('${ph.id}',this)"></label>`:''}
+      </div>`;
+    } else {
+      phHdr=`<div class="ph-nophoto" style="background:${cl};border-color:${cc}22;margin-bottom:10px">
+        <div class="ph-dot" style="background:${cc}"><i class="ti ti-map-pin" style="color:#fff;font-size:16px"></i></div>
+        <div style="flex:1;min-width:0">
+          ${canEdit
+            ?`<input value="${esc(ph.name)}" style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc};border:none;background:transparent;width:100%;outline:none;padding:0" onchange="savePh('${ph.id}','name',this.value)">
+               <input value="${esc(ph.date_range||'')}" style="font-size:10px;color:var(--text-3);border:none;background:transparent;width:100%;outline:none;padding:0;margin-top:2px" onchange="savePh('${ph.id}','date_range',this.value)">`
+            :`<div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:${cc}">${esc(ph.name)}</div><div style="font-size:10px;color:var(--text-3);margin-top:1px">${esc(ph.date_range||'')}</div>`}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${canEdit?`<label style="font-size:10px;color:var(--text-3);cursor:pointer;display:flex;align-items:center;gap:2px;background:var(--cream-2);border:1px solid var(--border);border-radius:6px;padding:5px 8px"><i class="ti ti-camera" style="font-size:13px"></i><input type="file" accept="image/*" style="display:none" onchange="uploadPh('${ph.id}',this)"></label>`:''}
+          ${role==='owner'?`<button onclick="delPhase('${ph.id}')" style="background:none;border:1px solid #B83230;border-radius:6px;color:#B83230;cursor:pointer;font-size:13px;padding:5px 8px;display:flex;align-items:center;gap:3px"><i class="ti ti-trash"></i></button>`:''}
+        </div>
+      </div>`;
+    }
+    // Shift buttons for this phase
+    const shiftBtns=role==='owner'?`<div class="shift-btns">
+      <button class="shift-btn" onclick="shiftPhase('${ph.id}',-1)" title="Move all days back 1 day">← Back 1 day</button>
+      <button class="shift-btn" onclick="shiftPhase('${ph.id}',1)" title="Move all days forward 1 day">Forward 1 day →</button>
+      <button class="shift-btn" onclick="shiftPhaseN('${ph.id}')" title="Shift by custom number of days">Shift by N days</button>
+    </div>`:''
+    html+=`<div class="phase-block">${phHdr}${shiftBtns}`;
+    const phDays=allDays.filter(d=>d.phase_id===ph.id);
+    phDays.forEach((d,dIdx)=>{
+      // Insert day button BEFORE this day card (owner only)
+      if(role==='owner'){
+        const prevDay=dIdx>0?phDays[dIdx-1]:null;
+        html+=`<div class="insert-day-btn" onclick="openInsertDay('${ph.id}','${d.id}','${esc(ph.name)}')">
+          <div class="insert-day-btn-inner"><i class="ti ti-plus" style="font-size:10px"></i> Insert day here</div>
+        </div>`;
+      }
+      const dt=parseDate(d.date),di=allDays.indexOf(d);
+      const linked=allBookings.filter(b=>{
+        // Hotels: use date range exclusively (checkin <= day < checkout)
+        if(b.category==='Hotels'){
+          if(b.checkin_date&&b.checkout_date) return d.date>=b.checkin_date&&d.date<b.checkout_date;
+          return b.day_id===d.id; // fallback: only check-in day
+        }
+        // All others: exact day match
+        return b.day_id===d.id;
+      });
+      const needsBk=!linked.length&&(d.title.includes('→')||['fly','hotel','check'].some(w=>d.title.toLowerCase().includes(w)));
+      const tags=linked.map(b=>{
+        const tcc=b.category==='Flights'?'#1A5FA8':b.category==='Hotels'?'#A05C10':b.category==='Transfers & Taxis'?'#2E7D52':b.category==='Special Bookings'?'#5B3FA8':'#666';
+        const st=b.status==='booked';
+        const stIcon=st?'✓':'⏳';
+        let label='';
+        if(b.category==='Flights'){
+          // Show route: use from_city/to_city or parse title
+          const from=(b.from_city||b.title.split('→')[0]||'').trim().split(' ')[0];
+          const to=(b.to_city||b.title.split('→')[1]||'').trim().split(' ')[0];
+          const t=(b.dep_time||'').substring(0,5);
+          label='✈ '+from+(to?'→'+to:'')+(t?' '+t:'');
+        } else if(b.category==='Hotels'){
+          const ni=b.checkin_date&&b.checkout_date?Math.round((parseDate(b.checkout_date)-parseDate(b.checkin_date))/86400000):0;
+          const nn=b.checkin_date&&d.date?Math.round((parseDate(d.date)-parseDate(b.checkin_date))/86400000)+1:1;
+          const showNight=ni>0&&ni<=30&&nn>0&&nn<=ni;
+          label='🏨 '+b.title.split(' ').slice(0,3).join(' ')+(showNight&&ni>1?' · Night '+nn+'/'+ni:'');
+        } else if(b.category==='Transfers & Taxis'){
+          const from=(b.from_city||b.title.split('→')[0]||'').trim().split(' ')[0];
+          const to=(b.to_city||b.title.split('→')[1]||'').trim().split(' ')[0];
+          const t=(b.dep_time||'').substring(0,5);
+          label='🚗 '+from+(to?'→'+to:'')+(t?' '+t:'');
+        } else if(b.category==='Special Bookings'){
+          const t=(b.dep_time||'').substring(0,5);
+          label='🚁 '+b.title.split(' ').slice(0,3).join(' ')+(t?' '+t:'');
+        } else {
+          label='📌 '+b.title.substring(0,18);
+        }
+                const el=document.createElement('span');
+        el.style.cssText='cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+tcc+'15;color:'+tcc+';border:1px solid '+tcc+'44;display:inline-flex;align-items:center;gap:4px;margin-right:2px;white-space:nowrap';
+        el.innerHTML=esc(label)+' '+stIcon;
+        el.addEventListener('click',function(e){e.stopPropagation();showTab('bookings');});
+        return el.outerHTML;
+      }).join('');
+      const nudge=needsBk&&canEdit?`<span class="dtag dtag-warn" onclick="event.stopPropagation();openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')">⚠ Link booking</span>`:'';
+      const lbkRows=linked.map(b=>`<div class="lbk-row"><span style="color:${b.status==='booked'?'var(--green)':'var(--amber-d)'}">${b.status==='booked'?'✓':'⏳'} ${esc(b.title.substring(0,30))}</span>${canEdit?`<span style="color:var(--text-3);cursor:pointer;font-size:16px" onclick="unlinkBk('${b.id}')">×</span>`:''}</div>`).join('');
+      const editRow=role==='owner'?`<div style="margin-bottom:10px">
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <div style="flex:1">
+              <div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Date</div>
+              <input class="exp-inp" type="date" value="${d.date||''}" id="edate-${d.id}">
+            </div>
+            <div style="flex:1">
+              <div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Weekday</div>
+              <input class="exp-inp" value="${esc(d.weekday||'')}" id="ewd-${d.id}" placeholder="e.g. Mon" style="text-align:center">
+            </div>
+          </div>
+          <input class="exp-inp" placeholder="Day title" value="${esc(d.title)}" id="etitle-${d.id}" style="margin-bottom:6px">
+          <input class="exp-inp" placeholder="Subtitle" value="${esc(d.subtitle||'')}" id="esub-${d.id}" style="margin-bottom:8px">
+          <div style="display:flex;gap:8px">
+            <button class="btn-save-sm" style="flex:1" onclick="saveDay('${d.id}')"><i class="ti ti-check" style="margin-right:4px"></i>Save</button>
+            <button class="btn-save-sm" style="background:#B83230;flex:1" onclick="delDay('${d.id}')"><i class="ti ti-trash" style="margin-right:4px"></i>Delete day</button>
+          </div>
+        </div>`:'';
+      const tipA=canEdit?`<textarea class="exp-ta" rows="2" placeholder="Tip for this day…" oninput="debT('${d.id}','tip',this.value)" onblur="saveDFld('${d.id}','tip',this.value)">${esc(d.tip||'')}</textarea>`:`<div class="exp-ro">${esc(d.tip||'No tip.')}</div>`;
+      const noteA=canEdit?`<textarea class="exp-ta" rows="2" placeholder="Your personal note…" oninput="debT('${d.id}','note',this.value)" onblur="saveDFld('${d.id}','note',this.value)">${esc(d.note||'')}</textarea>`:`<div class="exp-ro">${esc(d.note||'No note.')}</div>`;
+      html+=`<div class="day-card" id="dc-${d.id}" style="border-left:3px solid ${cc}">
+        <div class="day-hdr" onclick="toggleDay('${d.id}')">
+          <div class="date-col" style="background:${cl}">
+            <span class="day-wd">${esc(d.weekday||fmtDay(d.date))}</span>
+            <span class="day-num" style="color:${cc}">${dt?dt.getDate():''}</span>
+            <span class="day-mo">${dt?dt.toLocaleString('en',{month:'short'}):''}</span>
+          </div>
+          <div class="day-body">
+            <div class="day-title">${esc(d.title)}</div>
+            <div class="day-sub">${esc(d.subtitle||'')}</div>
+            <div class="day-tags">${tags}${nudge}</div>
+          </div>
+          <div class="day-chev" style="color:${cc}"><i class="ti ti-chevron-down"></i></div>
+        </div>
+        <div class="day-exp" style="background:${cl}">
+          ${editRow}
+          <div class="exp-lbl" style="color:${cc}">📋 Linked bookings</div>
+          <div style="margin-bottom:8px">${linked.length?lbkRows:'<div style="font-size:11px;color:var(--text-3)">None linked</div>'}</div>
+          ${canEdit?`<button class="btn-link-sm" onclick="openLinkModal('${d.id}','${esc(d.title).replace(/'/g,"'")}')"><i class="ti ti-link" style="font-size:12px"></i> Link a booking</button>`:''}
+          <div class="exp-lbl" style="color:${cc};margin-top:12px">💡 Tip</div>${tipA}
+          <div class="exp-lbl" style="color:${cc}">📝 Personal note</div>${noteA}
+        </div>
+      </div>`;
+    });
+    if(role==='owner'){html+=`<div class="insert-day-btn" onclick="openInsertDay('${ph.id}',null,'${esc(ph.name)}')"><div class="insert-day-btn-inner"><i class="ti ti-plus" style="font-size:10px"></i> Insert day at end</div></div>`;}
+    if(role==='owner'){html+=`<button class="btn-add-ph" style="margin:4px 0 8px;border-color:${cc}44;color:${cc}" onclick="openAddDayModal('${ph.id}','${esc(ph.name)}')"><i class="ti ti-plus"></i> Add day to ${esc(ph.name)}</button>`;}
+    html+='</div>';
+  });
+  if(!allPhases.length)html='<div style="padding:24px;text-align:center;color:var(--text-3)">No phases yet. Tap below to add one.</div>';
+  if(role==='owner')html+=`<div style="padding:0 0 8px"><button class="btn-add-ph" style="border-color:var(--teal);color:var(--teal)" onclick="openAddPhaseModal()"><i class="ti ti-plus"></i> Add new phase / leg</button></div>`;
+  el.innerHTML=html;
+}
+
+function toggleDay(id){document.getElementById('dc-'+id)?.classList.toggle('open');}
+async function savePh(id,f,v){try{await sbPatch('phases',id,{[f]:v});const i=allPhases.findIndex(p=>p.id===id);if(i>=0)allPhases[i][f]=v;}catch(e){showToast('Save failed');}}
+async function saveDay(id){
+  const t=document.getElementById('etitle-'+id)?.value;
+  const s=document.getElementById('esub-'+id)?.value;
+  const date=document.getElementById('edate-'+id)?.value;
+  const wd=document.getElementById('ewd-'+id)?.value||
+    (date?parseDate(date)?.toLocaleDateString('en',{weekday:'short'}):'');
+  try{
+    const updates={title:t,subtitle:s};
+    if(date){updates.date=date;updates.weekday=wd;}
+    await sbPatch('days',id,updates);
+    const i=allDays.findIndex(d=>d.id===id);
+    if(i>=0){allDays[i].title=t;allDays[i].subtitle=s;if(date){allDays[i].date=date;allDays[i].weekday=wd;}}
+    // Re-render the card so date numeral and weekday update
+    renderItinerary();
+    showToast('Saved ✓');
+  }catch(e){showToast('Save failed');}
+}
+function debT(id,f,v){const T=f==='tip'?tipT:noteT;clearTimeout(T[id]);T[id]=setTimeout(()=>saveDFld(id,f,v),800);}
+async function saveDFld(id,f,v){try{await sbPatch('days',id,{[f]:v});const i=allDays.findIndex(d=>d.id===id);if(i>=0)allDays[i][f]=v;}catch(e){}}
+async function uploadPh(id,inp){const f=inp.files[0];if(!f)return;if(f.size>2000000){showToast('Max 2MB');return;}showToast('Uploading…');const r=new FileReader();r.onload=async e=>{try{await sbPatch('phases',id,{photo_url:e.target.result});const i=allPhases.findIndex(p=>p.id===id);if(i>=0)allPhases[i].photo_url=e.target.result;renderItinerary();showToast('Photo saved ✓');}catch(err){showToast('Upload failed');}};r.readAsDataURL(f);}
+
+// ── BOOKINGS ──
+function renderBookings(){
+  const canEdit=role==='owner'||role==='editor',isOwner=role==='owner';
+  const cats=['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'];
+  allBookings.forEach(b=>{if(!cats.includes(b.category))cats.push(b.category);});
+  const used=cats.filter(g=>allBookings.some(b=>b.category===g));
+  let html='<div class="bk-body">';
+  if(!allBookings.length){html+=`<div style="text-align:center;padding:32px;color:var(--text-3)"><i class="ti ti-clipboard-list" style="font-size:32px;display:block;margin-bottom:12px"></i>No bookings yet.<br>${isOwner?'Tap + Add to create one.':'Owner can add bookings.'}</div>`;}
+  used.forEach(g=>{
+    const cc=CAT_CLR[g]||'#666',icon=CAT_ICO[g]||'ti-bookmark';
+    html+=`<div class="bk-group"><div class="bk-grp-title" style="color:${cc}"><span><i class="ti ${icon}" style="margin-right:5px"></i>${g}</span>${isOwner?`<button class="btn-add-bk" onclick="openAddBk('${g}')" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>`:''}</div>`;
+    [...allBookings.filter(b=>b.category===g)].sort((a,b)=>{
+      const getDate=bk=>bk.flight_date||bk.checkin_date||(bk.day_id?allDays.find(d=>d.id===bk.day_id)?.date:null)||'9999';
+      return getDate(a).localeCompare(getDate(b));
+    }).forEach(b=>{
+      let dayLbl='';
+      if(b.day_id){const sd=allDays.find(d=>d.id===b.day_id),ed=b.end_day_id?allDays.find(d=>d.id===b.end_day_id):null;dayLbl=ed?`${fmtDate(sd?.date)} → ${fmtDate(ed?.date)}`:`${fmtDay(sd?.date)} ${fmtDate(sd?.date)}`;}
+      const refF=canEdit?`<input class="bk-ref-inp" placeholder="Booking ref / PNR…" value="${esc(b.ref||'')}" onchange="saveBkF('${b.id}','ref',this.value)">`:`<div class="bk-ref-ro">${esc(b.ref||'Not entered')}</div>`;
+      const stBtn=canEdit?`<button class="st-btn ${b.status}" id="stb-${b.id}" onclick="togBkSt('${b.id}','${b.status}')">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</button>`:`<span class="st-btn ${b.status==='booked'?'dtag-bk':'dtag-pend'} dtag">${b.status==='booked'?'✓ Booked':'⏳ Pending'}</span>`;
+      const editF=isOwner?`<div class="bk-edit-flds"><input class="bk-edit-inp" value="${esc(b.title)}" placeholder="Title" onchange="saveBkF('${b.id}','title',this.value)" style="font-weight:600"><input class="bk-edit-inp" value="${esc(b.detail||'')}" placeholder="Details/dates" onchange="saveBkF('${b.id}','detail',this.value)"></div>`:'';
+      const attch=b.attachment_data?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><img src="${esc(b.attachment_data)}" class="bk-thumb" onclick="viewAttach('${b.id}')" alt="Attachment">${isOwner?`<button class="bk-attach-btn" onclick="remAttach('${b.id}')"><i class="ti ti-trash" style="font-size:11px"></i> Remove</button>`:''}</div>`:isOwner?`<label class="bk-attach-btn"><i class="ti ti-paperclip" style="font-size:11px"></i> Attach<input type="file" accept="image/*,.pdf" style="display:none" onchange="upAttach('${b.id}',this)"></label>`:'';
+      html+=`<div class="bk-item ${b.status}" id="bkitem-${b.id}" style="border-left-color:${b.status==='booked'?'var(--teal)':cc}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div style="flex:1;min-width:0">
+            <div class="bk-title">${esc(b.title)}</div>
+            ${(b.flight_date||b.checkin_date)?`<div style="font-size:10px;font-weight:600;color:var(--text-3);margin-top:1px">${fmtDate(b.flight_date||b.checkin_date)}${b.checkout_date?' – '+fmtDate(b.checkout_date):''}</div>`:''}
+            <div class="bk-detail">${esc(b.detail||'')}</div>
+            ${b.claude_tip?`<span class="bk-tip">💡 ${esc(b.claude_tip)}</span>`:''}
+            ${dayLbl?`<span class="bk-link-tag" style="background:var(--teal-light);color:var(--teal);border:1px solid var(--teal-border)"><i class="ti ti-calendar" style="font-size:9px"></i> ${dayLbl}</span>`:canEdit?`<span class="bk-link-tag" style="background:var(--amber-l);color:var(--amber-d);border:1px solid var(--amber-b);cursor:pointer" onclick="openLinkFromBk('${b.id}')"><i class="ti ti-link" style="font-size:9px"></i> Not linked — tap to link</span>`:''}
+            ${editF}${attch}
+          </div>
+          ${isOwner?`<div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="btn-del-sm" onclick="openEditBk('${b.id}')" style="color:var(--teal)"><i class="ti ti-pencil"></i></button>
+            <button class="btn-del-sm" onclick="delBk('${b.id}')"><i class="ti ti-trash"></i></button>
+          </div>`:''}
+        </div>
+        <div class="bk-actions">${refF}${stBtn}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  if(isOwner)html+=`<button class="btn-add-ph" onclick="openAddBk('')" style="margin:0 0 8px"><i class="ti ti-plus"></i> Add booking</button>`;
+  html+='</div>';
+  document.getElementById('tab-bookings').innerHTML=html;
+}
+
+function openAddBk(cat){
+  selBkCat=cat||'Flights';
+  // Reset all fields
+  ['fl-from','fl-to','fl-dep','fl-arr','ht-name','tr-from','tr-to','ot-title','ot-detail','sp-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fl-date','ht-cin','ht-cout','tr-date','sp-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fl-dep','fl-arr','tr-time','sp-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Show correct category pills and fields
+  document.querySelectorAll('.cat-pill').forEach(p=>{const a=p.dataset.cat===selBkCat,cc=CAT_CLR[p.dataset.cat]||'#666';p.className='cat-pill'+(a?' active':'');p.style.background=a?cc:'';p.style.color=a?'#fff':'';p.style.borderColor=a?cc:'';});
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{const el=document.getElementById('fields-'+c);if(el)el.style.display=c===selBkCat?'block':'none';});
+  openModal('modal-add-bk');
+}
+function selCat(el){
+  selBkCat=el.dataset.cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>{const a=p.dataset.cat===selBkCat,cc=CAT_CLR[p.dataset.cat]||'#666';p.className='cat-pill'+(a?' active':'');p.style.background=a?cc:'';p.style.color=a?'#fff':'';p.style.borderColor=a?cc:'';});
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{const el=document.getElementById('fields-'+c);if(el)el.style.display=c===selBkCat?'block':'none';});
+}
+async function confirmAddBk(){
+  const nextOrder=allBookings.length?Math.max(...allBookings.map(b=>b.sort_order||0))+1:0;
+  let bkData={trip_id:currentTrip.id,category:selBkCat,status:'pending',ref:'',cost:0,attachment_data:null,sort_order:nextOrder,day_id:null,end_day_id:null,claude_tip:'',dep_time:null,arr_time:null,from_city:null,to_city:null,flight_date:null,checkin_date:null,checkout_date:null};
+
+  if(selBkCat==='Flights'){
+    const from=document.getElementById('fl-from').value.trim();
+    const to=document.getElementById('fl-to').value.trim();
+    const date=document.getElementById('fl-date').value;
+    const dep=document.getElementById('fl-dep').value;
+    const arr=document.getElementById('fl-arr').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    bkData.title=from+' → '+to;
+    bkData.detail=date+(dep?' · '+dep:'')+(arr?' → '+arr:'');
+    bkData.from_city=from;bkData.to_city=to;bkData.flight_date=date;
+    bkData.dep_time=dep||null;bkData.arr_time=arr||null;
+    // Auto-link to day with matching date
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay){bkData.day_id=matchDay.id;}
+  } else if(selBkCat==='Hotels'){
+    const name=document.getElementById('ht-name').value.trim();
+    const cin=document.getElementById('ht-cin').value;
+    const cout=document.getElementById('ht-cout').value;
+    if(!name||!cin||!cout){showToast('Enter hotel name and dates');return;}
+    if(cout<=cin){showToast('Check-out must be after check-in');return;}
+    bkData.title=name;
+    bkData.detail=fmtDate(cin)+' – '+fmtDate(cout);
+    bkData.checkin_date=cin;bkData.checkout_date=cout;
+    // Auto-link check-in to check-out days
+    const cinDay=allDays.find(d=>d.date===cin);
+    const coutDay=allDays.find(d=>d.date===cout);
+    if(cinDay)bkData.day_id=cinDay.id;
+    if(coutDay)bkData.end_day_id=coutDay.id;
+  } else if(selBkCat==='Transfers & Taxis'){
+    const from=document.getElementById('tr-from').value.trim();
+    const to=document.getElementById('tr-to').value.trim();
+    const date=document.getElementById('tr-date').value;
+    const time=document.getElementById('tr-time').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    bkData.title=from+' → '+to;
+    bkData.detail=fmtDate(date)+(time?' · '+time:'');
+    bkData.from_city=from;bkData.to_city=to;bkData.flight_date=date;
+    bkData.dep_time=time||null;
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay)bkData.day_id=matchDay.id;
+  } else if(selBkCat==='Special Bookings'){
+    const name=document.getElementById('sp-name').value.trim();
+    const date=document.getElementById('sp-date').value;
+    const time=document.getElementById('sp-time').value;
+    if(!name||!date){showToast('Enter name and date');return;}
+    bkData.title=name;
+    bkData.detail=fmtDate(date)+(time?' · '+time:'');
+    bkData.flight_date=date;bkData.dep_time=time||null;
+    const matchDay=allDays.find(d=>d.date===date);
+    if(matchDay)bkData.day_id=matchDay.id;
+  } else {
+    const t=document.getElementById('ot-title').value.trim();
+    if(!t){showToast('Enter a title');return;}
+    bkData.title=t;
+    bkData.detail=document.getElementById('ot-detail').value.trim();
+  }
+
+  try{
+    const[bk]=await sbPost('bookings',bkData);
+    allBookings.push(bk);
+
+    // Auto-update day title for flights if title is placeholder
+    if(selBkCat==='Flights'&&bk.day_id){
+      const dayIdx=allDays.findIndex(d=>d.id===bk.day_id);
+      if(dayIdx>=0){
+        const d=allDays[dayIdx];
+        if(!d.title||d.title==='(add title)'||d.title.trim()===''){
+          await sbPatch('days',d.id,{title:bkData.title});
+          allDays[dayIdx].title=bkData.title;
+        }
+      }
+    }
+    // Re-fetch fresh so all structured fields are current
+    allBookings = await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    closeModal('modal-add-bk');
+    renderBanner();renderItinerary();renderBookings();
+    showToast('Booking added ✓');
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+async function saveBkF(id,f,v){try{await sbPatch('bookings',id,{[f]:v});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i][f]=v;}catch(e){showToast('Save failed');}}
+async function togBkSt(id,cur){const n=cur==='booked'?'pending':'booked';try{await sbPatch('bookings',id,{status:n});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].status=n;const item=document.getElementById('bkitem-'+id),btn=document.getElementById('stb-'+id);if(item){item.className='bk-item '+n;item.style.borderLeftColor=n==='booked'?'var(--teal)':(CAT_CLR[allBookings[i]?.category]||'#666');}if(btn){btn.className='st-btn '+n;btn.textContent=n==='booked'?'✓ Booked':'⏳ Pending';btn.setAttribute('onclick',`togBkSt('${id}','${n}')`);}renderBanner();showToast(n==='booked'?'Booked ✓':'Marked pending');}catch(e){showToast('Failed');}}
+async function delBk(id){if(!confirm('Delete this booking?'))return;try{await sbDel('bookings','id',id);allBookings=allBookings.filter(b=>b.id!==id);renderBookings();renderBanner();renderItinerary();showToast('Deleted');}catch(e){showToast('Failed');}}
+async function upAttach(id,inp){const f=inp.files[0];if(!f)return;if(f.size>2000000){showToast('Max 2MB');return;}showToast('Uploading…');const r=new FileReader();r.onload=async e=>{try{await sbPatch('bookings',id,{attachment_data:e.target.result});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=e.target.result;renderBookings();showToast('Saved ✓');}catch(err){showToast('Failed');}};r.readAsDataURL(f);}
+function viewAttach(id){
+  const b=allBookings.find(function(bk){return bk.id===id;});
+  if(!b||!b.attachment_data)return;
+  const o=document.createElement('div');
+  o.id='attach-overlay';
+  o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px';
+  const img=document.createElement('img');
+  img.src=b.attachment_data;
+  img.style.cssText='max-width:100%;max-height:65vh;border-radius:8px;object-fit:contain';
+  o.appendChild(img);
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center';
+  function makeBtn(label,bg,fn){
+    const btn=document.createElement('button');
+    btn.innerHTML=label;
+    btn.style.cssText='background:'+bg+';color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui)';
+    btn.onclick=fn;
+    row.appendChild(btn);
+  }
+  makeBtn('× Close','rgba(255,255,255,.2)',function(){o.remove();});
+  makeBtn('<i class="ti ti-share"></i> Share','#25D366',function(){shareAttach(id);});
+  makeBtn('<i class="ti ti-mail"></i> Email','#1A5FA8',function(){emailAttach(id);});
+  makeBtn('<i class="ti ti-printer"></i> Print','#555',function(){printAttach(id);});
+  o.appendChild(row);
+  o.addEventListener('click',function(e){if(e.target===o)o.remove();});
+  document.body.appendChild(o);
+}
+async function shareAttach(id){
+  const b=allBookings.find(function(bk){return bk.id===id;});
+  if(!b||!b.attachment_data)return;
+  try{
+    const res=await fetch(b.attachment_data);
+    const blob=await res.blob();
+    const ext=blob.type.includes('pdf')?'pdf':'jpg';
+    const file=new File([blob],'booking.'+ext,{type:blob.type});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:'Booking: '+b.title,files:[file]});
+    } else if(navigator.share){
+      await navigator.share({title:b.title,text:b.title+' '+(b.detail||'')});
+    } else { showToast('Sharing not supported'); }
+  }catch(e){if(e.name!=='AbortError')showToast('Share failed');}
+}
+function emailAttach(id){
+  const b=allBookings.find(function(bk){return bk.id===id;});
+  if(!b)return;
+  const sub=encodeURIComponent('Booking: '+b.title);
+  const body=encodeURIComponent('Booking: '+b.title+'\nDetails: '+(b.detail||'')+'\nRef: '+(b.ref||'TBD'));
+  window.location.href='mailto:?subject='+sub+'&body='+body;
+  if(b.attachment_data){setTimeout(function(){const a=document.createElement('a');a.href=b.attachment_data;a.download='booking.jpg';a.click();},600);}
+  showToast('Email app opening');
+}
+function printAttach(id){
+  const b=allBookings.find(function(bk){return bk.id===id;});
+  if(!b||!b.attachment_data)return;
+  const w=window.open('','_blank');
+  if(!w)return;
+  const html='<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:16px;font-family:sans-serif}img{max-width:100%;}</style></head><body><h2>'+b.title+'</h2><p>'+(b.detail||'')+'</p><img src="'+b.attachment_data+'" onload="window.print()"></body></html>';
+  w.document.write(html);
+  w.document.close();
+}
+async function remAttach(id){if(!confirm('Remove?'))return;try{await sbPatch('bookings',id,{attachment_data:null});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=null;renderBookings();}catch(e){showToast('Failed');}}
+
+// ── LINK ──
+async function openLinkModal(dayId,dayTitle){
+  // Always refresh days so newly added days appear
+  try{allDays=await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');}catch(e){}
+  document.getElementById('link-title').textContent='Link to: '+dayTitle.substring(0,28);
+  const thisDay=allDays.find(d=>d.id===dayId);
+  const linked=allBookings.filter(b=>{
+    if(b.category==='Hotels'){
+      if(b.checkin_date&&b.checkout_date&&thisDay) return thisDay.date>=b.checkin_date&&thisDay.date<b.checkout_date;
+      return b.day_id===dayId;
+    }
+    return b.day_id===dayId;
+  });
+  const unlinked=allBookings.filter(b=>!b.day_id);
+  let html='';
+  if(linked.length){html+=`<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">Linked</div>`;linked.forEach(b=>{const cc=CAT_CLR[b.category]||'#666';html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${cc};border-radius:8px;margin-bottom:6px"><div><div style="font-size:12px;font-weight:600">${esc(b.title)}</div><div style="font-size:10px;color:var(--text-3)">${esc(b.detail||'')}</div></div><button onclick="unlinkBk('${b.id}')" style="font-size:11px;color:var(--red);background:none;border:1px solid var(--red);border-radius:6px;padding:4px 8px;cursor:pointer">Unlink</button></div>`;});html+=`<div style="height:1px;background:var(--border);margin:10px 0"></div>`;}
+  if(unlinked.length){html+=`<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">Available</div>`;
+    unlinked.forEach(b=>{const cc=CAT_CLR[b.category]||'#666',isH=b.category==='Hotels';
+      html+=`<div style="padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${cc};border-radius:8px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div><div style="font-size:12px;font-weight:600">${esc(b.title)}</div><div style="font-size:10px;color:var(--text-3)">${esc(b.detail||'')}</div></div>
+          ${!isH?`<button onclick="lnkBkDay('${b.id}','${dayId}',null)" style="font-size:11px;color:${cc};background:${cc}18;border:1px solid ${cc}44;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">Link</button>`:''}
+        </div>
+        ${isH?`<div style="margin-top:8px;font-size:10px;color:var(--text-3);margin-bottom:6px">Pick check-in and check-out days:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:130px"><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:3px;text-transform:uppercase">Check-in</div>
+              <select id="cin-${b.id}" style="width:100%;font-size:11px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--cream);font-family:var(--ui)">
+                ${allDays.map(d=>`<option value="${d.id}" ${d.id===dayId?'selected':''}>${fmtDay(d.date)} ${fmtDate(d.date)} — ${esc(d.title.substring(0,16))}</option>`).join('')}
+              </select></div>
+            <div style="flex:1;min-width:130px"><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:3px;text-transform:uppercase">Check-out</div>
+              <select id="cout-${b.id}" style="width:100%;font-size:11px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--cream);font-family:var(--ui)">
+                ${allDays.map(d=>`<option value="${d.id}">${fmtDay(d.date)} ${fmtDate(d.date)} — ${esc(d.title.substring(0,16))}</option>`).join('')}
+              </select></div>
+            <button onclick="lnkHotel('${b.id}')" style="font-size:11px;color:${cc};background:${cc}18;border:1px solid ${cc}44;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;margin-bottom:1px">Link range</button>
+          </div>`:''}
+      </div>`;
+    });
+  } else if(!linked.length){html='<div style="font-size:13px;color:var(--text-3);text-align:center;padding:20px">All bookings already linked. Add a new one in Bookings tab first.</div>';}
+  document.getElementById('link-list').innerHTML=html;openModal('modal-link');
+}
+
+async function openLinkFromBk(bkId){
+  // Always refresh days so newly added days appear
+  try{allDays=await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');}catch(e){}
+  const b=allBookings.find(bk=>bk.id===bkId);if(!b)return;
+  const isH=b.category==='Hotels',cc=CAT_CLR[b.category]||'#666';
+  document.getElementById('link-title').textContent='Link: '+b.title.substring(0,28);
+  let html='<div style="font-size:11px;color:var(--text-3);margin-bottom:10px">'+(isH?'Pick check-in and check-out day.':'Pick the day this belongs to.')+'</div>';
+  if(isH){html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><div style="flex:1;min-width:140px"><div style="font-size:9px;font-weight:700;color:var(--text-3);margin-bottom:4px;text-transform:uppercase">Check-in</div><select id="cin2-${b.id}" style="width:100%;font-size:11px;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--cream);font-family:var(--ui)">${allDays.map(d=>`<option value="${d.id}">${fmtDay(d.date)} ${fmtDate(d.date)} — ${esc(d.title.substring(0,18))}</option>`).join('')}</select></div><div style="flex:1;min-width:140px"><div style="font-size:9px;font-weight:700;color:var(--text-3);margin-bottom:4px;text-transform:uppercase">Check-out</div><select id="cout2-${b.id}" style="width:100%;font-size:11px;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--cream);font-family:var(--ui)">${allDays.map(d=>`<option value="${d.id}">${fmtDay(d.date)} ${fmtDate(d.date)} — ${esc(d.title.substring(0,18))}</option>`).join('')}</select></div></div><button onclick="lnkHotel2('${b.id}')" style="width:100%;background:${cc};color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui)">Link hotel to date range</button>`;}
+  else{allDays.forEach(d=>{html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px"><div style="font-size:12px;font-weight:600">${fmtDay(d.date)} ${fmtDate(d.date)} — ${esc(d.title.substring(0,26))}</div><button onclick="lnkBkDay('${b.id}','${d.id}',null)" style="font-size:11px;color:${cc};background:${cc}18;border:1px solid ${cc}44;border-radius:6px;padding:5px 10px;cursor:pointer">Link</button></div>`;});}
+  document.getElementById('link-list').innerHTML=html;openModal('modal-link');
+}
+async function lnkBkDay(bkId,dayId,endId){try{await sbPatch('bookings',bkId,{day_id:dayId,end_day_id:endId||null});const i=allBookings.findIndex(b=>b.id===bkId);if(i>=0){allBookings[i].day_id=dayId;allBookings[i].end_day_id=endId||null;}closeModal('modal-link');showToast('Linked ✓');renderBookings();renderItinerary();}catch(e){showToast('Failed');}}
+async function lnkHotel(bkId){const s=document.getElementById('cin-'+bkId)?.value,e=document.getElementById('cout-'+bkId)?.value;if(!s||!e)return;if(allDays.findIndex(d=>d.id===e)<allDays.findIndex(d=>d.id===s)){showToast('Check-out must be after check-in');return;}await lnkBkDay(bkId,s,e);}
+async function lnkHotel2(bkId){const s=document.getElementById('cin2-'+bkId)?.value,e=document.getElementById('cout2-'+bkId)?.value;if(!s||!e)return;if(allDays.findIndex(d=>d.id===e)<allDays.findIndex(d=>d.id===s)){showToast('Check-out must be after check-in');return;}await lnkBkDay(bkId,s,e);}
+async function unlinkBk(id){try{await sbPatch('bookings',id,{day_id:null,end_day_id:null});const i=allBookings.findIndex(b=>b.id===id);if(i>=0){allBookings[i].day_id=null;allBookings[i].end_day_id=null;}closeModal('modal-link');showToast('Unlinked');renderBookings();renderItinerary();}catch(e){showToast('Failed');}}
+
+// ── ESSENTIALS ──
+async function renderEssentials(){
+  const el=document.getElementById('tab-essentials');if(!currentTrip){el.innerHTML='';return;}
+  try{
+    const items=await sbGet('essentials','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    const canEdit=role==='owner'||role==='editor';
+    const cats=[...new Set(items.map(i=>i.category))];
+    essCatIdx={};cats.forEach((c,i)=>essCatIdx[i]=c);
+    let html='<div class="ess-body">';
+    cats.forEach((cat,ci)=>{
+      const catItems=items.filter(i=>i.category===cat);
+      const cc=ESS_CLR[cat]||'#0F6E56',icon=ESS_ICO[cat]||'ti-checklist';
+      const done=catItems.filter(i=>i.checked).length;
+      html+=`<div class="ess-section"><div class="ess-sec-hdr"><div class="ess-sec-title" style="color:${cc}"><i class="ti ${icon}" style="color:${cc}"></i>${esc(cat)} <span style="font-weight:400;color:var(--text-3)">${done}/${catItems.length}</span></div>${canEdit?`<button class="btn-add-item" onclick="showEssAdd(${ci})" style="color:${cc}"><i class="ti ti-plus"></i> Add</button>`:''}</div><div class="checklist" id="esslist-${ci}">`;
+      catItems.forEach(item=>{html+=`<div class="check-item ${item.checked?'checked':''}" id="ci-${item.id}" onclick="togEss('${item.id}',${item.checked},'${cc}')"><div class="check-box" style="${item.checked?'background:'+cc+';border-color:'+cc:''}">${item.checked?'<i class="ti ti-check"></i>':''}</div><div class="check-text">${esc(item.item)}</div>${canEdit?`<span class="check-del" onclick="delEss(event,'${item.id}')"><i class="ti ti-x"></i></span>`:''}</div>`;});
+      if(canEdit)html+=`<div class="add-item-row" id="essadd-${ci}" style="display:none"><input class="add-item-inp" id="essinp-${ci}" placeholder="New item…" onkeydown="if(event.key==='Enter')confirmEssAdd(${ci})"><button class="btn-add-confirm" style="background:${cc}" onclick="confirmEssAdd(${ci})">Add</button></div>`;
+      html+='</div></div>';
+    });
+    html+='</div>';el.innerHTML=html;
+  }catch(e){el.innerHTML=`<div style="padding:20px;color:var(--red)">${e.message}</div>`;}
+}
+function showEssAdd(ci){const r=document.getElementById('essadd-'+ci);if(!r)return;const v=r.style.display==='flex';r.style.display=v?'none':'flex';if(!v)document.getElementById('essinp-'+ci)?.focus();}
+async function confirmEssAdd(ci){const cat=essCatIdx[ci],inp=document.getElementById('essinp-'+ci);if(!inp||!inp.value.trim()||!cat)return;try{const items=await sbGet('essentials','trip_id=eq.'+currentTrip.id+'&category=eq.'+encodeURIComponent(cat)+'&order=sort_order.desc&limit=1');const next=(items[0]?.sort_order||0)+1;await sbPost('essentials',{trip_id:currentTrip.id,category:cat,item:inp.value.trim(),checked:false,sort_order:next});inp.value='';await renderEssentials();showToast('Added');}catch(e){showToast('Failed');}}
+async function togEss(id,cur,cc){try{await sbPatch('essentials',id,{checked:!cur});const ci=document.getElementById('ci-'+id);if(ci){ci.classList.toggle('checked',!cur);const box=ci.querySelector('.check-box');box.innerHTML=!cur?'<i class="ti ti-check"></i>':'';box.style.background=!cur?cc:'';box.style.borderColor=!cur?cc:'';ci.setAttribute('onclick',`togEss('${id}',${!cur},'${cc}')`);};}catch(e){}}
+async function delEss(e,id){e.stopPropagation();try{await sbDel('essentials','id',id);document.getElementById('ci-'+id)?.remove();showToast('Removed');}catch(e){showToast('Failed');}}
+
+// ── SHARE ──
+function renderShare(){
+  if(!currentTrip){document.getElementById('tab-share').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-3)">Open a trip first.</div>';return;}
+  const booked=allBookings.filter(b=>b.status==='booked'),pend=allBookings.filter(b=>b.status!=='booked');
+  const today=new Date().toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+  let pTxt='MANISH EXPLORES — PENDING BOOKINGS\n'+'─'.repeat(36)+'\n'+currentTrip.name+'\n'+(currentTrip.subtitle||'')+'\nGenerated: '+today+'\n\n';
+  if(pend.length){const gs=[...new Set(pend.map(b=>b.category))];gs.forEach(g=>{pTxt+=g.toUpperCase()+'\n';pend.filter(b=>b.category===g).forEach(b=>{pTxt+='  □ '+b.title+'\n    '+(b.detail||'')+'\n\n';});});}else pTxt+='All bookings confirmed! ✓\n\n';
+  if(booked.length){pTxt+='CONFIRMED ('+booked.length+')\n';booked.forEach(b=>{pTxt+='  ✓ '+b.title+(b.ref?' ['+b.ref+']':'')+'\n';});}
+  let iTxt='MANISH EXPLORES — FULL ITINERARY\n'+'─'.repeat(34)+'\n'+currentTrip.name+'\n'+(currentTrip.subtitle||'')+'\nGenerated: '+today+'\n';
+  allPhases.forEach(ph=>{
+    iTxt+='\n▶ '+ph.name.toUpperCase()+(ph.date_range?' ('+ph.date_range+')':'')+'\n'+'─'.repeat(36)+'\n';
+    const phDays=allDays.filter(d=>d.phase_id===ph.id);
+    phDays.forEach(d=>{
+      const di=allDays.indexOf(d);
+      iTxt+='\n  '+(d.weekday||'')+' '+fmtDate(d.date)+' — '+d.title+'\n';
+      if(d.subtitle)iTxt+='  '+d.subtitle+'\n';
+      const dayBks=allBookings.filter(b=>{
+        if(b.category==='Hotels'){
+          if(b.checkin_date&&b.checkout_date) return d.date>=b.checkin_date&&d.date<b.checkout_date;
+          return b.day_id===d.id;
+        }
+        return b.day_id===d.id;
+      });
+      dayBks.forEach(b=>{iTxt+='  '+(b.status==='booked'?'✓':'⏳')+' '+b.title+(b.ref?' ['+b.ref+']':'')+'\n';});
+      if(d.note)iTxt+='  Note: '+d.note+'\n';
+    });
+  });
+    const pE=esc(pTxt);
+  const iE=esc(iTxt);
+  document.getElementById('tab-share').innerHTML=`<div class="share-body">
+    <div class="share-card"><div class="share-card-title"><i class="ti ti-clipboard-list"></i>Pending bookings</div><div class="share-desc">Only unconfirmed items — send to travel agent or family.</div><div class="share-prev">${esc(pTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(pTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
+    <div class="share-card"><div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div><div class="share-desc">All days, bookings and personal notes — ready to forward.</div><div class="share-prev">${esc(iTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(iTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
+    <button class="btn-export" onclick="expData()"><i class="ti ti-download"></i> Export JSON backup</button>
+  </div>`;
+}
+function cpyTxt(btn,text){navigator.clipboard.writeText(text).then(()=>{const o=btn.innerHTML;btn.innerHTML='<i class="ti ti-check"></i> Copied!';btn.classList.add('copied');setTimeout(()=>{btn.innerHTML=o;btn.classList.remove('copied');},2000);});}
+function waShare(text){window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');}
+function expData(){const blob=new Blob([JSON.stringify({trip:currentTrip,phases:allPhases,days:allDays,bookings:allBookings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(currentTrip.name||'trip').replace(/\s+/g,'-')+'-backup.json';a.click();}
+
+// ── SETTINGS ──
+let _addDayPhaseId = null;
+let _editBkId = null;
+
+function openEditBk(bkId){
+  const b = allBookings.find(bk=>bk.id===bkId);
+  if(!b) return;
+  _editBkId = bkId;
+  const cat = b.category;
+
+  // Show category label
+  document.getElementById('edit-bk-category-label').textContent = cat;
+
+  // Show correct fields, hide others
+  ['Flights','Hotels','Transfers & Taxis','Special Bookings','Other'].forEach(c=>{
+    const el=document.getElementById('edit-fields-'+c);
+    if(el) el.style.display = c===cat ? 'block' : 'none';
+  });
+
+  // Pre-fill fields — use structured fields, fall back to parsing title/detail
+  if(cat==='Flights'){
+    // from_city/to_city — parse from title if not stored (e.g. "Dubai → Delhi")
+    let fromCity = b.from_city||'';
+    let toCity = b.to_city||'';
+    if(!fromCity && b.title && b.title.includes('→')){
+      const parts = b.title.split('→');
+      fromCity = parts[0].trim();
+      toCity = parts[1]?.trim()||'';
+    }
+    document.getElementById('efl-from').value = fromCity;
+    document.getElementById('efl-to').value = toCity;
+    document.getElementById('efl-date').value = b.flight_date||'';
+    // dep_time may come as "HH:MM:SS" from postgres — trim to HH:MM
+    document.getElementById('efl-dep').value = (b.dep_time||'').substring(0,5);
+    document.getElementById('efl-arr').value = (b.arr_time||'').substring(0,5);
+  } else if(cat==='Hotels'){
+    document.getElementById('eht-name').value = b.title||'';
+    document.getElementById('eht-cin').value = b.checkin_date||'';
+    document.getElementById('eht-cout').value = b.checkout_date||'';
+  } else if(cat==='Transfers & Taxis'){
+    let tfrom = b.from_city||'';
+    let tto = b.to_city||'';
+    if(!tfrom && b.title && b.title.includes('→')){
+      const parts = b.title.split('→');
+      tfrom = parts[0].trim(); tto = parts[1]?.trim()||'';
+    }
+    document.getElementById('etr-from').value = tfrom;
+    document.getElementById('etr-to').value = tto;
+    document.getElementById('etr-date').value = b.flight_date||'';
+    document.getElementById('etr-time').value = (b.dep_time||'').substring(0,5);
+  } else if(cat==='Special Bookings'){
+    document.getElementById('esp-name').value = b.title||'';
+    document.getElementById('esp-date').value = b.flight_date||'';
+    document.getElementById('esp-time').value = (b.dep_time||'').substring(0,5);
+  } else {
+    document.getElementById('eot-title').value = b.title||'';
+    document.getElementById('eot-detail').value = b.detail||'';
+  }
+  document.getElementById('ebk-ref').value = b.ref||'';
+  openModal('modal-edit-bk');
+}
+
+async function confirmEditBk(){
+  const b = allBookings.find(bk=>bk.id===_editBkId);
+  if(!b) return;
+  const cat = b.category;
+  let updates = {ref: document.getElementById('ebk-ref').value.trim()};
+
+  if(cat==='Flights'){
+    const from = document.getElementById('efl-from').value.trim();
+    const to = document.getElementById('efl-to').value.trim();
+    const date = document.getElementById('efl-date').value;
+    const dep = document.getElementById('efl-dep').value;
+    const arr = document.getElementById('efl-arr').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    updates.from_city=from; updates.to_city=to; updates.flight_date=date;
+    updates.dep_time=dep||null; updates.arr_time=arr||null;
+    updates.title=from+' → '+to;
+    updates.detail=fmtDate(date)+(dep?' · '+dep:'')+(arr?' → '+arr:'');
+    // Re-link to new date
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else if(cat==='Hotels'){
+    const name=document.getElementById('eht-name').value.trim();
+    const cin=document.getElementById('eht-cin').value;
+    const cout=document.getElementById('eht-cout').value;
+    if(!name||!cin||!cout){showToast('Enter hotel name and dates');return;}
+    if(cout<=cin){showToast('Check-out must be after check-in');return;}
+    updates.title=name; updates.checkin_date=cin; updates.checkout_date=cout;
+    updates.detail=fmtDate(cin)+' – '+fmtDate(cout);
+    const cinDay=allDays.find(d=>d.date===cin);
+    const coutDay=allDays.find(d=>d.date===cout);
+    updates.day_id=cinDay?cinDay.id:null;
+    updates.end_day_id=coutDay?coutDay.id:null;
+  } else if(cat==='Transfers & Taxis'){
+    const from=document.getElementById('etr-from').value.trim();
+    const to=document.getElementById('etr-to').value.trim();
+    const date=document.getElementById('etr-date').value;
+    const time=document.getElementById('etr-time').value;
+    if(!from||!to||!date){showToast('Enter route and date');return;}
+    updates.from_city=from; updates.to_city=to; updates.flight_date=date;
+    updates.dep_time=time||null;
+    updates.title=from+' → '+to;
+    updates.detail=fmtDate(date)+(time?' · '+time:'');
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else if(cat==='Special Bookings'){
+    const name=document.getElementById('esp-name').value.trim();
+    const date=document.getElementById('esp-date').value;
+    const time=document.getElementById('esp-time').value;
+    if(!name||!date){showToast('Enter name and date');return;}
+    updates.title=name; updates.flight_date=date; updates.dep_time=time||null;
+    updates.detail=fmtDate(date)+(time?' · '+time:'');
+    const matchDay=allDays.find(d=>d.date===date);
+    updates.day_id=matchDay?matchDay.id:null;
+    updates.end_day_id=null;
+  } else {
+    updates.title=document.getElementById('eot-title').value.trim();
+    updates.detail=document.getElementById('eot-detail').value.trim();
+  }
+
+  try{
+    await sbPatch('bookings',_editBkId,updates);
+    // Re-fetch fresh from Supabase so all fields including new dates are current
+    allBookings = await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    closeModal('modal-edit-bk');
+    renderBanner();
+    renderItinerary();
+    renderBookings();
+    showToast('Booking updated ✓');
+  } catch(e){ showToast('Save failed: '+e.message.substring(0,40)); }
+}
+
+async function delDay(id){
+  if(!confirm('Delete this day card? Linked bookings will be unlinked but not deleted.'))return;
+  try{
+    // Unlink any bookings pointing to this day
+    const linked=allBookings.filter(b=>b.day_id===id||b.end_day_id===id);
+    for(const b of linked){
+      const patch={};
+      if(b.day_id===id)patch.day_id=null;
+      if(b.end_day_id===id)patch.end_day_id=null;
+      await sbPatch('bookings',b.id,patch);
+    }
+    await sbDel('days','id',id);
+    allDays=allDays.filter(d=>d.id!==id);
+    allBookings=await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    renderItinerary();renderBanner();
+    showToast('Day deleted');
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
+async function delPhase(id){
+  const ph=allPhases.find(p=>p.id===id);
+  if(!confirm('Delete phase "'+( ph?.name||'this phase')+'"? All its days will also be deleted.'))return;
+  try{
+    // Get days in this phase
+    const phDays=allDays.filter(d=>d.phase_id===id);
+    // Unlink bookings for these days
+    for(const d of phDays){
+      const linked=allBookings.filter(b=>b.day_id===d.id||b.end_day_id===d.id);
+      for(const b of linked){
+        const patch={};
+        if(b.day_id===d.id)patch.day_id=null;
+        if(b.end_day_id===d.id)patch.end_day_id=null;
+        await sbPatch('bookings',b.id,patch);
+      }
+      await sbDel('days','id',d.id);
+    }
+    await sbDel('phases','id',id);
+    allPhases=allPhases.filter(p=>p.id!==id);
+    allDays=allDays.filter(d=>d.phase_id!==id);
+    allBookings=await sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    renderItinerary();renderBanner();
+    showToast('Phase deleted');
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
+async function delTrip(id,name){
+  if(!confirm('Delete trip "'+name+'"? This will permanently delete all phases, days, bookings and essentials.'))return;
+  try{
+    await sbDel('essentials','trip_id',id);
+    await sbDel('bookings','trip_id',id);
+    await sbDel('days','trip_id',id);
+    await sbDel('phases','trip_id',id);
+    await sbDel('trips','id',id);
+    if(currentTrip?.id===id)currentTrip=null;
+    showToast('Trip deleted');
+    await loadHome();
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
+let _insertBeforeDayId = null;
+let _insertPhaseId = null;
+
+function openInsertDay(phaseId, beforeDayId, phaseName){
+  _insertPhaseId = phaseId;
+  _insertBeforeDayId = beforeDayId;
+  const label = beforeDayId
+    ? 'Inserting into: ' + phaseName + ' · all days from this point shift forward 1 day'
+    : 'Adding to end of: ' + phaseName;
+  document.getElementById('insert-day-label').textContent = label;
+  document.getElementById('insert-day-title').value = '';
+  document.getElementById('insert-day-sub').value = '';
+  openModal('modal-insert-day');
+}
+
+async function confirmInsertDay(){
+  const title = document.getElementById('insert-day-title').value.trim();
+  const subtitle = document.getElementById('insert-day-sub').value.trim();
+  if(!title){showToast('Enter a title');return;}
+
+  const btn = document.querySelector('#modal-insert-day .btn-mg');
+  btn.textContent = 'Working…'; btn.disabled = true;
+
+  try{
+    // Find insertion point
+    const phDays = allDays.filter(d=>d.phase_id===_insertPhaseId);
+    let insertSortOrder, insertDate, daysToShift;
+
+    if(_insertBeforeDayId){
+      const beforeDay = allDays.find(d=>d.id===_insertBeforeDayId);
+      if(!beforeDay){showToast('Could not find day — try refreshing');btn.textContent='Insert & shift dates →';btn.disabled=false;return;}
+      insertSortOrder = (beforeDay.sort_order||0);
+      insertDate = beforeDay.date;
+      // All days from this point forward (across ALL phases) need date+1
+      const beforeIdx = allDays.findIndex(d=>d.id===_insertBeforeDayId);
+      daysToShift = allDays.slice(beforeIdx);
+    } else {
+      // Insert at end of phase
+      const lastDay = phDays[phDays.length-1];
+      insertSortOrder = lastDay ? (lastDay.sort_order||0)+1 : 0;
+      // Date is last day + 1
+      const lastDate = lastDay ? parseDate(lastDay.date) : parseDate(currentTrip.start_date);
+      lastDate.setDate(lastDate.getDate()+1);
+      insertDate = lastDate.toISOString().split('T')[0];
+      daysToShift = [];
+    }
+
+    // Shift all affected days forward 1 day
+    if(daysToShift && daysToShift.length){
+      showToast('Shifting ' + daysToShift.length + ' days forward…');
+      for(const d of daysToShift){
+        const newDate = parseDate(d.date);
+        newDate.setDate(newDate.getDate()+1);
+        const newDateStr = newDate.toISOString().split('T')[0];
+        const newWeekday = newDate.toLocaleDateString('en',{weekday:'short'});
+        await sbPatch('days', d.id, {date: newDateStr, weekday: newWeekday});
+      }
+      // Also shift hotel booking dates that overlap
+      for(const b of allBookings){
+        if(b.category==='Hotels' && b.checkin_date && b.checkout_date){
+          const cin = parseDate(b.checkin_date);
+          const cout = parseDate(b.checkout_date);
+          const pivot = parseDate(insertDate);
+          if(cin >= pivot || cout > pivot){
+            const updates = {};
+            if(cin >= pivot){ cin.setDate(cin.getDate()+1); updates.checkin_date = cin.toISOString().split('T')[0]; }
+            if(cout > pivot){ cout.setDate(cout.getDate()+1); updates.checkout_date = cout.toISOString().split('T')[0]; }
+            await sbPatch('bookings', b.id, updates);
+          }
+        }
+        // Shift flight dates too
+        if((b.category==='Flights'||b.category==='Transfers & Taxis'||b.category==='Special Bookings') && b.flight_date){
+          const fd = parseDate(b.flight_date);
+          const pivot = parseDate(insertDate);
+          if(fd >= pivot){
+            fd.setDate(fd.getDate()+1);
+            await sbPatch('bookings', b.id, {flight_date: fd.toISOString().split('T')[0], detail: b.detail});
+          }
+        }
+      }
+      // Extend trip end date by 1
+      if(currentTrip.end_date){
+        const te = parseDate(currentTrip.end_date);
+        te.setDate(te.getDate()+1);
+        const newEnd = te.toISOString().split('T')[0];
+        await sbPatch('trips', currentTrip.id, {end_date: newEnd});
+        currentTrip.end_date = newEnd;
+      }
+    }
+
+    // Insert the new day — use sort_order as integer (shifted days already moved up)
+    const newWeekday = parseDate(insertDate)?.toLocaleDateString('en',{weekday:'short'})||'';
+    await sbPost('days',{
+      trip_id: currentTrip.id,
+      phase_id: _insertPhaseId,
+      date: insertDate,
+      weekday: newWeekday,
+      title, subtitle,
+      tip:'', note:'',
+      sort_order: Math.floor(insertSortOrder)
+    });
+
+    // Re-fetch everything fresh
+    const [phases,days,bookings] = await Promise.all([
+      sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc')
+    ]);
+    allPhases=phases; allDays=days; allBookings=bookings;
+    closeModal('modal-insert-day');
+    renderBanner(); renderProgressBar(); renderItinerary();
+    showToast('Day inserted, dates shifted ✓');
+  }catch(e){
+    showToast('Failed: '+e.message.substring(0,50));
+  }finally{
+    btn.textContent='Insert & shift dates →'; btn.disabled=false;
+  }
+}
+
+async function shiftPhase(phaseId, days){
+  const ph = allPhases.find(p=>p.id===phaseId);
+  const dir = days > 0 ? 'forward' : 'back';
+  const abs = Math.abs(days);
+  if(!confirm(`Shift all days in "${ph?.name}" ${abs} day ${dir}?\nHotel and flight booking dates will also be updated.`)) return;
+  await doShiftPhase(phaseId, days);
+}
+
+async function shiftPhaseN(phaseId){
+  const ph = allPhases.find(p=>p.id===phaseId);
+  const n = prompt(`How many days to shift "${ph?.name}"?\nPositive = forward, negative = back\n(e.g. 2 or -1)`);
+  if(!n) return;
+  const days = parseInt(n);
+  if(isNaN(days)||days===0){showToast('Enter a valid number');return;}
+  if(!confirm(`Shift all days in "${ph?.name}" by ${days} day${Math.abs(days)>1?'s':''}?\nHotel and flight booking dates will also be updated.`)) return;
+  await doShiftPhase(phaseId, days);
+}
+
+async function doShiftPhase(phaseId, shiftDays){
+  const phDays = allDays.filter(d=>d.phase_id===phaseId);
+  if(!phDays.length){showToast('No days in this phase');return;}
+  showToast('Shifting dates…');
+  try{
+    // Shift all days in phase
+    for(const d of phDays){
+      const nd = parseDate(d.date);
+      nd.setDate(nd.getDate()+shiftDays);
+      const newDate = nd.toISOString().split('T')[0];
+      const newWd = nd.toLocaleDateString('en',{weekday:'short'});
+      await sbPatch('days', d.id, {date: newDate, weekday: newWd});
+    }
+    // Shift hotel bookings linked to days in this phase
+    const phDayIds = new Set(phDays.map(d=>d.id));
+    for(const b of allBookings){
+      if(b.category==='Hotels' && b.checkin_date && b.checkout_date){
+        const cinDay = allDays.find(d=>d.id===b.day_id);
+        if(cinDay && phDayIds.has(cinDay.id)){
+          const cin = parseDate(b.checkin_date); cin.setDate(cin.getDate()+shiftDays);
+          const cout = parseDate(b.checkout_date); cout.setDate(cout.getDate()+shiftDays);
+          await sbPatch('bookings', b.id, {
+            checkin_date: cin.toISOString().split('T')[0],
+            checkout_date: cout.toISOString().split('T')[0]
+          });
+        }
+      }
+      if((b.category==='Flights'||b.category==='Transfers & Taxis'||b.category==='Special Bookings') && b.flight_date){
+        const linkedDay = allDays.find(d=>d.id===b.day_id);
+        if(linkedDay && phDayIds.has(linkedDay.id)){
+          const fd = parseDate(b.flight_date); fd.setDate(fd.getDate()+shiftDays);
+          await sbPatch('bookings', b.id, {flight_date: fd.toISOString().split('T')[0]});
+        }
+      }
+    }
+    // Update trip end date if last phase
+    const lastPhase = allPhases[allPhases.length-1];
+    if(lastPhase?.id===phaseId && currentTrip.end_date){
+      const te = parseDate(currentTrip.end_date); te.setDate(te.getDate()+shiftDays);
+      const newEnd = te.toISOString().split('T')[0];
+      await sbPatch('trips', currentTrip.id, {end_date: newEnd});
+      currentTrip.end_date = newEnd;
+    }
+    // Re-fetch everything
+    const [phases,days,bookings] = await Promise.all([
+      sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
+      sbGet('bookings','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc')
+    ]);
+    allPhases=phases; allDays=days; allBookings=bookings;
+    renderBanner(); renderProgressBar(); renderItinerary(); renderBookings();
+    showToast('Phase shifted ✓');
+  }catch(e){ showToast('Failed: '+e.message.substring(0,50)); }
+}
+
+function toggleShiftPanel(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const open=el.style.display==='flex';
+  el.style.display=open?'none':'flex';
+}
+
+function openAddPhaseModal(){
+  const name = prompt('Phase name (e.g. Leh Valley, Udaipur):');
+  if(!name?.trim()) return;
+  const dateRange = prompt('Date range (e.g. Aug 7 – 11):') || '';
+  const color = prompt('Color (paste one):\n#1A5FA8 blue\n#2E7D52 green\n#A05C10 amber\n#5B3FA8 purple\n#0F6E56 teal\n#C45E2A coral\n#B83230 red') || '#0F6E56';
+  confirmAddPhase(name.trim(), dateRange, color);
+}
+
+async function confirmAddPhase(name, dateRange, color){
+  try{
+    const nextOrder = allPhases.length ? Math.max(...allPhases.map(p=>p.sort_order||0))+1 : 0;
+    const [ph] = await sbPost('phases', {
+      trip_id: currentTrip.id,
+      name,
+      date_range: dateRange,
+      color: color||'#0F6E56',
+      sort_order: nextOrder
+    });
+    allPhases.push(ph);
+    renderItinerary();
+    showToast('Phase added ✓');
+  } catch(e){ showToast('Failed: '+e.message.substring(0,40)); }
+}
+
+function openAddDayModal(phaseId, phaseName){
+  _addDayPhaseId = phaseId;
+  document.getElementById('add-day-phase-label').textContent = 'Adding to: ' + phaseName;
+  document.getElementById('add-day-date').value = '';
+  document.getElementById('add-day-title').value = '';
+  document.getElementById('add-day-sub').value = '';
+  openModal('modal-add-day');
+}
+
+async function confirmAddDay(){
+  const date = document.getElementById('add-day-date').value;
+  const title = document.getElementById('add-day-title').value.trim();
+  const subtitle = document.getElementById('add-day-sub').value.trim();
+  if(!date){showToast('Pick a date');return;}
+  if(!title){showToast('Enter a title');return;}
+  const d = new Date(date);
+  const weekday = d.toLocaleDateString('en',{weekday:'short'});
+  // Find sort order — insert after last day with same date, or at end
+  const insertAfterOrder = allDays.length ? Math.max(...allDays.map(d=>d.sort_order||0)) + 1 : 0;
+  try{
+    const [newDay] = await sbPost('days',{
+      trip_id: currentTrip.id,
+      phase_id: _addDayPhaseId,
+      date,
+      weekday,
+      title,
+      subtitle,
+      tip: '',
+      note: '',
+      sort_order: insertAfterOrder
+    });
+    // Re-fetch all days to get correct order
+    const days = await sbGet('days','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    allDays = days;
+    closeModal('modal-add-day');
+    showToast('Day added ✓');
+    renderItinerary();
+    renderBanner();
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
+
+function openSettings(){document.getElementById('set-owner').value='';document.getElementById('set-editor').value='';document.getElementById('set-viewer').value='';openModal('modal-settings');}
+async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
+
+// ── TABS ──
+function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}}
+
+// ── WEATHER ──
+const WC=[{n:'Delhi',lat:28.6139,lon:77.2090},{n:'Katra',lat:32.9916,lon:74.9320},{n:'Udaipur',lat:24.5854,lon:73.7125},{n:'Leh',lat:34.1526,lon:77.5771},{n:'Patiala',lat:30.3398,lon:76.3869}];
+const WMO={0:'☀️',1:'🌤',2:'⛅',3:'☁️',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'❄️',80:'🌦',81:'🌧',95:'⛈'};
+async function fetchWeather(){
+  const s=document.getElementById('wstrip');if(!s)return;
+  s.innerHTML=WC.map(c=>`<div class="wchip" id="wc-${c.n}"><div class="wcity">${c.n}</div><div class="wtemp">…</div></div>`).join('')+`<button onclick="fetchWeather()" style="flex-shrink:0;background:none;border:none;color:var(--text-3);font-size:14px;padding:4px 8px;cursor:pointer" title="Refresh"><i class="ti ti-refresh"></i></button>`;
+  for(const c of WC){try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current_weather=true&timezone=auto`);if(!r.ok)continue;const d=await r.json();const cw=d.current_weather;if(!cw)continue;const icon=WMO[cw.weathercode]||'🌡';const el=document.getElementById('wc-'+c.n);if(el)el.innerHTML=`<div class="wcity">${c.n}</div><div class="wtemp">${icon}${Math.round(cw.temperature)}°</div>`;}catch(e){}}
+}
+
+// ── COUNTDOWN ──
+function updateCountdown(){
+  const el=document.getElementById('login-countdown');if(!el)return;
+  const c=loadCache(),trip=currentTrip||(c?.trip);if(!trip?.start_date){el.textContent='';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const ts=parseDate(trip.start_date),te=parseDate(trip.end_date);
+  const diff=Math.round((ts-today)/86400000);
+  if(diff>0)el.innerHTML=`${diff} day${diff===1?'':'s'} to departure ✈<br><span style="font-size:10px;opacity:.6">${trip.name} · ${fmtDate(trip.start_date)}</span>`;
+  else if(diff===0)el.textContent='Departure day! ✈';
+  else if(today<=te)el.textContent=`Day ${Math.abs(diff)+1} · Trip in progress 🌏`;
+  else el.textContent=trip.name+' · Memories made ✓';
+}
+
+// ── PULL TO REFRESH ──
+(function(){let sy=0,pulling=false;const T=70;
+document.addEventListener('touchstart',e=>{const el=document.getElementById('tab-scroll');if(!el||el.scrollTop>0)return;sy=e.touches[0].clientY;pulling=true;},{passive:true});
+document.addEventListener('touchmove',e=>{if(!pulling)return;const el=document.getElementById('tab-scroll');if(!el||el.scrollTop>0)return;const dist=e.touches[0].clientY-sy;if(dist<0)return;const ind=document.getElementById('ptr-ind'),icon=document.getElementById('ptr-icon'),txt=document.getElementById('ptr-txt');if(dist>20){ind.classList.add('show');icon.style.transform=dist>T?'rotate(180deg)':`rotate(${dist*2}deg)`;txt.textContent=dist>T?'Release to refresh':'Pull to refresh';}},{passive:true});
+document.addEventListener('touchend',async e=>{if(!pulling)return;pulling=false;const dist=e.changedTouches[0].clientY-sy;const ind=document.getElementById('ptr-ind'),txt=document.getElementById('ptr-txt');if(dist>T){txt.textContent='Refreshing…';document.getElementById('ptr-icon').className='ti ti-loader spinning';await renderAll();txt.textContent='Updated ✓';setTimeout(()=>ind.classList.remove('show'),800);}else ind.classList.remove('show');document.getElementById('ptr-icon').style.transform='';document.getElementById('ptr-icon').className='ti ti-refresh';},{passive:true});
+})();
+
+// INIT
+updateCountdown();
+</script>
+</body>
+</html>
