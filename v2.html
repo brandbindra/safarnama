@@ -12,6 +12,46 @@
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
 :root{--teal:#0F6E56;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-pale:#F0FAF7;--teal-border:#9FE1CB;--cream:#FAFCFC;--cream-2:#F0FAF7;--border:#D8EDEA;--border-2:#B0D4CC;--text:#0D2E28;--text-2:#2A5A52;--text-3:#7AADA3;--text-4:#B0D4CC;--amber:#E8A020;--amber-l:#FDF3E3;--amber-d:#A05C10;--amber-b:#F0C878;--green:#085041;--green-l:#E1F5EE;--green-b:#9FE1CB;--red:#B83230;--brand:'Cormorant Garamond',serif;--ui:'Inter',sans-serif;--r:12px;--rs:8px}
+[data-theme="dark"]{
+  --teal:#1DB887;--teal-dark:#25D99F;--teal-light:#0A2E24;--teal-pale:#0D2820;--teal-border:#0F6E56;
+  --cream:#0F1A16;--cream-2:#162118;--border:#1E3329;--border-2:#2A4A38;
+  --text:#E0F5EE;--text-2:#9FD4C0;--text-3:#4A8A72;--text-4:#2A4A38;
+  --amber:#F0C060;--amber-l:#2A1A00;--amber-d:#F0C060;--amber-b:#5A3A00;
+  --green:#25D99F;--green-l:#0A2E24;--green-b:#0F6E56;
+  --red:#FF7070;
+}
+[data-theme="dark"] body{background:#0F1A16}
+[data-theme="dark"] .login-hero{background:#085041!important;animation:heroBreathDark 3.5s ease-in-out infinite alternate!important}
+@keyframes heroBreathDark{0%{background:#085041}100%{background:#042E24}}
+[data-theme="dark"] .app-hdr{background:#0F1A16;border-color:#1E3329}
+[data-theme="dark"] .trip-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .day-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .bk-item{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .modal-sheet{background:#162118}
+[data-theme="dark"] .pin-key{background:#162118;border-color:#1E3329;color:#E0F5EE}
+[data-theme="dark"] .role-btn{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .role-btn:not(.primary) .role-name{color:#E0F5EE}
+[data-theme="dark"] .f-inp,[data-theme="dark"] .day-wiz-inp,[data-theme="dark"] .bk-ref-inp,[data-theme="dark"] .exp-inp,[data-theme="dark"] .exp-ta{background:#1E3329;border-color:#2A4A38;color:#E0F5EE}
+[data-theme="dark"] .checklist{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .check-item{border-color:#1E3329}
+[data-theme="dark"] .check-text{color:#E0F5EE}
+[data-theme="dark"] .share-card,[data-theme="dark"] .budget-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .wchip{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .wtemp{color:#1DB887}
+[data-theme="dark"] .home-content{background:#0F1A16}
+[data-theme="dark"] .ph-nophoto{border-color:#2A4A38}
+[data-theme="dark"] .day-exp{background:#0D2820}
+[data-theme="dark"] .exp-ro,[data-theme="dark"] .add-item-row{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .bk-ref-ro{background:#1E3329;color:#9FD4C0}
+[data-theme="dark"] .prog-wrap,[data-theme="dark"] .itin-body,[data-theme="dark"] .bk-body,[data-theme="dark"] .ess-body,[data-theme="dark"] .share-body{background:#0F1A16}
+[data-theme="dark"] .lbk-row{background:#1E3329;border-color:#2A4A38}
+[data-theme="dark"] .wiz-body,[data-theme="dark"] #screen-wizard{background:#0F1A16}
+[data-theme="dark"] .wiz-foot{background:#162118;border-color:#1E3329}
+[data-theme="dark"] input::placeholder,[data-theme="dark"] textarea::placeholder{color:#4A8A72}
+[data-theme="dark"] select{background:#1E3329;color:#E0F5EE;border-color:#2A4A38}
+/* Dark toggle button */
+.dark-toggle{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-3);font-family:var(--ui);display:flex;align-items:center;gap:4px;transition:all .2s}
+.dark-toggle:hover{border-color:var(--teal);color:var(--teal)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:14px;line-height:1.5;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
@@ -293,6 +333,46 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
 :root{--teal:#0F6E56;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-pale:#F0FAF7;--teal-border:#9FE1CB;--cream:#FAFCFC;--cream-2:#F0FAF7;--border:#D8EDEA;--border-2:#B0D4CC;--text:#0D2E28;--text-2:#2A5A52;--text-3:#7AADA3;--text-4:#B0D4CC;--amber:#E8A020;--amber-l:#FDF3E3;--amber-d:#A05C10;--amber-b:#F0C878;--green:#085041;--green-l:#E1F5EE;--green-b:#9FE1CB;--red:#B83230;--brand:'Cormorant Garamond',serif;--ui:'Inter',sans-serif;--r:12px;--rs:8px}
+[data-theme="dark"]{
+  --teal:#1DB887;--teal-dark:#25D99F;--teal-light:#0A2E24;--teal-pale:#0D2820;--teal-border:#0F6E56;
+  --cream:#0F1A16;--cream-2:#162118;--border:#1E3329;--border-2:#2A4A38;
+  --text:#E0F5EE;--text-2:#9FD4C0;--text-3:#4A8A72;--text-4:#2A4A38;
+  --amber:#F0C060;--amber-l:#2A1A00;--amber-d:#F0C060;--amber-b:#5A3A00;
+  --green:#25D99F;--green-l:#0A2E24;--green-b:#0F6E56;
+  --red:#FF7070;
+}
+[data-theme="dark"] body{background:#0F1A16}
+[data-theme="dark"] .login-hero{background:#085041!important;animation:heroBreathDark 3.5s ease-in-out infinite alternate!important}
+@keyframes heroBreathDark{0%{background:#085041}100%{background:#042E24}}
+[data-theme="dark"] .app-hdr{background:#0F1A16;border-color:#1E3329}
+[data-theme="dark"] .trip-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .day-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .bk-item{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .modal-sheet{background:#162118}
+[data-theme="dark"] .pin-key{background:#162118;border-color:#1E3329;color:#E0F5EE}
+[data-theme="dark"] .role-btn{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .role-btn:not(.primary) .role-name{color:#E0F5EE}
+[data-theme="dark"] .f-inp,[data-theme="dark"] .day-wiz-inp,[data-theme="dark"] .bk-ref-inp,[data-theme="dark"] .exp-inp,[data-theme="dark"] .exp-ta{background:#1E3329;border-color:#2A4A38;color:#E0F5EE}
+[data-theme="dark"] .checklist{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .check-item{border-color:#1E3329}
+[data-theme="dark"] .check-text{color:#E0F5EE}
+[data-theme="dark"] .share-card,[data-theme="dark"] .budget-card{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .wchip{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .wtemp{color:#1DB887}
+[data-theme="dark"] .home-content{background:#0F1A16}
+[data-theme="dark"] .ph-nophoto{border-color:#2A4A38}
+[data-theme="dark"] .day-exp{background:#0D2820}
+[data-theme="dark"] .exp-ro,[data-theme="dark"] .add-item-row{background:#162118;border-color:#1E3329}
+[data-theme="dark"] .bk-ref-ro{background:#1E3329;color:#9FD4C0}
+[data-theme="dark"] .prog-wrap,[data-theme="dark"] .itin-body,[data-theme="dark"] .bk-body,[data-theme="dark"] .ess-body,[data-theme="dark"] .share-body{background:#0F1A16}
+[data-theme="dark"] .lbk-row{background:#1E3329;border-color:#2A4A38}
+[data-theme="dark"] .wiz-body,[data-theme="dark"] #screen-wizard{background:#0F1A16}
+[data-theme="dark"] .wiz-foot{background:#162118;border-color:#1E3329}
+[data-theme="dark"] input::placeholder,[data-theme="dark"] textarea::placeholder{color:#4A8A72}
+[data-theme="dark"] select{background:#1E3329;color:#E0F5EE;border-color:#2A4A38}
+/* Dark toggle button */
+.dark-toggle{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-3);font-family:var(--ui);display:flex;align-items:center;gap:4px;transition:all .2s}
+.dark-toggle:hover{border-color:var(--teal);color:var(--teal)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:14px;line-height:1.5;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
@@ -746,6 +826,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="home-badge" class="rbadge badge-owner">Owner</span>
+        <button onclick="toggleDark()" id="home-dark-btn" style="background:rgba(240,250,247,.15);border:1px solid rgba(240,250,247,.25);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:13px;color:#F0FAF7;font-family:var(--ui)">🌙</button>
         <button class="icon-btn" id="home-settings-btn" onclick="openSettings()" style="color:rgba(240,250,247,.7);display:none"><i class="ti ti-settings"></i></button>
       </div>
     </div>
@@ -781,6 +862,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
       <div class="app-wm" onclick="goHome()" style="cursor:pointer" title="All trips"><span class="w1">Manish </span><span class="w2">Explores</span></div>
       <div class="app-right">
         <span class="rbadge badge-owner" id="app-badge">Owner</span>
+        <button class="dark-toggle" id="dark-btn" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
         <button class="icon-btn" id="app-settings-btn" onclick="openSettings()" style="display:none"><i class="ti ti-settings"></i></button>
         <button class="icon-btn" onclick="goHome()" title="All trips" style="color:var(--teal)"><i class="ti ti-home"></i></button>
       </div>
@@ -3650,6 +3732,25 @@ function checkDepartureConfetti(){
     setTimeout(launchConfetti,800);
   }
 }
+
+// ── DARK MODE ──
+function toggleDark(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const newTheme=isDark?'light':'dark';
+  document.documentElement.setAttribute('data-theme',newTheme);
+  localStorage.setItem('theme',newTheme);
+  // Update all toggle buttons
+  const emoji=newTheme==='dark'?'☀️':'🌙';
+  document.querySelectorAll('#dark-btn,#home-dark-btn').forEach(b=>{if(b)b.textContent=emoji;});
+}
+// Apply saved theme on load
+(function(){
+  const saved=localStorage.getItem('theme')||'light';
+  if(saved==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    document.querySelectorAll('#dark-btn,#home-dark-btn').forEach(b=>{if(b)b.textContent='☀️';});
+  }
+})();
 
 // ── LOGIN PARTICLES ──
 (function(){
