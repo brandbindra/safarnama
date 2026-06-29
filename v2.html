@@ -349,6 +349,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
       <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:#F0FAF7" id="wiz-title">New trip</div>
       <div style="font-size:10px;color:rgba(240,250,247,.5);letter-spacing:.06em" id="wiz-step-lbl">Step 1 of 4</div>
     </div>
+    <button onclick="showScreen('screen-home');loadHome()" style="background:rgba(240,250,247,.15);border:1px solid rgba(240,250,247,.25);border-radius:8px;color:#F0FAF7;font-size:11px;font-weight:600;padding:6px 10px;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;gap:4px"><i class="ti ti-layout-grid" style="font-size:13px"></i> My trips</button>
   </div>
   <div class="wiz-prog"><div class="wiz-prog-fill" id="wiz-prog" style="width:25%"></div></div>
   <div class="wiz-body" id="wiz-body"></div>
@@ -748,7 +749,7 @@ async function openTrip(id){
 
 // ── WIZARD ──
 function startWizard(){wizStep=1;wizTrip={};wizPhases=[];wizDays=[];wizBookings=[];renderWizStep();showScreen('screen-wizard');}
-function wizBack(){if(wizStep>1){wizStep--;renderWizStep();}else showScreen('screen-home');}
+function wizBack(){if(wizStep>1){wizStep--;renderWizStep();}else{showScreen('screen-home');loadHome();}}
 async function wizNext(){
   if(wizStep===1){
     const n=document.getElementById('wiz-name')?.value?.trim();
