@@ -1360,10 +1360,19 @@ function viewAttach(id){
   const o=document.createElement('div');
   o.id='attach-overlay';
   o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px';
-  const img=document.createElement('img');
-  img.src=b.attachment_data;
-  img.style.cssText='max-width:100%;max-height:65vh;border-radius:8px;object-fit:contain';
-  o.appendChild(img);
+  const isPdf=b.attachment_data.startsWith('data:application/pdf');
+  if(isPdf){
+    // Show PDF in iframe
+    const iframe=document.createElement('iframe');
+    iframe.src=b.attachment_data;
+    iframe.style.cssText='width:100%;max-width:480px;height:65vh;border:none;border-radius:8px;background:#fff';
+    o.appendChild(iframe);
+  } else {
+    const img=document.createElement('img');
+    img.src=b.attachment_data;
+    img.style.cssText='max-width:100%;max-height:65vh;border-radius:8px;object-fit:contain';
+    o.appendChild(img);
+  }
   const row=document.createElement('div');
   row.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center';
   function makeBtn(label,bg,fn){
@@ -1385,10 +1394,11 @@ async function shareAttach(id){
   const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b||!b.attachment_data)return;
   try{
+    const isPdf=b.attachment_data.startsWith('data:application/pdf');
     const res=await fetch(b.attachment_data);
     const blob=await res.blob();
-    const ext=blob.type.includes('pdf')?'pdf':'jpg';
-    const file=new File([blob],'booking.'+ext,{type:blob.type});
+    const ext=isPdf?'pdf':'jpg';
+    const file=new File([blob],'booking-'+b.title.replace(/[^a-z0-9]/gi,'-').substring(0,20)+'.'+ext,{type:blob.type});
     if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({title:'Booking: '+b.title,files:[file]});
     } else if(navigator.share){
@@ -1408,11 +1418,20 @@ function emailAttach(id){
 function printAttach(id){
   const b=allBookings.find(function(bk){return bk.id===id;});
   if(!b||!b.attachment_data)return;
-  const w=window.open('','_blank');
-  if(!w)return;
-  const html='<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:16px;font-family:sans-serif}img{max-width:100%;}</style></head><body><h2>'+b.title+'</h2><p>'+(b.detail||'')+'</p><img src="'+b.attachment_data+'" onload="window.print()"></body></html>';
-  w.document.write(html);
-  w.document.close();
+  const isPdf=b.attachment_data.startsWith('data:application/pdf');
+  if(isPdf){
+    // For PDFs — open directly in new tab, user can print from there
+    const w=window.open('','_blank');
+    if(!w)return;
+    w.document.write('<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:0;padding:0}iframe{width:100vw;height:100vh;border:none}</style></head><body><iframe src="'+b.attachment_data+'"></iframe></body></html>');
+    w.document.close();
+  } else {
+    const w=window.open('','_blank');
+    if(!w)return;
+    const html='<!DOCTYPE html><html><head><title>'+b.title+'</title><style>body{margin:16px;font-family:sans-serif}img{max-width:100%;}</style></head><body><h2>'+b.title+'</h2><p>'+(b.detail||'')+'</p><img src="'+b.attachment_data+'" onload="window.print()"></body></html>';
+    w.document.write(html);
+    w.document.close();
+  }
 }
 async function remAttach(id){if(!confirm('Remove?'))return;try{await sbPatch('bookings',id,{attachment_data:null});const i=allBookings.findIndex(b=>b.id===id);if(i>=0)allBookings[i].attachment_data=null;renderBookings();}catch(e){showToast('Failed');}}
 
