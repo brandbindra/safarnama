@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <style>
 :root{--teal:#0F6E56;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-pale:#F0FAF7;--teal-border:#9FE1CB;--cream:#FAFCFC;--cream-2:#F0FAF7;--border:#D8EDEA;--border-2:#B0D4CC;--text:#0D2E28;--text-2:#2A5A52;--text-3:#7AADA3;--text-4:#B0D4CC;--amber:#E8A020;--amber-l:#FDF3E3;--amber-d:#A05C10;--amber-b:#F0C878;--green:#085041;--green-l:#E1F5EE;--green-b:#9FE1CB;--red:#B83230;--brand:'Cormorant Garamond',serif;--ui:'Inter',sans-serif;--r:12px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1196,6 +1198,7 @@ function renderBanner(){
       </div>
     </div>
     <div id="prog-section"></div>
+    <div id="today-banner"></div>
     <div class="itin-body" id="itin-inner"></div>`;
   renderProgressBar();
 }
@@ -1743,6 +1746,13 @@ function renderShare(){
     <div class="share-card"><div class="share-card-title"><i class="ti ti-map-2"></i>Full itinerary</div><div class="share-desc">All days, bookings and personal notes — ready to forward.</div><div class="share-prev">${esc(iTxt)}</div><div class="share-btns"><button class="btn-copy" onclick="cpyTxt(this,this.nextElementSibling.dataset.txt)"><i class="ti ti-copy"></i> Copy</button><span style="display:none" data-txt="${esc(iTxt)}"></span><button class="btn-wa" onclick="waShare(this.previousElementSibling.dataset.txt)"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button></div></div>
     <button class="btn-export" onclick="printItinerary()"><i class="ti ti-printer"></i> Print full itinerary (PDF)</button>
     <button class="btn-export" onclick="expData()"><i class="ti ti-download"></i> Export JSON backup</button>
+    ${role==='owner'?`<div style="margin-top:12px;background:var(--cream-2);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><img src="https://www.google.com/favicon.ico" style="width:14px;height:14px"> Google Calendar sync</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5">Syncs all flights, hotels and day plans to a shared "Manish Explores" calendar. Family members you invite get automatic notifications.</div>
+      <div id="gcal-status" style="font-size:11px;color:var(--text-3);margin-bottom:8px"></div>
+      <button onclick="gcalSync()" id="gcal-btn" style="width:100%;background:#4285F4;color:#fff;border:none;border-radius:var(--rs);padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:8px"><i class="ti ti-calendar-event"></i> <span id="gcal-btn-txt">Sign in & Sync to Google Calendar</span></button>
+      <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4">After syncing, share the "Manish Explores" calendar from Google Calendar with family emails — they accept once and get all future updates automatically.</div>
+    </div>`:''}
   </div>`;
 }
 function cpyTxt(btn,text){navigator.clipboard.writeText(text).then(()=>{const o=btn.innerHTML;btn.innerHTML='<i class="ti ti-check"></i> Copied!';btn.classList.add('copied');setTimeout(()=>{btn.innerHTML=o;btn.classList.remove('copied');},2000);});}
@@ -2766,6 +2776,280 @@ async function confirmRebuildEssentials(){
     await renderEssentials();
   }catch(e){showToast('Failed: '+e.message.substring(0,40));}
   btn.textContent='Rebuild list';btn.disabled=false;
+}
+
+// ── TODAY / TOMORROW BANNER ──
+function renderTodayBanner(){
+  const el=document.getElementById('today-banner');
+  if(!el||!currentTrip)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);
+  const todayStr=today.toISOString().split('T')[0];
+  const tomorrowStr=tomorrow.toISOString().split('T')[0];
+  const ts=parseDate(currentTrip.start_date);
+  const te=parseDate(currentTrip.end_date);
+  if(!ts||!te)return;
+
+  // Only show during trip or 1 day before
+  const daysBefore=Math.round((ts-today)/86400000);
+  if(daysBefore>1||today>te){el.innerHTML='';return;}
+
+  let html='';
+
+  // Pre-departure banner (1 day before)
+  if(daysBefore===1){
+    const tomorrowFlights=allBookings.filter(b=>b.category==='Flights'&&b.flight_date===tomorrowStr);
+    html+=`<div style="background:linear-gradient(135deg,var(--teal),var(--teal-dark));padding:14px 16px;margin-bottom:0">
+      <div style="font-size:10px;font-weight:700;color:rgba(240,250,247,.7);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">🗓 Departure tomorrow!</div>
+      <div style="font-family:var(--brand);font-size:20px;color:#F0FAF7;font-weight:500;margin-bottom:8px">${esc(currentTrip.name)}</div>
+      ${tomorrowFlights.map(b=>`<div style="background:rgba(240,250,247,.15);border-radius:8px;padding:8px 10px;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:600;color:#F0FAF7">✈ ${esc(b.title)}</div>
+        ${b.dep_time?`<div style="font-size:11px;color:rgba(240,250,247,.75)">Departs ${b.dep_time.substring(0,5)}${b.arr_time?' · Arrives '+b.arr_time.substring(0,5):''}${b.ref?' · '+b.ref:''}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }
+
+  // Today banner
+  const todayDays=allDays.filter(d=>d.date===todayStr);
+  if(todayDays.length){
+    const todayBks=allBookings.filter(b=>{
+      if(b.category==='Hotels'){if(b.checkin_date&&b.checkout_date)return todayStr>=b.checkin_date&&todayStr<b.checkout_date;return b.day_id&&todayDays.some(d=>d.id===b.day_id);}
+      return b.day_id&&todayDays.some(d=>d.id===b.day_id);
+    });
+    const todayFlights=todayBks.filter(b=>b.category==='Flights');
+    const todayHotels=todayBks.filter(b=>b.category==='Hotels');
+    const todayTransfers=todayBks.filter(b=>b.category==='Transfers & Taxis');
+    html+=`<div style="background:var(--teal);padding:14px 16px">
+      <div style="font-size:10px;font-weight:700;color:rgba(240,250,247,.65);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">📅 TODAY · ${todayDays[0].weekday} ${fmtDate(todayStr)}</div>
+      ${todayDays.map(d=>`<div style="font-family:var(--brand);font-size:18px;color:#F0FAF7;font-weight:500">${esc(d.title)}</div>${d.subtitle?`<div style="font-size:11px;color:rgba(240,250,247,.65);margin-top:1px">${esc(d.subtitle)}</div>`:''}`).join('')}
+      ${todayFlights.length?`<div style="margin-top:10px">${todayFlights.map(b=>`<div style="background:rgba(26,95,168,.35);border-radius:8px;padding:8px 10px;margin-bottom:5px;border:1px solid rgba(26,95,168,.4)">
+        <div style="font-size:12px;font-weight:600;color:#F0FAF7">✈ ${esc(b.title)}</div>
+        <div style="font-size:11px;color:rgba(240,250,247,.8)">${b.dep_time?b.dep_time.substring(0,5):''}${b.arr_time?' → '+b.arr_time.substring(0,5):''}${b.ref?' · PNR: '+b.ref:''}</div>
+        <div style="font-size:10px;color:rgba(240,250,247,.55);margin-top:2px">${b.status==='booked'?'✓ Confirmed':'⏳ Pending'}</div>
+      </div>`).join('')}</div>`:''}
+      ${todayTransfers.length?`<div style="margin-top:6px">${todayTransfers.map(b=>`<div style="background:rgba(46,125,82,.35);border-radius:8px;padding:8px 10px;margin-bottom:5px;border:1px solid rgba(46,125,82,.4)">
+        <div style="font-size:12px;font-weight:600;color:#F0FAF7">🚗 ${esc(b.title)}</div>
+        ${b.dep_time?`<div style="font-size:11px;color:rgba(240,250,247,.8)">${b.dep_time.substring(0,5)}</div>`:''}
+      </div>`).join('')}</div>`:''}
+      ${todayHotels.length?`<div style="margin-top:6px">${todayHotels.map(b=>`<div style="background:rgba(160,92,16,.3);border-radius:8px;padding:8px 10px;border:1px solid rgba(160,92,16,.4)">
+        <div style="font-size:12px;font-weight:600;color:#F0FAF7">🏨 ${esc(b.title)}</div>
+        ${b.checkin_date?`<div style="font-size:11px;color:rgba(240,250,247,.75)">Check-in ${fmtDate(b.checkin_date)}${b.checkout_date?' · Check-out '+fmtDate(b.checkout_date):''}</div>`:''}
+      </div>`).join('')}</div>`:''}
+      ${todayDays[0].tip?`<div style="margin-top:10px;background:rgba(240,250,247,.1);border-radius:8px;padding:8px 10px;font-size:11px;color:rgba(240,250,247,.85);line-height:1.5">💡 ${esc(todayDays[0].tip)}</div>`:''}
+    </div>`;
+  }
+
+  // Tomorrow preview
+  const tomorrowDays=allDays.filter(d=>d.date===tomorrowStr);
+  if(tomorrowDays.length&&todayDays.length){
+    const tmrFlights=allBookings.filter(b=>b.category==='Flights'&&b.flight_date===tomorrowStr);
+    html+=`<div style="background:var(--cream-2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:flex-start;gap:10px">
+      <div style="flex-shrink:0;text-align:center;padding-top:2px">
+        <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;font-weight:700">TMR</div>
+        <div style="font-family:var(--brand);font-size:18px;font-weight:500;color:var(--teal);line-height:1">${parseDate(tomorrowStr)?.getDate()}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        ${tomorrowDays.map(d=>`<div style="font-size:13px;font-weight:600;color:var(--text)">${esc(d.title)}</div>${d.subtitle?`<div style="font-size:11px;color:var(--text-3)">${esc(d.subtitle)}</div>`:''}`).join('')}
+        ${tmrFlights.map(b=>`<div style="font-size:11px;color:#1A5FA8;margin-top:4px;font-weight:500">✈ ${esc(b.title)} ${b.dep_time?'· '+b.dep_time.substring(0,5):''}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+// ── GOOGLE CALENDAR SYNC ──
+const GCLIENT_ID='342271528174-kmqcdtstc1ekg2hsuo5g20naluu65eno.apps.googleusercontent.com';
+const GCAL_SCOPE='https://www.googleapis.com/auth/calendar';
+const MASTER_CAL_NAME='Manish Explores';
+let _gcalToken=null;
+let _gcalCalId=localStorage.getItem('gcal_cal_id')||null;
+
+function setGcalStatus(msg,color){
+  const el=document.getElementById('gcal-status');
+  if(el)el.innerHTML=`<span style="color:${color||'var(--text-3)'}">${msg}</span>`;
+}
+function setGcalBtn(txt,disabled){
+  const btn=document.getElementById('gcal-btn');
+  const t=document.getElementById('gcal-btn-txt');
+  if(t)t.textContent=txt;
+  if(btn)btn.disabled=disabled;
+}
+
+async function gcalSync(){
+  setGcalBtn('Signing in…',true);
+  setGcalStatus('Connecting to Google…','var(--text-3)');
+  try{
+    // OAuth via Google Identity Services
+    await new Promise((resolve,reject)=>{
+      const client=google.accounts.oauth2.initTokenClient({
+        client_id:GCLIENT_ID,
+        scope:GCAL_SCOPE,
+        callback:(resp)=>{
+          if(resp.error){reject(new Error(resp.error));return;}
+          _gcalToken=resp.access_token;
+          resolve();
+        }
+      });
+      client.requestAccessToken();
+    });
+    setGcalStatus('✓ Signed in · Finding calendar…','var(--teal)');
+    await doGcalSync();
+  }catch(e){
+    setGcalStatus('Failed: '+e.message.substring(0,60),'var(--red)');
+    setGcalBtn('Try again',false);
+  }
+}
+
+async function gcalRequest(method,url,body){
+  const r=await fetch(url,{method,headers:{'Authorization':'Bearer '+_gcalToken,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  if(!r.ok){const err=await r.json();throw new Error(err.error?.message||r.status);}
+  if(r.status===204)return null;
+  return r.json();
+}
+
+async function getOrCreateMasterCal(){
+  // List calendars and find "Manish Explores"
+  const list=await gcalRequest('GET','https://www.googleapis.com/calendar/v3/users/me/calendarList');
+  const existing=list.items?.find(c=>c.summary===MASTER_CAL_NAME);
+  if(existing){_gcalCalId=existing.id;localStorage.setItem('gcal_cal_id',_gcalCalId);return _gcalCalId;}
+  // Create it
+  const created=await gcalRequest('POST','https://www.googleapis.com/calendar/v3/calendars',{
+    summary:MASTER_CAL_NAME,
+    description:'Created by Manish Explores · brandbindra.github.io/safarnama',
+    timeZone:'Asia/Dubai'
+  });
+  _gcalCalId=created.id;
+  localStorage.setItem('gcal_cal_id',_gcalCalId);
+  return _gcalCalId;
+}
+
+async function doGcalSync(){
+  setGcalStatus('Setting up calendar…','var(--text-3)');
+  const calId=await getOrCreateMasterCal();
+
+  // Delete existing events for this trip (to avoid duplicates on re-sync)
+  setGcalStatus('Clearing old events…','var(--text-3)');
+  try{
+    const existing=await gcalRequest('GET',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?privateExtendedProperty=manishTripId%3D${currentTrip.id}&maxResults=500`);
+    if(existing?.items?.length){
+      for(const ev of existing.items){
+        await gcalRequest('DELETE',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events/${ev.id}`);
+      }
+    }
+  }catch(e){}
+
+  const TZ='Asia/Dubai';
+  let created=0;
+  setGcalStatus('Creating events…','var(--text-3)');
+
+  // ── Create day plan events (all-day, 7 AM notification) ──
+  for(const d of allDays){
+    const ph=allPhases.find(p=>p.id===d.phase_id);
+    const dayBks=allBookings.filter(b=>{
+      if(b.category==='Hotels'&&b.checkin_date&&b.checkout_date)return d.date>=b.checkin_date&&d.date<b.checkout_date;
+      return b.day_id===d.id;
+    });
+    const bkLines=dayBks.map(function(b){return(b.status==='booked'?'\u2713':'\u23f3')+' '+b.title+(b.ref?' ['+b.ref+']':'')+(b.dep_time?' \u00b7 '+b.dep_time.substring(0,5):'');}).join('\n');
+    const tip=d.tip?'\ud83d\udca1 '+d.tip:'';
+    const desc=[d.subtitle,bkLines,tip].filter(Boolean).join('\n\n');
+
+        await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
+      summary:`${ph?ph.name+' · ':''}${d.title}`,
+      description:desc||undefined,
+      start:{date:d.date},
+      end:{date:d.date},
+      reminders:{useDefault:false,overrides:[{method:'popup',minutes:0}]}, // 7 AM = midnight + 0 for all-day
+      extendedProperties:{private:{manishTripId:currentTrip.id,manishDayId:d.id}}
+    });
+    created++;
+  }
+
+  // ── Create flight events (timed, 3hr + 1day notifications) ──
+  for(const b of allBookings.filter(bk=>bk.category==='Flights'&&bk.flight_date&&bk.dep_time)){
+    const depTime=b.dep_time.substring(0,5);
+    const arrTime=b.arr_time?b.arr_time.substring(0,5):null;
+    const startDt=b.flight_date+'T'+depTime+':00';
+    // Arrival: if arr time < dep time assume next day
+    let endDate=b.flight_date;
+    if(arrTime&&arrTime<depTime){
+      const nd=parseDate(b.flight_date);nd.setDate(nd.getDate()+1);
+      endDate=nd.toISOString().split('T')[0];
+    }
+    const endDt=(endDate)+'T'+(arrTime||depTime)+':00';
+    const desc=[b.ref?'PNR: '+b.ref:'',b.claude_tip?'\ud83d\udca1 '+b.claude_tip:''].filter(Boolean).join('\n');
+
+    await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
+      summary:`✈ ${b.title}`,
+      description:desc||undefined,
+      start:{dateTime:startDt,timeZone:TZ},
+      end:{dateTime:endDt,timeZone:TZ},
+      reminders:{useDefault:false,overrides:[
+        {method:'popup',minutes:180},  // 3 hrs before
+        {method:'popup',minutes:720},  // 12 hrs before (evening before)
+        {method:'email',minutes:1440}  // 1 day before
+      ]},
+      extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
+    });
+    created++;
+  }
+
+  // ── Create hotel events (multi-day) ──
+  for(const b of allBookings.filter(bk=>bk.category==='Hotels'&&bk.checkin_date&&bk.checkout_date)){
+    const desc=[b.ref?'Ref: '+b.ref:'',b.detail||''].filter(Boolean).join('\n');
+    await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
+      summary:`🏨 ${b.title}`,
+      description:desc||undefined,
+      start:{date:b.checkin_date},
+      end:{date:b.checkout_date},
+      reminders:{useDefault:false,overrides:[
+        {method:'popup',minutes:0},   // morning of check-in
+        {method:'popup',minutes:480}  // check-out reminder (8 AM)
+      ]},
+      extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
+    });
+    created++;
+  }
+
+  // ── Create transfer events (timed) ──
+  for(const b of allBookings.filter(bk=>bk.category==='Transfers & Taxis'&&bk.flight_date&&bk.dep_time)){
+    const depTime=b.dep_time.substring(0,5);
+    const startDt=b.flight_date+'T'+depTime+':00';
+    await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
+      summary:`🚗 ${b.title}`,
+      description:b.detail||undefined,
+      start:{dateTime:startDt,timeZone:TZ},
+      end:{dateTime:startDt,timeZone:TZ},
+      reminders:{useDefault:false,overrides:[{method:'popup',minutes:60}]},
+      extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
+    });
+    created++;
+  }
+
+  // ── Create special booking events ──
+  for(const b of allBookings.filter(bk=>bk.category==='Special Bookings'&&bk.flight_date&&bk.dep_time)){
+    const depTime=b.dep_time.substring(0,5);
+    const startDt=b.flight_date+'T'+depTime+':00';
+    await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
+      summary:`🚁 ${b.title}`,
+      description:b.detail||undefined,
+      start:{dateTime:startDt,timeZone:TZ},
+      end:{dateTime:startDt,timeZone:TZ},
+      reminders:{useDefault:false,overrides:[{method:'popup',minutes:120}]},
+      extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
+    });
+    created++;
+  }
+
+  setGcalStatus(`✓ Synced ${created} events to "${MASTER_CAL_NAME}" calendar`,'var(--teal)');
+  setGcalBtn('✓ Synced · Tap to re-sync',false);
+  showToast('Google Calendar synced ✓ — '+created+' events created');
+
+  // Show sharing instructions
+  const statusEl=document.getElementById('gcal-status');
+  if(statusEl){statusEl.innerHTML+=`<div style="margin-top:8px;padding:8px 10px;background:var(--teal-light);border-radius:6px;font-size:11px;color:var(--teal-dark);line-height:1.5">
+    <strong>Share with family:</strong> Open Google Calendar on your phone → find "Manish Explores" → tap ⋮ → Settings → Share with specific people → add family Gmail addresses → they accept once and see everything.
+  </div>`;}
 }
 
 // INIT
