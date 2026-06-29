@@ -2976,7 +2976,15 @@ async function doGcalSync(){
       const nd=parseDate(b.flight_date);nd.setDate(nd.getDate()+1);
       endDate=nd.toISOString().split('T')[0];
     }
-    const endDt=(endDate)+'T'+(arrTime||depTime)+':00';
+    // If no arrival time or same as departure, add 2 hours default
+    let effectiveArr=arrTime;
+    if(!effectiveArr||effectiveArr===depTime){
+      const [dh,dm]=depTime.split(':').map(Number);
+      const tot=dh*60+dm+120; // +2 hours
+      effectiveArr=String(Math.floor(tot/60)%24).padStart(2,'0')+':'+String(tot%60).padStart(2,'0');
+      if(tot>=1440)endDate=(()=>{const nd=parseDate(b.flight_date);nd.setDate(nd.getDate()+1);return nd.toISOString().split('T')[0];})();
+    }
+    const endDt=endDate+'T'+effectiveArr+':00';
     const desc=[b.ref?'PNR: '+b.ref:'',b.claude_tip?'\ud83d\udca1 '+b.claude_tip:''].filter(Boolean).join('\n');
 
     await gcalRequest('POST',`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,{
@@ -2989,6 +2997,7 @@ async function doGcalSync(){
         {method:'popup',minutes:720},  // 12 hrs before (evening before)
         {method:'email',minutes:1440}  // 1 day before
       ]},
+      colorId:'9',
       extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
     });
     created++;
@@ -3006,6 +3015,7 @@ async function doGcalSync(){
         {method:'popup',minutes:0},   // morning of check-in
         {method:'popup',minutes:480}  // check-out reminder (8 AM)
       ]},
+      colorId:'6',
       extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
     });
     created++;
@@ -3021,6 +3031,7 @@ async function doGcalSync(){
       start:{dateTime:startDt,timeZone:TZ},
       end:{dateTime:startDt,timeZone:TZ},
       reminders:{useDefault:false,overrides:[{method:'popup',minutes:60}]},
+      colorId:'10',
       extendedProperties:{private:{manishTripId:currentTrip.id,manishBkId:b.id}}
     });
     created++;
