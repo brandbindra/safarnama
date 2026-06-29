@@ -680,8 +680,9 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 
 <!-- LOGIN -->
 <div id="screen-login" class="screen active">
-  <div class="login-hero">
-    <div class="login-compass"><i class="ti ti-compass"></i></div>
+  <div class="login-hero" style="position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;pointer-events:none" id="login-particles"></div>
+    <div class="login-compass" style="animation:compassSpin 7s linear infinite;transform-origin:center"><i class="ti ti-compass"></i></div>
     <div style="font-family:'Cormorant Garamond',serif;line-height:1.1">
       <div style="font-size:18px;font-weight:500;color:rgba(240,250,247,.85);letter-spacing:.22em;text-transform:uppercase;margin-bottom:3px">Manish</div>
       <div style="font-size:46px;font-weight:500;color:#F0FAF7;letter-spacing:.06em">Explores</div>
@@ -2954,18 +2955,20 @@ function drawMap(phaseFilter){
   if(allPoints.length>1){
     _leafletMap.fitBounds(allPoints.map(p=>p.coords),{padding:[30,30]});
   }
-  // Animate markers after map renders
+  // Animate markers after map renders - use leaflet-marker-icon directly
   setTimeout(()=>{
-    document.querySelectorAll('.leaflet-marker-icon div').forEach((el,i)=>{
+    const pins=document.querySelectorAll('#map-container .leaflet-marker-icon');
+    pins.forEach((el,i)=>{
       el.style.opacity='0';
-      el.style.transform='translateY(-30px) scale(0.3)';
+      el.style.transform='translateY(-40px) scale(0.2)';
+      el.style.transition='none';
       setTimeout(()=>{
-        el.style.transition='all 0.5s cubic-bezier(.34,1.8,.64,1)';
+        el.style.transition='opacity 0.5s cubic-bezier(.34,1.8,.64,1), transform 0.5s cubic-bezier(.34,1.8,.64,1)';
         el.style.opacity='1';
         el.style.transform='translateY(0) scale(1)';
-      }, 300 + i*120);
+      }, 400 + i*150);
     });
-  }, 500);
+  }, 800);
 }
 
 
@@ -3626,6 +3629,24 @@ function checkDepartureConfetti(){
     setTimeout(launchConfetti,800);
   }
 }
+
+// ── LOGIN PARTICLES ──
+(function(){
+  const el=document.getElementById('login-particles');
+  if(!el)return;
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    const size=Math.random()*4+2;
+    const x=Math.random()*100;
+    const delay=Math.random()*4;
+    const dur=Math.random()*6+6;
+    p.style.cssText=`position:absolute;width:${size}px;height:${size}px;border-radius:50%;background:rgba(240,250,247,${Math.random()*.15+.05});left:${x}%;bottom:-10px;animation:particleFloat ${dur}s linear ${delay}s infinite`;
+    el.appendChild(p);
+  }
+  const style=document.createElement('style');
+  style.textContent=`@keyframes particleFloat{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:1}90%{opacity:.5}100%{transform:translateY(-280px) rotate(360deg);opacity:0}}`;
+  document.head.appendChild(style);
+})();
 
 // INIT
 updateCountdown();
