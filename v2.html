@@ -1748,10 +1748,10 @@ function renderShare(){
     <button class="btn-export" onclick="expData()"><i class="ti ti-download"></i> Export JSON backup</button>
     ${role==='owner'?`<div style="margin-top:12px;background:var(--cream-2);border:1px solid var(--border);border-radius:var(--r);padding:14px">
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><img src="https://www.google.com/favicon.ico" style="width:14px;height:14px"> Google Calendar sync</div>
-      <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5">Syncs all flights, hotels and day plans to a shared "Manish Explores" calendar. Family members you invite get automatic notifications.</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5">Only <strong>you</strong> sign in here. Family never need to sign in — you share the calendar with them and they just accept once. They get automatic notifications from then on.</div>
       <div id="gcal-status" style="font-size:11px;color:var(--text-3);margin-bottom:8px"></div>
-      <button onclick="gcalSync()" id="gcal-btn" style="width:100%;background:#4285F4;color:#fff;border:none;border-radius:var(--rs);padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:8px"><i class="ti ti-calendar-event"></i> <span id="gcal-btn-txt">Sign in & Sync to Google Calendar</span></button>
-      <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4">After syncing, share the "Manish Explores" calendar from Google Calendar with family emails — they accept once and get all future updates automatically.</div>
+      <button onclick="gcalSync()" id="gcal-btn" style="width:100%;background:#4285F4;color:#fff;border:none;border-radius:var(--rs);padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);display:flex;align-items:center;justify-content:center;gap:8px"><i class="ti ti-calendar-event"></i> <span id="gcal-btn-txt">Sign in with your Google account & Sync</span></button>
+      <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4">Only you sign in. Family and friends receive a calendar share link from you — no app access needed.</div>
     </div>`:''}
   </div>`;
 }
