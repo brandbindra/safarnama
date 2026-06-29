@@ -682,7 +682,7 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 <div id="screen-login" class="screen active">
   <div class="login-hero" style="position:relative;overflow:hidden">
   <div style="position:absolute;inset:0;pointer-events:none" id="login-particles"></div>
-    <div class="login-compass" style="animation:compassSpin 7s linear infinite;transform-origin:center"><i class="ti ti-compass"></i></div>
+    <div class="login-compass" style="animation:compassSpin 3s linear infinite;transform-origin:center;width:64px;height:64px;font-size:30px;border:2px solid rgba(240,250,247,.5)"><i class="ti ti-compass" style="animation:compassSpin 3s linear infinite reverse;display:inline-block"></i></div>
     <div style="font-family:'Cormorant Garamond',serif;line-height:1.1">
       <div style="font-size:18px;font-weight:500;color:rgba(240,250,247,.85);letter-spacing:.22em;text-transform:uppercase;margin-bottom:3px">Manish</div>
       <div style="font-size:46px;font-weight:500;color:#F0FAF7;letter-spacing:.06em">Explores</div>
@@ -2955,20 +2955,41 @@ function drawMap(phaseFilter){
   if(allPoints.length>1){
     _leafletMap.fitBounds(allPoints.map(p=>p.coords),{padding:[30,30]});
   }
-  // Animate markers after map renders - use leaflet-marker-icon directly
-  setTimeout(()=>{
-    const pins=document.querySelectorAll('#map-container .leaflet-marker-icon');
-    pins.forEach((el,i)=>{
-      el.style.opacity='0';
-      el.style.transform='translateY(-40px) scale(0.2)';
-      el.style.transition='none';
-      setTimeout(()=>{
-        el.style.transition='opacity 0.5s cubic-bezier(.34,1.8,.64,1), transform 0.5s cubic-bezier(.34,1.8,.64,1)';
-        el.style.opacity='1';
-        el.style.transform='translateY(0) scale(1)';
-      }, 400 + i*150);
+  // Use MutationObserver to detect when Leaflet adds markers
+  const mapEl=document.getElementById('map-container');
+  if(mapEl){
+    let animated=false;
+    const obs=new MutationObserver(()=>{
+      const pins=mapEl.querySelectorAll('.leaflet-marker-icon');
+      if(pins.length>0&&!animated){
+        animated=true;
+        obs.disconnect();
+        pins.forEach((el,i)=>{
+          el.style.opacity='0';
+          el.style.transform='translateY(-60px) scale(0.1)';
+          el.style.transition='none';
+          setTimeout(()=>{
+            el.style.transition='opacity 0.6s cubic-bezier(.34,2,.64,1), transform 0.6s cubic-bezier(.34,2,.64,1)';
+            el.style.opacity='1';
+            el.style.transform='translateY(0) scale(1)';
+          }, 200+i*180);
+        });
+      }
     });
-  }, 800);
+    obs.observe(mapEl,{childList:true,subtree:true});
+    // Fallback after 3s
+    setTimeout(()=>{
+      obs.disconnect();
+      if(!animated){
+        const pins=mapEl.querySelectorAll('.leaflet-marker-icon');
+        pins.forEach((el,i)=>{
+          el.style.transition='opacity 0.6s cubic-bezier(.34,2,.64,1), transform 0.6s cubic-bezier(.34,2,.64,1)';
+          el.style.opacity='1';
+          el.style.transform='translateY(0) scale(1)';
+        });
+      }
+    },3000);
+  }
 }
 
 
@@ -3634,13 +3655,16 @@ function checkDepartureConfetti(){
 (function(){
   const el=document.getElementById('login-particles');
   if(!el)return;
-  for(let i=0;i<12;i++){
+  const shapes=['50%','3px','0px'];
+  for(let i=0;i<30;i++){
     const p=document.createElement('div');
-    const size=Math.random()*4+2;
+    const size=Math.random()*8+3;
     const x=Math.random()*100;
-    const delay=Math.random()*4;
-    const dur=Math.random()*6+6;
-    p.style.cssText=`position:absolute;width:${size}px;height:${size}px;border-radius:50%;background:rgba(240,250,247,${Math.random()*.15+.05});left:${x}%;bottom:-10px;animation:particleFloat ${dur}s linear ${delay}s infinite`;
+    const delay=Math.random()*5;
+    const dur=Math.random()*5+5;
+    const opacity=Math.random()*.35+.15;
+    const shape=shapes[Math.floor(Math.random()*shapes.length)];
+    p.style.cssText=`position:absolute;width:${size}px;height:${size}px;border-radius:${shape};background:rgba(240,250,247,${opacity});left:${x}%;bottom:-10px;animation:particleFloat ${dur}s linear ${delay}s infinite`;
     el.appendChild(p);
   }
   const style=document.createElement('style');
