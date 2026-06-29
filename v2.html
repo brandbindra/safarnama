@@ -363,11 +363,11 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 <div id="screen-app" class="screen">
   <div class="app-hdr">
     <div class="app-top">
-      <div class="app-wm"><span class="w1">Manish </span><span class="w2">Explores</span></div>
+      <div class="app-wm" onclick="goHome()" style="cursor:pointer" title="All trips"><span class="w1">Manish </span><span class="w2">Explores</span></div>
       <div class="app-right">
         <span class="rbadge badge-owner" id="app-badge">Owner</span>
         <button class="icon-btn" id="app-settings-btn" onclick="openSettings()" style="display:none"><i class="ti ti-settings"></i></button>
-        <button class="icon-btn" onclick="goHome()" title="All trips"><i class="ti ti-layout-grid"></i></button>
+        <button class="icon-btn" onclick="goHome()" title="All trips" style="color:var(--teal)"><i class="ti ti-home"></i></button>
       </div>
     </div>
     <div class="app-tabs">
