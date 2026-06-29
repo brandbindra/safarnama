@@ -249,6 +249,131 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ANIMATIONS ── */
+@media(prefers-reduced-motion:no-preference){
+  /* Splash */
+  .splash-overlay{position:fixed;inset:0;background:var(--teal);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s ease}
+  .splash-overlay.fade-out{opacity:0;pointer-events:none}
+  .splash-compass{width:70px;height:70px;border-radius:50%;border:2px solid rgba(240,250,247,.25);display:flex;align-items:center;justify-content:center;color:rgba(240,250,247,.9);font-size:32px;animation:splashCompass 1.2s cubic-bezier(.34,1.56,.64,1) forwards,compassSpin 8s linear 1.2s infinite;opacity:0}
+  @keyframes splashCompass{0%{opacity:0;transform:scale(.3) rotate(-180deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+  @keyframes compassSpin{to{transform:rotate(360deg)}}
+  .splash-manish{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:rgba(240,250,247,.85);letter-spacing:.22em;text-transform:uppercase;opacity:0;animation:splashText .6s ease .8s forwards}
+  .splash-explores{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:500;color:#F0FAF7;letter-spacing:.06em;opacity:0;animation:splashExplores .8s cubic-bezier(.34,1.56,.64,1) 1s forwards}
+  .splash-tagline{font-size:11px;color:rgba(240,250,247,.4);letter-spacing:.16em;text-transform:uppercase;opacity:0;animation:splashText .6s ease 1.4s forwards}
+  @keyframes splashText{to{opacity:1}}
+  @keyframes splashExplores{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+
+  /* Login breathing hero */
+  .login-hero{animation:heroBreath 4s ease-in-out infinite alternate}
+  @keyframes heroBreath{0%{background:#0F6E56}100%{background:#0A5A46}}
+  .login-compass{animation:compassRotate 60s linear infinite!important}
+  @keyframes compassRotate{to{transform:rotate(360deg)}}
+  .role-btn{opacity:0;animation:slideUp .4s ease forwards}
+  .role-btn:nth-child(1){animation-delay:.1s}
+  .role-btn:nth-child(2){animation-delay:.2s}
+  .role-btn:nth-child(3){animation-delay:.3s}
+  @keyframes slideUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+
+  /* Tab fade */
+  .tab-panel.active{animation:tabFadeIn .25s ease}
+  @keyframes tabFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Phase blocks stagger */
+  .phase-block{opacity:0;animation:phaseIn .4s ease forwards}
+  .phase-block:nth-child(1){animation-delay:.05s}
+  .phase-block:nth-child(2){animation-delay:.12s}
+  .phase-block:nth-child(3){animation-delay:.19s}
+  .phase-block:nth-child(4){animation-delay:.26s}
+  .phase-block:nth-child(5){animation-delay:.33s}
+  .phase-block:nth-child(6){animation-delay:.40s}
+  @keyframes phaseIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Day cards stagger */
+  .day-card{opacity:0;animation:cardIn .35s ease forwards}
+  .day-card:nth-child(1){animation-delay:.08s}.day-card:nth-child(2){animation-delay:.13s}
+  .day-card:nth-child(3){animation-delay:.18s}.day-card:nth-child(4){animation-delay:.23s}
+  .day-card:nth-child(5){animation-delay:.28s}.day-card:nth-child(6){animation-delay:.33s}
+  .day-card:nth-child(7){animation-delay:.38s}.day-card:nth-child(8){animation-delay:.43s}
+  .day-card:nth-child(n+9){animation-delay:.48s}
+  @keyframes cardIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+  /* Day card expand */
+  .day-exp{overflow:hidden;animation:none}
+  .day-card.open .day-exp{animation:expandDown .25s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes expandDown{from{opacity:0;max-height:0}to{opacity:1;max-height:2000px}}
+
+  /* Booking cards stagger */
+  .bk-item{opacity:0;animation:bkIn .3s ease forwards}
+  .bk-item:nth-child(1){animation-delay:.05s}.bk-item:nth-child(2){animation-delay:.1s}
+  .bk-item:nth-child(3){animation-delay:.15s}.bk-item:nth-child(4){animation-delay:.2s}
+  .bk-item:nth-child(n+5){animation-delay:.25s}
+  @keyframes bkIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+
+  /* Booking confirmed bounce */
+  .st-btn.booked{animation:confirmBounce .4s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes confirmBounce{0%{transform:scale(1)}40%{transform:scale(1.2)}70%{transform:scale(.95)}100%{transform:scale(1)}}
+
+  /* Check item pulse */
+  .check-item.checked .check-box{animation:checkPulse .3s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes checkPulse{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+  /* Parallax phase photos */
+  .ph-photo-wrap{overflow:hidden}
+  .ph-photo-wrap img{transition:transform .1s linear;will-change:transform}
+
+  /* Trip card hover */
+  .trip-card{transition:transform .15s ease,box-shadow .15s ease}
+  .trip-card:active{transform:scale(.98);box-shadow:0 4px 20px rgba(15,110,86,.15)}
+
+  /* Map pin drop */
+  .leaflet-marker-icon{animation:pinDrop .4s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes pinDrop{0%{opacity:0;transform:translateY(-20px) scale(.5)}100%{opacity:1;transform:translateY(0) scale(1)}}
+
+  /* Modal sheet slide up */
+  .modal-sheet{animation:sheetUp .3s cubic-bezier(.4,0,.2,1)}
+  @keyframes sheetUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* Home screen trip cards stagger */
+  .trip-card{opacity:0;animation:cardIn .35s ease forwards}
+  .trip-card:nth-child(1){animation-delay:.05s}
+  .trip-card:nth-child(2){animation-delay:.1s}
+  .trip-card:nth-child(3){animation-delay:.15s}
+  .trip-card:nth-child(n+4){animation-delay:.2s}
+
+  /* Progress bar fill animation */
+  .prog-fill{animation:progFill 1s cubic-bezier(.4,0,.2,1) both}
+  @keyframes progFill{from{width:0%}}
+
+  /* Weather chips slide in */
+  .wchip{opacity:0;animation:chipIn .3s ease forwards}
+  .wchip:nth-child(1){animation-delay:.1s}.wchip:nth-child(2){animation-delay:.15s}
+  .wchip:nth-child(3){animation-delay:.2s}.wchip:nth-child(4){animation-delay:.25s}
+  .wchip:nth-child(5){animation-delay:.3s}
+  @keyframes chipIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Essentials check items stagger */
+  .check-item{opacity:0;animation:cardIn .25s ease forwards}
+  .check-item:nth-child(1){animation-delay:.03s}.check-item:nth-child(2){animation-delay:.06s}
+  .check-item:nth-child(3){animation-delay:.09s}.check-item:nth-child(4){animation-delay:.12s}
+  .check-item:nth-child(5){animation-delay:.15s}.check-item:nth-child(n+6){animation-delay:.18s}
+
+  /* Share cards */
+  .share-card{opacity:0;animation:phaseIn .4s ease forwards}
+  .share-card:nth-child(1){animation-delay:.05s}
+  .share-card:nth-child(2){animation-delay:.12s}
+  .share-card:nth-child(3){animation-delay:.19s}
+
+  /* Budget card */
+  .budget-card{opacity:0;animation:phaseIn .35s ease forwards}
+  .budget-card:nth-child(1){animation-delay:.05s}
+  .budget-card:nth-child(2){animation-delay:.1s}
+  .budget-card:nth-child(3){animation-delay:.15s}
+
+  /* Budget bar grow */
+  .budget-bar{animation:barGrow .8s cubic-bezier(.4,0,.2,1) both}
+  @keyframes barGrow{from{width:0%}}
+}
 #map-container{height:340px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:12px}
 .budget-card{background:var(--cream);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
 .budget-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
@@ -263,6 +388,14 @@ body{font-family:var(--ui);background:var(--cream);color:var(--text);font-size:1
 </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+<div class="splash-overlay" id="splash">
+  <div class="splash-compass"><i class="ti ti-compass"></i></div>
+  <div class="splash-manish">Manish</div>
+  <div class="splash-explores">Explores</div>
+  <div class="splash-tagline">Crafted for the Bindras</div>
+</div>
 
 <!-- LOGIN -->
 <div id="screen-login" class="screen active">
@@ -3064,8 +3197,104 @@ async function doGcalSync(){
   </div>`;}
 }
 
+// ── SPLASH SCREEN ──
+(function(){
+  const splash=document.getElementById('splash');
+  if(!splash)return;
+  // Show splash for 2.5s then fade out
+  setTimeout(()=>{
+    splash.classList.add('fade-out');
+    setTimeout(()=>{splash.style.display='none';},600);
+  },2500);
+})();
+
+// ── CONFETTI on departure day ──
+function launchConfetti(){
+  const colors=['#0F6E56','#9FE1CB','#E8A020','#1A5FA8','#5B3FA8','#F0FAF7'];
+  const container=document.getElementById('today-banner');
+  if(!container)return;
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    const size=Math.random()*8+4;
+    el.style.cssText=`position:absolute;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};left:${Math.random()*100}%;top:-10px;pointer-events:none;z-index:10;animation:confettiFall ${Math.random()*2+1.5}s ease-in ${Math.random()*.8}s forwards`;
+    container.style.position='relative';
+    container.style.overflow='hidden';
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  }
+}
+
+// Add confetti keyframes dynamically
+const confettiStyle=document.createElement('style');
+confettiStyle.textContent=`@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(300px) rotate(720deg)}}`;
+document.head.appendChild(confettiStyle);
+
+// ── PARTICLE BURST on booking confirmed ──
+function particleBurst(el){
+  const rect=el.getBoundingClientRect();
+  const cx=rect.left+rect.width/2;
+  const cy=rect.top+rect.height/2;
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    const angle=(i/12)*360;
+    const dist=40+Math.random()*30;
+    const rad=angle*Math.PI/180;
+    const tx=Math.cos(rad)*dist;
+    const ty=Math.sin(rad)*dist;
+    p.style.cssText=`position:fixed;width:6px;height:6px;border-radius:50%;background:#0F6E56;left:${cx}px;top:${cy}px;pointer-events:none;z-index:9999;transition:all .5s cubic-bezier(.4,0,.2,1);transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        p.style.transform=`translate(calc(-50% + ${tx}px),calc(-50% + ${ty}px))`;
+        p.style.opacity='0';
+        p.style.width='4px';p.style.height='4px';
+      });
+    });
+    setTimeout(()=>p.remove(),600);
+  }
+}
+
+// ── PARALLAX on phase photos ──
+(function(){
+  let ticking=false;
+  function updateParallax(){
+    document.querySelectorAll('.ph-photo-wrap img').forEach(img=>{
+      const rect=img.closest('.ph-photo-wrap').getBoundingClientRect();
+      const viewH=window.innerHeight;
+      if(rect.bottom<0||rect.top>viewH)return;
+      const progress=(viewH-rect.top)/(viewH+rect.height);
+      const shift=(progress-.5)*40;
+      img.style.transform=`translateY(${shift}px) scale(1.1)`;
+    });
+    ticking=false;
+  }
+  const scrollEl=document.getElementById('tab-scroll');
+  if(scrollEl){scrollEl.addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(updateParallax);ticking=true;}},{passive:true});}
+})();
+
+// ── HOOK particle burst into togBkSt ──
+const _origTogBkSt=togBkSt;
+window.togBkSt=async function(id,cur){
+  await _origTogBkSt(id,cur);
+  if(cur==='pending'){
+    const btn=document.getElementById('stb-'+id);
+    if(btn)particleBurst(btn);
+  }
+};
+
+// ── CHECK confetti on departure day ──
+function checkDepartureConfetti(){
+  if(!currentTrip?.start_date)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const dep=parseDate(currentTrip.start_date);
+  if(dep&&today.getTime()===dep.getTime()){
+    setTimeout(launchConfetti,800);
+  }
+}
+
 // INIT
 updateCountdown();
+setTimeout(checkDepartureConfetti,1000);
 </script>
 </body>
 </html>
