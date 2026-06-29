@@ -828,23 +828,114 @@ function wiz2(){
 }
 function addWizPh(){const n=prompt('Phase name (e.g. Katra):');if(!n?.trim())return;const r=prompt('Date range (e.g. Jul 31 – Aug 1):')||'';wizPhases.push({name:n.trim(),date_range:r,color:PH_CLR[wizPhases.length%PH_CLR.length]});renderWizStep();}
 
+// ── CITY REGISTRY — populated from phases + user entries ──
+let wizCityList = [];
+function getWizCities(){
+  const base = wizPhases.map(p=>p.name.split(/[·\-,→]/)[0].trim()).filter(Boolean);
+  const extra = [...new Set([...wizCityList,...base])].filter(c=>c.length>1);
+  return [...new Set(extra)];
+}
+function addWizCity(city){if(city&&!wizCityList.includes(city))wizCityList.push(city);}
+
 function wiz3(){
-  if(!wizDays.length)return'<div style="color:var(--text-3);padding:20px;text-align:center">No days — check trip dates.</div>';
-  let h='<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.5">Fill in each day and assign to a phase.</div>';
+  if(!wizDays.length)return'<div style="color:var(--text-3);padding:20px;text-align:center">No days generated — check trip dates.</div>';
+  let h=`<div style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5">Define what happens each day. The app will auto-create booking placeholders based on your plan.</div>`;
   wizDays.forEach((d,i)=>{
     const dt=parseDate(d.date);
     const ph=wizPhases[d.phase_idx]||wizPhases[0];
     const cc=ph?.color||PH_CLR[0];
     const phOpts=wizPhases.map((p,pi)=>`<option value="${pi}" ${d.phase_idx===pi?'selected':''}>${p.name}</option>`).join('');
-    h+=`<div class="day-wiz" style="border-left:3px solid ${cc}">
-      <div class="day-wiz-date"><div style="font-size:8px;color:var(--text-3);text-transform:uppercase">${d.weekday}</div><div style="font-family:var(--brand);font-size:20px;font-weight:500;color:${cc};line-height:1">${dt?dt.getDate():''}</div><div style="font-size:8px;color:var(--text-3)">${dt?dt.toLocaleString('en',{month:'short'}):''}</div></div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:5px">
-        <input class="day-wiz-inp" placeholder="What happens today?" value="${esc(d.title)}" oninput="wizDays[${i}].title=this.value">
-        ${wizPhases.length>1?`<select style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;background:var(--cream-2);color:var(--text);font-family:var(--ui)" onchange="wizDays[${i}].phase_idx=parseInt(this.value);renderWizStep()">${phOpts}</select>`:''}
+    const dtype=d.day_type||'stay';
+    const cities=getWizCities();
+    const cityOpts=(sel)=>['',  ...cities].map(c=>`<option value="${c}" ${c===sel?'selected':''}>${c||'-- pick city --'}</option>`).join('');
+    const modeOpts=['✈ Flight','🚂 Train','🚗 Car / Taxi','🚌 Bus','🚢 Ferry','🏍 Bike'].map(m=>`<option value="${m}" ${d.travel_mode===m?'selected':''}>${m}</option>`).join('');
+    const stayOpts=['🏨 Hotel (TBD)','🏠 Home / parents','✅ Already booked'].map(s=>`<option value="${s}" ${d.stay_type===s?'selected':''}>${s}</option>`).join('');
+
+    h+=`<div style="background:var(--cream);border:1px solid var(--border);border-left:3px solid ${cc};border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+      <!-- Date row -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="flex-shrink:0;text-align:center;width:44px">
+          <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">${d.weekday}</div>
+          <div style="font-family:var(--brand);font-size:22px;font-weight:500;color:${cc};line-height:1">${dt?dt.getDate():''}</div>
+          <div style="font-size:8px;color:var(--text-3)">${dt?dt.toLocaleString('en',{month:'short'}):''}</div>
+        </div>
+        <!-- Day type pills -->
+        <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1">
+          ${['travel','stay','activity'].map(t=>`<button onclick="setWizDayType(${i},'${t}')" style="font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;border:1.5px solid ${dtype===t?cc:'var(--border)'};background:${dtype===t?cc:'transparent'};color:${dtype===t?'#fff':'var(--text-3)'};cursor:pointer;font-family:var(--ui)">${t==='travel'?'🚀 Travel':t==='stay'?'🏠 Stay':'🎯 Activity'}</button>`).join('')}
+        </div>
+        ${wizPhases.length>1?`<select style="font-size:10px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;background:var(--cream-2);color:var(--text);font-family:var(--ui);flex-shrink:0" onchange="wizDays[${i}].phase_idx=parseInt(this.value);renderWizStep()">${phOpts}</select>`:''}
       </div>
+
+      <!-- TRAVEL DAY fields -->
+      ${dtype==='travel'?`
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">From</div>
+          <input list="city-list-${i}" class="day-wiz-inp" placeholder="Departure city" value="${esc(d.from_city||'')}" oninput="wizDays[${i}].from_city=this.value;addWizCity(this.value)">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">To</div>
+          <input list="city-list-${i}" class="day-wiz-inp" placeholder="Arrival city" value="${esc(d.to_city||'')}" oninput="wizDays[${i}].to_city=this.value;addWizCity(this.value)">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Via (optional)</div>
+          <input list="city-list-${i}" class="day-wiz-inp" placeholder="e.g. Delhi (transit)" value="${esc(d.via_city||'')}" oninput="wizDays[${i}].via_city=this.value;addWizCity(this.value)">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Travel mode</div>
+          <select class="day-wiz-inp" style="font-size:12px" onchange="wizDays[${i}].travel_mode=this.value">${modeOpts}</select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Notes (optional)</div>
+        <input class="day-wiz-inp" placeholder="e.g. Morning flight, check in evening" value="${esc(d.notes||'')}" oninput="wizDays[${i}].notes=this.value">
+      </div>
+      <datalist id="city-list-${i}">${cities.map(c=>`<option value="${c}">`).join('')}</datalist>`:''}
+
+      <!-- STAY DAY fields -->
+      ${dtype==='stay'?`
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Location</div>
+          <input list="city-list-s-${i}" class="day-wiz-inp" placeholder="City / place" value="${esc(d.stay_city||'')}" oninput="wizDays[${i}].stay_city=this.value;addWizCity(this.value)">
+          <datalist id="city-list-s-${i}">${cities.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </div>
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Accommodation</div>
+          <select class="day-wiz-inp" style="font-size:12px" onchange="wizDays[${i}].stay_type=this.value">${stayOpts}</select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Activity / plan (optional)</div>
+        <input class="day-wiz-inp" placeholder="e.g. Vaishno Devi helipad 8 AM, rest day" value="${esc(d.activity||'')}" oninput="wizDays[${i}].activity=this.value">
+      </div>`:''}
+
+      <!-- ACTIVITY DAY fields -->
+      ${dtype==='activity'?`
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">Location</div>
+          <input list="city-list-a-${i}" class="day-wiz-inp" placeholder="City / place" value="${esc(d.stay_city||'')}" oninput="wizDays[${i}].stay_city=this.value;addWizCity(this.value)">
+          <datalist id="city-list-a-${i}">${cities.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:3px">What are you doing?</div>
+        <input class="day-wiz-inp" placeholder="e.g. Thiksey Monastery · Shey Palace · 2 hr round trip" value="${esc(d.activity||'')}" oninput="wizDays[${i}].activity=this.value">
+      </div>`:''}
     </div>`;
   });
   return h;
+}
+
+function setWizDayType(i,type){
+  wizDays[i].day_type=type;
+  // Set smart defaults for travel mode
+  if(type==='travel'&&!wizDays[i].travel_mode)wizDays[i].travel_mode='✈ Flight';
+  if(type==='stay'&&!wizDays[i].stay_type)wizDays[i].stay_type='🏨 Hotel (TBD)';
+  renderWizStep();
 }
 
 function wiz4(){
@@ -869,8 +960,103 @@ async function saveWizard(){
     const[trip]=await sbPost('trips',{name:wizTrip.name,subtitle:wizTrip.subtitle||'',start_date:wizTrip.start_date,end_date:wizTrip.end_date,trip_types:(wizTrip.tripTypes||[]).join(',')});
     const phRows=await sbPost('phases',wizPhases.map((p,i)=>({...p,trip_id:trip.id,sort_order:i})));
     const phMap=phRows.reduce((m,p)=>({...m,[p.sort_order]:p.id}),{});
-    await sbPost('days',wizDays.map((d,i)=>({trip_id:trip.id,phase_id:phMap[d.phase_idx]||phRows[0]?.id,date:d.date,weekday:d.weekday,title:d.title||'(add title)',subtitle:d.subtitle||'',tip:'',note:'',sort_order:i})));
-    if(wizBookings.length)await sbPost('bookings',wizBookings.map((b,i)=>({...b,trip_id:trip.id,claude_tip:'',day_id:null,end_day_id:null,attachment_data:null,sort_order:i})));
+    // Build day records and auto-generate booking placeholders
+    const dayRecords=[];
+    const autoBookings=[];
+    let bkOrder=wizBookings.length;
+
+    wizDays.forEach((d,i)=>{
+      const dtype=d.day_type||'stay';
+      let title='',subtitle='';
+
+      if(dtype==='travel'){
+        const from=d.from_city||'';
+        const to=d.to_city||'';
+        const via=d.via_city?(' → '+d.via_city):'';
+        title=from+(via)+' → '+to;
+        subtitle=d.notes||'';
+        const mode=d.travel_mode||'✈ Flight';
+        const cat=mode.includes('Flight')?'Flights':mode.includes('Train')?'Transfers & Taxis':mode.includes('Car')||mode.includes('Taxi')?'Transfers & Taxis':'Transfers & Taxis';
+        // Create auto booking placeholder
+        autoBookings.push({
+          trip_id:trip.id,category:cat,
+          title:from+(d.via_city?' → '+d.via_city:'')+' → '+to,
+          detail:fmtDate(d.date)+(d.notes?' · '+d.notes:''),
+          status:'pending',ref:'',cost:0,currency:'AED',
+          from_city:from,to_city:to,flight_date:d.date,
+          dep_time:null,arr_time:null,checkin_date:null,checkout_date:null,
+          attachment_data:null,claude_tip:'',sort_order:bkOrder++,
+          day_id:null,end_day_id:null
+        });
+      } else if(dtype==='stay'){
+        const loc=d.stay_city||'';
+        const act=d.activity||'';
+        title=act||(loc?'Stay · '+loc:'Rest day');
+        subtitle=loc;
+        const stype=d.stay_type||'🏨 Hotel (TBD)';
+        if(stype.includes('Hotel')){
+          autoBookings.push({
+            trip_id:trip.id,category:'Hotels',
+            title:'Hotel TBD · '+loc,
+            detail:'Check-in: '+fmtDate(d.date)+' · Check-out: TBD',
+            status:'pending',ref:'',cost:0,currency:'AED',
+            from_city:null,to_city:null,flight_date:null,
+            dep_time:null,arr_time:null,
+            checkin_date:d.date,checkout_date:null,
+            attachment_data:null,claude_tip:'',sort_order:bkOrder++,
+            day_id:null,end_day_id:null
+          });
+        } else if(stype.includes('Home')){
+          autoBookings.push({
+            trip_id:trip.id,category:'Hotels',
+            title:'Home / parents · '+loc,
+            detail:fmtDate(d.date),
+            status:'booked',ref:'',cost:0,currency:'AED',
+            from_city:null,to_city:null,flight_date:null,
+            dep_time:null,arr_time:null,
+            checkin_date:d.date,checkout_date:null,
+            attachment_data:null,claude_tip:'',sort_order:bkOrder++,
+            day_id:null,end_day_id:null
+          });
+        }
+      } else {
+        // Activity day
+        title=d.activity||'Activity day';
+        subtitle=d.stay_city||'';
+      }
+
+      dayRecords.push({
+        trip_id:trip.id,
+        phase_id:phMap[d.phase_idx]||phRows[0]?.id,
+        date:d.date,weekday:d.weekday,
+        title,subtitle,
+        day_type:dtype,
+        from_city:d.from_city||null,
+        to_city:d.to_city||null,
+        via_city:d.via_city||null,
+        travel_mode:d.travel_mode||null,
+        stay_city:d.stay_city||null,
+        tip:'',note:'',sort_order:i
+      });
+    });
+
+    const savedDays=await sbPost('days',dayRecords);
+
+    // Now auto-link bookings to their day cards by date
+    const allManualBks=wizBookings.map((b,i)=>({...b,trip_id:trip.id,claude_tip:'',attachment_data:null,sort_order:i}));
+    const allAutoBks=autoBookings;
+    const allBks=[...allManualBks,...allAutoBks];
+
+    // Link each booking to its day
+    allBks.forEach(b=>{
+      const matchDate=b.flight_date||b.checkin_date;
+      if(matchDate){
+        const matchDay=savedDays.find(d=>d.date===matchDate);
+        if(matchDay)b.day_id=matchDay.id;
+      }
+    });
+
+    if(allBks.length)await sbPost('bookings',allBks);
     await sbPost('essentials',getDefEss(trip.id,wizTrip));
     const s=await sbGet('app_settings','limit=1').catch(()=>[]);
     if(!s.length)await sbPost('app_settings',{pin_owner:'1111',pin_editor:'2222',pin_viewer:'3333'});
