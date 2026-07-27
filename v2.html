@@ -1303,7 +1303,7 @@ async function openTrip(id){
     b.textContent=role.charAt(0).toUpperCase()+role.slice(1);b.className='rbadge badge-'+role;
     document.getElementById('app-settings-btn').style.display=role==='owner'?'flex':'none';
     const wtab=document.getElementById('wardrobe-tab-btn');
-    if(wtab)wtab.style.display=role==='owner'?'flex':'none';
+    if(wtab)wtab.style.display='flex';
     showScreen('screen-app');showTab('itinerary');
     await renderAll();setTimeout(fetchWeather,600);
   }catch(e){showToast('Failed to open trip');}
@@ -4041,6 +4041,9 @@ function renderWardrobe(){
       <div class="budget-title"><i class="ti ti-backpack" style="color:var(--teal)"></i>Packing plan · ${totalDays} days · ${totalPhotos} outfit photos</div>
       <div id="wardrobe-summary-body"></div>
     </div>`;
+
+  // Day cards only for owner
+  if(role!=='owner'){el.innerHTML=html+'</div>';renderWardrobeSummary();return;}
 
   // One card per day
   allDays.forEach(d => {
