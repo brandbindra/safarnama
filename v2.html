@@ -2784,11 +2784,12 @@ async function confirmAddDay(){
   }catch(e){showToast('Failed: '+e.message.substring(0,40));}
 }
 
-function openSettings(){document.getElementById('set-owner').value='';document.getElementById('set-editor').value='';document.getElementById('set-viewer').value='';openModal('modal-settings');}
+function openSettings(){
+  setTimeout(renderCustomCats,100);document.getElementById('set-owner').value='';document.getElementById('set-editor').value='';document.getElementById('set-viewer').value='';openModal('modal-settings');}
 async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
 
 // ── TABS ──
-function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}if(name==='wardrobe'){loadWardrobeForTrip().then(()=>renderWardrobe());}}
+function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}if(name==='wardrobe'){Promise.all([loadWardrobeForTrip(),loadWardrobeDays()]).then(()=>{renderWardrobe();setTimeout(renderWardrobeSummary,100);});}}
 
 // ── WEATHER ──
 const WC=[{n:'Delhi',lat:28.6139,lon:77.2090},{n:'Katra',lat:32.9916,lon:74.9320},{n:'Udaipur',lat:24.5854,lon:73.7125},{n:'Leh',lat:34.1526,lon:77.5771},{n:'Patiala',lat:30.3398,lon:76.3869}];
@@ -3785,6 +3786,174 @@ function checkDepartureConfetti(){
 }
 
 // ── WARDROBE ──
+// ── WARDROBE CLOTHING CATEGORIES ──
+const DEFAULT_WARDROBE_CATS = [
+  {id:'casual',icon:'👕',label:'Casual daywear'},
+  {id:'summer',icon:'☀️',label:'Summer / light clothes'},
+  {id:'trekking',icon:'🥾',label:'Trekking / outdoor'},
+  {id:'formal',icon:'🎩',label:'Formal / dinner'},
+  {id:'gym',icon:'💪',label:'Gym / workout'},
+  {id:'nightwear',icon:'🌙',label:'Nightwear / pyjamas'},
+  {id:'swimwear',icon:'🏊',label:'Swimwear'},
+  {id:'ethnic',icon:'🪔',label:'Ethnic / traditional'},
+  {id:'rain',icon:'🌧',label:'Rain gear'},
+  {id:'warm',icon:'🧥',label:'Warm layers / thermals'},
+];
+
+function getAllWardrobeCats(){
+  const custom=(currentTrip?.wardrobe_categories||'').split(',').filter(Boolean).map(c=>({id:'custom_'+c,icon:'👔',label:c}));
+  return [...DEFAULT_WARDROBE_CATS,...custom];
+}
+
+// wardrobe_days cache: {dayId: {id, categories:[], pack_overrides:{}}}
+let _wardrobeDaysCache = {};
+
+async function loadWardrobeDays(){
+  try{
+    const rows=await sbGet('wardrobe_days','trip_id=eq.'+currentTrip.id);
+    _wardrobeDaysCache={};
+    rows.forEach(r=>{
+      _wardrobeDaysCache[r.day_id]={
+        id:r.id,
+        categories:(r.categories||'').split(',').filter(Boolean),
+        pack_overrides:JSON.parse(r.pack_overrides||'{}')
+      };
+    });
+  }catch(e){_wardrobeDaysCache={};}
+}
+
+async function saveWardrobeDay(dayId){
+  const d=_wardrobeDaysCache[dayId]||{categories:[],pack_overrides:{}};
+  const payload={
+    trip_id:currentTrip.id,
+    day_id:dayId,
+    categories:d.categories.join(','),
+    pack_overrides:JSON.stringify(d.pack_overrides)
+  };
+  try{
+    if(d.id){
+      await sbPatch('wardrobe_days','id=eq.'+d.id,payload);
+    } else {
+      const [row]=await sbPost('wardrobe_days',payload);
+      _wardrobeDaysCache[dayId].id=row.id;
+    }
+  }catch(e){showToast('Save failed: '+e.message.substring(0,30));}
+}
+
+function toggleWardrobeCat(dayId,catId){
+  if(!_wardrobeDaysCache[dayId])_wardrobeDaysCache[dayId]={categories:[],pack_overrides:{}};
+  const cats=_wardrobeDaysCache[dayId].categories;
+  const idx=cats.indexOf(catId);
+  if(idx>=0)cats.splice(idx,1); else cats.push(catId);
+  saveWardrobeDay(dayId);
+  // Update pill UI without full re-render
+  const pill=document.getElementById('wcat-'+dayId+'-'+catId);
+  if(pill){
+    const active=cats.includes(catId);
+    pill.style.background=active?'var(--teal)':'var(--cream-2)';
+    pill.style.borderColor=active?'var(--teal)':'var(--border)';
+    pill.style.color=active?'#fff':'var(--text-2)';
+  }
+  // Update packing summary
+  renderWardrobeSummary();
+}
+
+function calcPackQty(days){
+  if(days<=0)return 0;
+  if(days<7)return days;
+  return Math.ceil(days/7)*7;
+}
+
+function renderWardrobeSummary(){
+  const el=document.getElementById('wardrobe-summary-body');
+  if(!el)return;
+  const allCats=getAllWardrobeCats();
+  const totalDays=allDays.length;
+  const trekDays=allDays.filter(d=>{
+    const ph=allPhases.find(p=>p.id===d.phase_id);
+    return ph&&(ph.name.toLowerCase().includes('leh')||ph.name.toLowerCase().includes('vaishno')||ph.name.toLowerCase().includes('katra')||d.title.toLowerCase().includes('trek'));
+  }).length;
+
+  // Count days per category
+  const catDays={};
+  Object.values(_wardrobeDaysCache).forEach(d=>{
+    (d.categories||[]).forEach(cid=>{
+      catDays[cid]=(catDays[cid]||0)+1;
+    });
+  });
+
+  // Get overrides (use first day's overrides as trip-level for now)
+  const overrides=Object.values(_wardrobeDaysCache)[0]?.pack_overrides||{};
+
+  let html='';
+
+  // Category rows
+  const usedCats=allCats.filter(c=>catDays[c.id]>0);
+  if(usedCats.length){
+    usedCats.forEach(cat=>{
+      const days=catDays[cat.id]||0;
+      const suggested=calcPackQty(days);
+      const qty=overrides[cat.id]!==undefined?overrides[cat.id]:suggested;
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:18px;width:28px;text-align:center">${cat.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${cat.label}</div>
+          <div style="font-size:10px;color:var(--text-3)">${days} day${days!==1?'s':''} planned</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="adjustPack('${cat.id}',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+          <span id="packqty-${cat.id}" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${qty}</span>
+          <button onclick="adjustPack('${cat.id}',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-3);min-width:32px;text-align:right">${qty===suggested?'':'✏️'}</div>
+      </div>`;
+    });
+  } else {
+    html='<div style="font-size:12px;color:var(--text-3);padding:8px 0">No categories planned yet — expand a day below and tap categories.</div>';
+  }
+
+  // Fixed: underwear + socks
+  const uw=totalDays+2;
+  const sk=totalDays+trekDays+2;
+  const uwO=overrides['_underwear']!==undefined?overrides['_underwear']:uw;
+  const skO=overrides['_socks']!==undefined?overrides['_socks']:sk;
+  html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:18px;width:28px;text-align:center">🩲</span>
+    <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">Underwear</div><div style="font-size:10px;color:var(--text-3)">${totalDays} days + 2 spare</div></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="adjustPack('_underwear',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+      <span id="packqty-_underwear" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${uwO}</span>
+      <button onclick="adjustPack('_underwear',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div><div style="min-width:32px"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+    <span style="font-size:18px;width:28px;text-align:center">🧦</span>
+    <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">Socks pairs</div><div style="font-size:10px;color:var(--text-3)">${totalDays} days + ${trekDays} trek + 2 spare</div></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="adjustPack('_socks',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+      <span id="packqty-_socks" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${skO}</span>
+      <button onclick="adjustPack('_socks',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div><div style="min-width:32px"></div>
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+function adjustPack(catId, delta){
+  // Get current value
+  const el=document.getElementById('packqty-'+catId);
+  if(!el)return;
+  const cur=parseInt(el.textContent)||0;
+  const newVal=Math.max(0,cur+delta);
+  el.textContent=newVal;
+  // Save override to first wardrobe_day record (trip-level)
+  const firstDayId=allDays[0]?.id;
+  if(!firstDayId)return;
+  if(!_wardrobeDaysCache[firstDayId])_wardrobeDaysCache[firstDayId]={categories:[],pack_overrides:{}};
+  _wardrobeDaysCache[firstDayId].pack_overrides[catId]=newVal;
+  saveWardrobeDay(firstDayId);
+}
+
 // Wardrobe photos stored in Supabase wardrobe table
 // Compressed to 400px wide before storing
 let _wardrobeCache = {}; // {dayId: [photos]}
@@ -3827,46 +3996,13 @@ function compressImage(file, maxWidth=400){
 function renderWardrobe(){
   const el = document.getElementById('tab-wardrobe');
   if(!el || !currentTrip) return;
-
-  // Calculate packing summary
-  const totalDays = allDays.length;
-  const trekDays = allDays.filter(d => {
-    const ph = allPhases.find(p => p.id === d.phase_id);
-    return ph && (ph.name.toLowerCase().includes('leh') || ph.name.toLowerCase().includes('trek') ||
-      ph.name.toLowerCase().includes('vaishno') || ph.name.toLowerCase().includes('katra') ||
-      d.title.toLowerCase().includes('trek') || d.title.toLowerCase().includes('hike'));
-  }).length;
-
-  const underwear = totalDays + 2;
-  const socks = totalDays + trekDays + 2; // extra for trek days
-  const tshirts = Math.ceil(totalDays / 2) + 1;
-  const trekSocks = trekDays > 0 ? trekDays + 1 : 0;
-
-  // Count total uploaded photos
   const totalPhotos = allDays.reduce((sum, d) => sum + getWardrobePhotos(d.id).length, 0);
+  const totalDays = allDays.length;
 
   let html = `<div class="wardrobe-body">
-    <div class="wardrobe-summary">
-      <div class="wardrobe-summary-title">👗 Packing calculator · ${totalDays} days</div>
-      <div class="wardrobe-summary-grid">
-        <div class="wardrobe-summary-item">
-          <div class="wardrobe-summary-num">${underwear}</div>
-          <div class="wardrobe-summary-lbl">🩲 Underwear</div>
-        </div>
-        <div class="wardrobe-summary-item">
-          <div class="wardrobe-summary-num">${socks}</div>
-          <div class="wardrobe-summary-lbl">🧦 Socks pairs${trekDays > 0 ? ' (+'+trekDays+' trek)' : ''}</div>
-        </div>
-        <div class="wardrobe-summary-item">
-          <div class="wardrobe-summary-num">${tshirts}</div>
-          <div class="wardrobe-summary-lbl">👕 T-shirts / tops</div>
-        </div>
-        <div class="wardrobe-summary-item">
-          <div class="wardrobe-summary-num">${totalPhotos}</div>
-          <div class="wardrobe-summary-lbl">📸 Outfits planned</div>
-        </div>
-      </div>
-      ${trekDays > 0 ? `<div style="margin-top:10px;font-size:11px;color:rgba(240,250,247,.7)">🏔 ${trekDays} trek days detected — extra socks included</div>` : ''}
+    <div class="budget-card">
+      <div class="budget-title"><i class="ti ti-backpack" style="color:var(--teal)"></i>Packing plan · ${totalDays} days · ${totalPhotos} outfit photos</div>
+      <div id="wardrobe-summary-body"></div>
     </div>`;
 
   // One card per day
@@ -3888,6 +4024,16 @@ function renderWardrobe(){
         </div>
       </div>
       <div class="wardrobe-day-body" id="wd-${d.id}" style="display:none">
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">What will you wear?</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            ${getAllWardrobeCats().map(cat=>{
+              const active=(_wardrobeDaysCache[d.id]?.categories||[]).includes(cat.id);
+              return `<button id="wcat-${d.id}-${cat.id}" onclick="toggleWardrobeCat('${d.id}','${cat.id}')" style="font-size:11px;padding:5px 10px;border-radius:20px;border:1.5px solid ${active?'var(--teal)':'var(--border)'};background:${active?'var(--teal)':'var(--cream-2)'};color:${active?'#fff':'var(--text-2)'};cursor:pointer;font-family:var(--ui);font-weight:500">${cat.icon} ${cat.label}</button>`;
+            }).join('')}
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Outfit photos</div>
         <div class="wardrobe-photos" id="wdphotos-${d.id}">
           ${photos.map((p, i) => `<div class="wardrobe-photo">
             <img src="${p.photo}" onclick="viewWardrobePhoto('${d.id}',${i})" alt="Outfit">
@@ -3906,7 +4052,10 @@ function renderWardrobe(){
 
   html += '</div>';
   el.innerHTML = html;
-  requestAnimationFrame(() => animateIn('#tab-wardrobe', '.wardrobe-day', 'fadeUp', 400, 60));
+  requestAnimationFrame(() => {
+    animateIn('#tab-wardrobe', '.wardrobe-day', 'fadeUp', 400, 60);
+    renderWardrobeSummary();
+  });
 }
 
 function toggleWardrobeDay(id){
@@ -3996,6 +4145,43 @@ function viewWardrobePhoto(dayId, idx){
     <button onclick="this.parentElement.remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>`;
   o.addEventListener('click', e => { if(e.target === o) o.remove(); });
   document.body.appendChild(o);
+}
+
+// ── CUSTOM WARDROBE CATEGORIES ──
+function renderCustomCats(){
+  const el=document.getElementById('custom-cats-list');
+  if(!el)return;
+  const cats=(currentTrip?.wardrobe_categories||'').split(',').filter(Boolean);
+  if(!cats.length){el.innerHTML='<div style="font-size:11px;color:var(--text-3)">No custom categories yet.</div>';return;}
+  el.innerHTML=cats.map((c,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+    <span style="font-size:12px;flex:1;color:var(--text)">👔 ${esc(c)}</span>
+    <button onclick="removeCustomCat(${i})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--red);cursor:pointer">✕</button>
+  </div>`).join('');
+}
+
+async function addCustomCat(){
+  const inp=document.getElementById('new-cat-inp');
+  const val=(inp?.value||'').trim();
+  if(!val){showToast('Enter a category name');return;}
+  const existing=(currentTrip?.wardrobe_categories||'').split(',').filter(Boolean);
+  if(existing.includes(val)){showToast('Already exists');return;}
+  existing.push(val);
+  const newVal=existing.join(',');
+  await sbPatch('trips','id=eq.'+currentTrip.id,{wardrobe_categories:newVal});
+  currentTrip.wardrobe_categories=newVal;
+  inp.value='';
+  renderCustomCats();
+  showToast('Category added ✓');
+}
+
+async function removeCustomCat(idx){
+  const cats=(currentTrip?.wardrobe_categories||'').split(',').filter(Boolean);
+  cats.splice(idx,1);
+  const newVal=cats.join(',');
+  await sbPatch('trips','id=eq.'+currentTrip.id,{wardrobe_categories:newVal});
+  currentTrip.wardrobe_categories=newVal;
+  renderCustomCats();
+  showToast('Removed');
 }
 
 // ── DARK MODE ──
