@@ -3896,8 +3896,8 @@ function renderWardrobeSummary(){
     });
   });
 
-  // Get overrides (use first day's overrides as trip-level for now)
-  const overrides=Object.values(_wardrobeDaysCache)[0]?.pack_overrides||{};
+  // Get overrides from trip record
+  const overrides=JSON.parse(currentTrip?.pack_overrides||'{}');
 
   let html='';
 
@@ -3954,18 +3954,17 @@ function renderWardrobeSummary(){
 }
 
 function adjustPack(catId, delta){
-  // Get current value
   const el=document.getElementById('packqty-'+catId);
   if(!el)return;
   const cur=parseInt(el.textContent)||0;
   const newVal=Math.max(0,cur+delta);
   el.textContent=newVal;
-  // Save override to first wardrobe_day record (trip-level)
-  const firstDayId=allDays[0]?.id;
-  if(!firstDayId)return;
-  if(!_wardrobeDaysCache[firstDayId])_wardrobeDaysCache[firstDayId]={categories:[],pack_overrides:{}};
-  _wardrobeDaysCache[firstDayId].pack_overrides[catId]=newVal;
-  saveWardrobeDay(firstDayId);
+  // Save to trips table directly
+  if(!currentTrip)return;
+  const overrides=JSON.parse(currentTrip.pack_overrides||'{}');
+  overrides[catId]=newVal;
+  currentTrip.pack_overrides=JSON.stringify(overrides);
+  sbPatch('trips',currentTrip.id,{pack_overrides:currentTrip.pack_overrides}).catch(e=>console.warn(e));
 }
 
 // Wardrobe photos stored in Supabase wardrobe table
