@@ -3953,18 +3953,33 @@ function renderWardrobeSummary(){
   el.innerHTML=html;
 }
 
-function adjustPack(catId, delta){
+async function adjustPack(catId, delta){
   const el=document.getElementById('packqty-'+catId);
   if(!el)return;
   const cur=parseInt(el.textContent)||0;
   const newVal=Math.max(0,cur+delta);
   el.textContent=newVal;
-  // Save to trips table directly
-  if(!currentTrip)return;
-  const overrides=JSON.parse(currentTrip.pack_overrides||'{}');
-  overrides[catId]=newVal;
-  currentTrip.pack_overrides=JSON.stringify(overrides);
-  sbPatch('trips',currentTrip.id,{pack_overrides:currentTrip.pack_overrides}).catch(e=>console.warn(e));
+  if(!currentTrip){showToast('No trip loaded');return;}
+  try{
+    const overrides=JSON.parse(currentTrip.pack_overrides||'{}');
+    overrides[catId]=newVal;
+    const newJson=JSON.stringify(overrides);
+    currentTrip.pack_overrides=newJson;
+    // Direct fetch - bypass sbPatch to eliminate any issues
+    const r=await fetch(SB+'/trips?id=eq.'+currentTrip.id,{
+      method:'PATCH',
+      headers:{...SH,'Prefer':'return=minimal'},
+      body:JSON.stringify({pack_overrides:newJson})
+    });
+    if(r.ok){
+      showToast('Saved ✓');
+    } else {
+      const err=await r.text();
+      showToast('Save failed: '+err.substring(0,50));
+    }
+  }catch(e){
+    showToast('Error: '+e.message.substring(0,50));
+  }
 }
 
 // Wardrobe photos stored in Supabase wardrobe table
