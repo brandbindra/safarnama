@@ -2788,7 +2788,7 @@ function openSettings(){document.getElementById('set-owner').value='';document.g
 async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
 
 // ── TABS ──
-function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}if(name==='wardrobe')renderWardrobe();}
+function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}if(name==='wardrobe'){loadWardrobeForTrip().then(()=>renderWardrobe());}}
 
 // ── WEATHER ──
 const WC=[{n:'Delhi',lat:28.6139,lon:77.2090},{n:'Katra',lat:32.9916,lon:74.9320},{n:'Udaipur',lat:24.5854,lon:73.7125},{n:'Leh',lat:34.1526,lon:77.5771},{n:'Patiala',lat:30.3398,lon:76.3869}];
@@ -3785,18 +3785,43 @@ function checkDepartureConfetti(){
 }
 
 // ── WARDROBE ──
-const WARDROBE_KEY = (tripId, dayId) => `wardrobe_${tripId}_${dayId}`;
+// Wardrobe photos stored in Supabase wardrobe table
+// Compressed to 400px wide before storing
+let _wardrobeCache = {}; // {dayId: [photos]}
 
-function getWardrobePhotos(dayId){
+async function loadWardrobeForTrip(){
   try{
-    return JSON.parse(localStorage.getItem(WARDROBE_KEY(currentTrip.id, dayId)) || '[]');
-  }catch(e){return [];}
+    const rows = await sbGet('wardrobe', 'trip_id=eq.'+currentTrip.id+'&order=sort_order.asc');
+    _wardrobeCache = {};
+    rows.forEach(r => {
+      if(!_wardrobeCache[r.day_id]) _wardrobeCache[r.day_id] = [];
+      _wardrobeCache[r.day_id].push({id: r.id, photo: r.photo_data, sort_order: r.sort_order});
+    });
+  }catch(e){ _wardrobeCache = {}; }
 }
 
-function saveWardrobePhotos(dayId, photos){
-  try{
-    localStorage.setItem(WARDROBE_KEY(currentTrip.id, dayId), JSON.stringify(photos));
-  }catch(e){showToast('Storage full — try removing some photos');}
+function getWardrobePhotos(dayId){
+  return _wardrobeCache[dayId] || [];
+}
+
+function compressImage(file, maxWidth=400){
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function renderWardrobe(){
@@ -3865,7 +3890,7 @@ function renderWardrobe(){
       <div class="wardrobe-day-body" id="wd-${d.id}" style="display:none">
         <div class="wardrobe-photos" id="wdphotos-${d.id}">
           ${photos.map((p, i) => `<div class="wardrobe-photo">
-            <img src="${p}" onclick="viewWardrobePhoto('${d.id}',${i})" alt="Outfit">
+            <img src="${p.photo}" onclick="viewWardrobePhoto('${d.id}',${i})" alt="Outfit">
             <button class="wardrobe-photo-del" onclick="delWardrobePhoto('${d.id}',${i})">×</button>
           </div>`).join('')}
           <label class="wardrobe-add-photo">
@@ -3904,43 +3929,57 @@ function toggleWardrobeDay(id){
 async function addWardrobePhotos(dayId, input){
   const files = [...input.files];
   if(!files.length) return;
-  showToast('Adding ' + files.length + ' photo' + (files.length > 1 ? 's' : '') + '…');
-  const photos = getWardrobePhotos(dayId);
+  showToast('Compressing & uploading ' + files.length + ' photo' + (files.length > 1 ? 's' : '') + '…');
+  const existing = getWardrobePhotos(dayId);
+  let nextOrder = existing.length ? Math.max(...existing.map(p=>p.sort_order||0))+1 : 0;
+  let added = 0;
   for(const file of files){
-    if(file.size > 3000000){ showToast('Max 3MB per photo — skipping ' + file.name); continue; }
-    const b64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = e => res(e.target.result);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
-    photos.push(b64);
+    try{
+      // Compress to 400px wide, 75% JPEG quality
+      const compressed = await compressImage(file, 400);
+      const sizekb = Math.round(compressed.length * 0.75 / 1024);
+      // Save to Supabase wardrobe table
+      const [row] = await sbPost('wardrobe', {
+        trip_id: currentTrip.id,
+        day_id: dayId,
+        photo_data: compressed,
+        sort_order: nextOrder++
+      });
+      if(!_wardrobeCache[dayId]) _wardrobeCache[dayId] = [];
+      _wardrobeCache[dayId].push({id: row.id, photo: compressed, sort_order: row.sort_order});
+      added++;
+    }catch(e){ showToast('Failed to save photo: '+e.message.substring(0,30)); }
   }
-  saveWardrobePhotos(dayId, photos);
-  renderWardrobe();
-  // Re-open the day after re-render
-  setTimeout(() => {
-    const el = document.getElementById('wd-' + dayId);
-    if(el) el.style.display = 'block';
-  }, 100);
-  showToast('Photos saved ✓');
+  if(added > 0){
+    renderWardrobe();
+    setTimeout(() => {
+      const el = document.getElementById('wd-' + dayId);
+      if(el) el.style.display = 'block';
+    }, 100);
+    showToast(added + ' photo' + (added>1?'s':'') + ' saved ✓ (compressed to ~400px)');
+  }
 }
 
-function delWardrobePhoto(dayId, idx){
+async function delWardrobePhoto(dayId, idx){
   if(!confirm('Remove this outfit photo?')) return;
   const photos = getWardrobePhotos(dayId);
-  photos.splice(idx, 1);
-  saveWardrobePhotos(dayId, photos);
-  renderWardrobe();
-  setTimeout(() => {
-    const el = document.getElementById('wd-' + dayId);
-    if(el) el.style.display = 'block';
-  }, 100);
+  const photo = photos[idx];
+  if(!photo) return;
+  try{
+    await sbDel('wardrobe', 'id', photo.id);
+    _wardrobeCache[dayId].splice(idx, 1);
+    renderWardrobe();
+    setTimeout(() => {
+      const el = document.getElementById('wd-' + dayId);
+      if(el) el.style.display = 'block';
+    }, 100);
+    showToast('Removed');
+  }catch(e){ showToast('Failed to remove'); }
 }
 
 function viewWardrobePhoto(dayId, idx){
   const photos = getWardrobePhotos(dayId);
-  const src = photos[idx];
+  const src = photos[idx]?.photo;
   if(!src) return;
   const o = document.createElement('div');
   o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
