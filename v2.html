@@ -3841,7 +3841,7 @@ async function saveWardrobeDay(dayId){
   };
   try{
     if(d.id){
-      await sbPatch('wardrobe_days','id=eq.'+d.id,payload);
+      await sbPatch('wardrobe_days',d.id,payload);
     } else {
       const [row]=await sbPost('wardrobe_days',payload);
       _wardrobeDaysCache[dayId].id=row.id;
@@ -4176,7 +4176,7 @@ async function addCustomCat(){
   if(existing.includes(val)){showToast('Already exists');return;}
   existing.push(val);
   const newVal=existing.join(',');
-  await sbPatch('trips','id=eq.'+currentTrip.id,{wardrobe_categories:newVal});
+  await sbPatch('trips',currentTrip.id,{wardrobe_categories:newVal});
   currentTrip.wardrobe_categories=newVal;
   inp.value='';
   renderCustomCats();
@@ -4187,7 +4187,7 @@ async function removeCustomCat(idx){
   const cats=(currentTrip?.wardrobe_categories||'').split(',').filter(Boolean);
   cats.splice(idx,1);
   const newVal=cats.join(',');
-  await sbPatch('trips','id=eq.'+currentTrip.id,{wardrobe_categories:newVal});
+  await sbPatch('trips',currentTrip.id,{wardrobe_categories:newVal});
   currentTrip.wardrobe_categories=newVal;
   renderCustomCats();
   showToast('Removed');
