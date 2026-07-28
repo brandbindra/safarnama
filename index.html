@@ -1740,7 +1740,13 @@ function getDefEss(tid,trip){
 
 // ── RENDER ALL ──
 async function renderAll(){
-  renderBanner();
+  // Show cached data immediately while fetching
+  const c=loadCache();
+  if(c&&c.phases&&c.trip&&c.trip.id===currentTrip.id){
+    allPhases=c.phases;allDays=c.days;allBookings=c.bookings;
+    renderBanner();renderProgressBar();renderTodayBanner();
+    renderItinerary();
+  }
   try{
     const[phases,days,bookings]=await Promise.all([
       sbGet('phases','trip_id=eq.'+currentTrip.id+'&order=sort_order.asc'),
@@ -1749,13 +1755,12 @@ async function renderAll(){
     ]);
     allPhases=phases;allDays=days;allBookings=bookings;
     saveCache({trip:currentTrip,phases,days,bookings});
-    renderBanner();renderProgressBar();
+    renderBanner();renderProgressBar();renderTodayBanner();
     renderItinerary();renderBookings();renderShare();
     await renderEssentials();
   }catch(e){
-    const c=loadCache();
-    if(c&&c.phases){allPhases=c.phases;allDays=c.days;allBookings=c.bookings;renderBanner();renderProgressBar();renderItinerary();renderBookings();renderShare();}
-    showToast('Offline — showing cached data');
+    if(!c||!c.phases)showToast('Failed to load trip data');
+    else showToast('Showing cached data');
   }
 }
 
@@ -3883,8 +3888,7 @@ async function loadWardrobeDays(){
         pack_overrides:JSON.parse(r.pack_overrides||'{}')
       };
     });
-    showToast('Loaded '+rows.length+' wardrobe rows · cats: '+rows.map(r=>r.categories).join(' | '));
-  }catch(e){_wardrobeDaysCache={};showToast('loadWardrobeDays error: '+e.message);}
+  }catch(e){_wardrobeDaysCache={};}
 }
 
 async function saveWardrobeDay(dayId){
