@@ -1225,7 +1225,7 @@ function startPin(r){pendingRole=r;pinBuf='';[0,1,2,3].forEach(i=>{const d=docum
 function pinKey(k){if(!k||pinBuf.length>=4)return;pinBuf+=k;updDots();if(pinBuf.length===4)setTimeout(checkPin,120);}
 function pinDel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);updDots();}}
 function updDots(){[0,1,2,3].forEach(i=>{const d=document.getElementById('pd'+i);d.classList.toggle('filled',i<pinBuf.length);d.classList.remove('error');});}
-function checkPin(){if(pinBuf===pins[pendingRole]){role=pendingRole;enterApp();}else{[0,1,2,3].forEach(i=>document.getElementById('pd'+i).classList.add('error'));setTimeout(()=>{pinBuf='';updDots();},700);}}
+function checkPin(){if(pinBuf===pins[pendingRole]){role=pendingRole;sessionStorage.setItem('me_role',role);enterApp();}else{[0,1,2,3].forEach(i=>document.getElementById('pd'+i).classList.add('error'));setTimeout(()=>{pinBuf='';updDots();},700);}}
 
 // ── ENTER APP ──
 async function enterApp(){
@@ -1234,6 +1234,29 @@ async function enterApp(){
   b.textContent=role.charAt(0).toUpperCase()+role.slice(1);b.className='rbadge badge-'+role;
   document.getElementById('home-settings-btn').style.display=role==='owner'?'flex':'none';
   await loadHome();updateCountdown();
+}
+
+async function restoreSession(){
+  const savedRole=sessionStorage.getItem('me_role');
+  const savedTrip=sessionStorage.getItem('me_trip');
+  if(!savedRole)return false;
+  role=savedRole;
+  if(savedTrip){
+    showScreen('screen-app');
+    // Set badges before loading
+    const ab=document.getElementById('app-badge');
+    if(ab){ab.textContent=role.charAt(0).toUpperCase()+role.slice(1);ab.className='rbadge badge-'+role;}
+    document.getElementById('app-settings-btn').style.display=role==='owner'?'flex':'none';
+    const wtab=document.getElementById('wardrobe-tab-btn');
+    if(wtab)wtab.style.display='flex';
+    try{await openTrip(savedTrip);}catch(e){
+      sessionStorage.removeItem('me_trip');
+      await enterApp();
+    }
+  } else {
+    await enterApp();
+  }
+  return true;
 }
 
 function goHome(){showScreen('screen-home');loadHome();}
@@ -2795,7 +2818,39 @@ async function confirmAddDay(){
 
 function openSettings(){
   setTimeout(renderCustomCats,100);document.getElementById('set-owner').value='';document.getElementById('set-editor').value='';document.getElementById('set-viewer').value='';openModal('modal-settings');}
-async function savePins(){const o=document.getElementById('set-owner').value,e=document.getElementById('set-editor').value,v=document.getElementById('set-viewer').value;if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}if(o)pins.owner=o;if(e)pins.editor=e;if(v)pins.viewer=v;try{const s=await sbGet('app_settings','limit=1');if(s.length)await sbPatch('app_settings',s[0].id,{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});else await sbPost('app_settings',{pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer});closeModal('modal-settings');showToast('PINs updated ✓');}catch(e){showToast('Failed');}}
+async function savePins(){
+  const o=document.getElementById('set-owner').value.trim();
+  const e=document.getElementById('set-editor').value.trim();
+  const v=document.getElementById('set-viewer').value.trim();
+  if((o&&o.length!==4)||(e&&e.length!==4)||(v&&v.length!==4)){showToast('PINs must be 4 digits');return;}
+  if(!o&&!e&&!v){showToast('Enter at least one PIN to change');return;}
+  if(o)pins.owner=o;
+  if(e)pins.editor=e;
+  if(v)pins.viewer=v;
+  try{
+    const s=await sbGet('app_settings','limit=1');
+    const payload={pin_owner:pins.owner,pin_editor:pins.editor,pin_viewer:pins.viewer};
+    if(s&&s.length){
+      // Direct fetch PATCH
+      const r=await fetch(SB+'/app_settings?id=eq.'+s[0].id,{
+        method:'PATCH',
+        headers:{...SH,'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      if(!r.ok){const err=await r.text();showToast('Error: '+err.substring(0,50));return;}
+    } else {
+      // Insert new row
+      const r=await fetch(SB+'/app_settings',{
+        method:'POST',
+        headers:{...SH,'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      if(!r.ok){const err=await r.text();showToast('Error: '+err.substring(0,50));return;}
+    }
+    closeModal('modal-settings');
+    showToast('PINs updated ✓');
+  }catch(e){showToast('Failed: '+e.message.substring(0,40));}
+}
 
 // ── TABS ──
 function showTab(name){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.querySelectorAll('.app-tab').forEach(t=>{if(t.textContent.toLowerCase().startsWith(name.substring(0,3)))t.classList.add('active');});if(name==='share')renderShare();if(name==='essentials')renderEssentials();if(name==='bookings')renderBookings();if(name==='itinerary'){renderBanner();renderProgressBar();renderItinerary();}if(name==='map'){renderMapTab();}if(name==='wardrobe'){(async()=>{await loadWardrobeDays();await loadWardrobeForTrip();renderWardrobe();})();}}
@@ -4263,6 +4318,9 @@ function toggleDark(){
   style.textContent=`@keyframes particleFloat{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:1}90%{opacity:.5}100%{transform:translateY(-280px) rotate(360deg);opacity:0}}`;
   document.head.appendChild(style);
 })();
+
+// ── RESTORE SESSION ON REFRESH ──
+(function(){restoreSession();})();
 
 // INIT
 updateCountdown();
