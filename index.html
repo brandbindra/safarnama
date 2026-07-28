@@ -3978,18 +3978,19 @@ function renderWardrobeSummary(){
       const days=catDays[cat.id]||0;
       const suggested=calcPackQty(days);
       const qty=overrides[cat.id]!==undefined?overrides[cat.id]:suggested;
+      const canAdjust=role==='owner'||role==='editor';
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
         <span style="font-size:18px;width:28px;text-align:center">${cat.icon}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:600;color:var(--text)">${cat.label}</div>
           <div style="font-size:10px;color:var(--text-3)">${days} day${days!==1?'s':''} planned</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
+        ${canAdjust?`<div style="display:flex;align-items:center;gap:6px">
           <button onclick="adjustPack('${cat.id}',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
           <span id="packqty-${cat.id}" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${qty}</span>
           <button onclick="adjustPack('${cat.id}',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-        </div>
-        <div style="font-size:10px;color:var(--text-3);min-width:32px;text-align:right">${qty===suggested?'':'✏️'}</div>
+        </div>`:`<span style="font-size:15px;font-weight:700;color:var(--teal);min-width:32px;text-align:right">${qty}</span>`}
+        ${canAdjust?`<div style="font-size:10px;color:var(--text-3);min-width:32px;text-align:right">${qty===suggested?'':'✏️'}</div>`:''}
       </div>`;
     });
   } else {
@@ -4001,23 +4002,24 @@ function renderWardrobeSummary(){
   const sk=totalDays+trekDays+2;
   const uwO=overrides['_underwear']!==undefined?overrides['_underwear']:uw;
   const skO=overrides['_socks']!==undefined?overrides['_socks']:sk;
+  const canAdjustFixed=role==='owner'||role==='editor';
   html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
     <span style="font-size:18px;width:28px;text-align:center">🩲</span>
     <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">Underwear</div><div style="font-size:10px;color:var(--text-3)">${totalDays} days + 2 spare</div></div>
-    <div style="display:flex;align-items:center;gap:6px">
+    ${canAdjustFixed?`<div style="display:flex;align-items:center;gap:6px">
       <button onclick="adjustPack('_underwear',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
       <span id="packqty-_underwear" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${uwO}</span>
       <button onclick="adjustPack('_underwear',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-    </div><div style="min-width:32px"></div>
+    </div>`:`<span style="font-size:15px;font-weight:700;color:var(--teal)">${uwO}</span>`}
   </div>
   <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
     <span style="font-size:18px;width:28px;text-align:center">🧦</span>
     <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">Socks pairs</div><div style="font-size:10px;color:var(--text-3)">${totalDays} days + ${trekDays} trek + 2 spare</div></div>
-    <div style="display:flex;align-items:center;gap:6px">
+    ${canAdjustFixed?`<div style="display:flex;align-items:center;gap:6px">
       <button onclick="adjustPack('_socks',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
       <span id="packqty-_socks" style="font-size:15px;font-weight:700;color:var(--teal);min-width:24px;text-align:center">${skO}</span>
       <button onclick="adjustPack('_socks',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--cream-2);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-    </div><div style="min-width:32px"></div>
+    </div>`:`<span style="font-size:15px;font-weight:700;color:var(--teal)">${skO}</span>`}
   </div>`;
 
   el.innerHTML=html;
